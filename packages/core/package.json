@@ -12,6 +12,7 @@
     "opportunities": "tsx src/run/opportunities.ts",
     "fanout": "tsx src/run/fanout-demo.ts",
     "durable": "tsx src/run/durable-demo.ts",
+    "activate": "tsx src/run/activate-demo.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
