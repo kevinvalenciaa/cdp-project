@@ -20,8 +20,18 @@ async function callStats(stats: Client, tool: string, args: Record<string, unkno
 
 const n = (v: unknown) => Number(v);
 
+export interface CampaignRow {
+  campaign_id: string;
+  name: string;
+  target_description: string;
+}
+
+export async function discoverCampaigns(wh: Client): Promise<CampaignRow[]> {
+  return (await runSql(wh, "SELECT campaign_id, name, target_description FROM campaigns")) as unknown as CampaignRow[];
+}
+
 /** The Verifier stage applied to one campaign experiment. */
-async function verifyExperiment(
+export async function verifyExperiment(
   wh: Client,
   stats: Client,
   campaign: { campaign_id: string; name: string; target_description: string },
@@ -98,7 +108,7 @@ function baseOpp(
 }
 
 /** A tempting time-series claim ("Q4 surge — double down") that the Verifier must reject. */
-async function seasonalityOpportunity(wh: Client, stats: Client): Promise<Opportunity> {
+export async function seasonalityOpportunity(wh: Client, stats: Client): Promise<Opportunity> {
   const rows = await runSql(
     wh,
     `SELECT CAST(date_trunc('week', order_date) AS VARCHAR) AS wk, SUM(revenue) AS rev FROM orders GROUP BY 1 ORDER BY 1`,
@@ -121,7 +131,7 @@ async function seasonalityOpportunity(wh: Client, stats: Client): Promise<Opport
 }
 
 /** Archetype 3: an under-targeted high-value cohort — surfaced as "needs a holdout to test". */
-async function underservedOpportunity(wh: Client): Promise<Opportunity> {
+export async function underservedOpportunity(wh: Client): Promise<Opportunity> {
   const row = (
     await runSql(
       wh,

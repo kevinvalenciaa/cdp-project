@@ -19,8 +19,8 @@ Hightouch ranks by "how many customers it could reach, what the outcome is worth
 - **AMP** (Agentic Marketing Platform) = turns ideas into campaign assets — we ship a thin analog (variant drafter + creative brief).
 - **AI Decisioning** = a *separate* RL/bandit product — our `decisioning/` bandit is an explicit analog, in its own module, never conflated with the harness.
 
-## Durability: Inngest (not Temporal)
-Right-sized for multi-*hour* runs, TS-native, observable timeline. *Seam to handle:* a stateful agent conversation is not natively serializable into durable steps — we externalize agent state (plan + scratchpad pointers + transcript) at each checkpoint and rehydrate on resume; read-only MCP queries are naturally idempotent. *Alternative:* Temporal (overkill), DBOS (lighter, pure-library).
+## Durability: step-journaled checkpoints (Inngest/DBOS the production target)
+Implemented as an append-only **step journal** (`durable/journal.ts`) with Inngest-style `step.run` memoization: each step's result is journaled by name; on resume, completed steps return their cached result without re-executing. A crash mid-run leaves the journal on disk, so resuming replays it and continues (proven in `pnpm durable`). This externalizes the same state a durable engine would and demonstrates the hard seam transparently **without an external dev-server**. *Why it's safe:* read-only MCP/warehouse queries are naturally idempotent, so replay can't double-apply effects. *Production target:* **Inngest** (TS-native, observable timeline) or **DBOS** (pure-library); **Temporal** is overkill for a multi-hour horizon. The same pattern wraps the agent harness — externalize plan + scratchpad pointers + transcript per checkpoint and rehydrate on resume.
 
 ## Memory: typed, multi-level, verified-only
 Structured insight/outcome records (not raw embeddings), keyed by subject across initiative/audience/journey/campaign/message, with a **verified-only write gate** (only Verifier-passed claims enter — prevents memory poisoning) and temporal validity (`valid_until`).
