@@ -1,0 +1,345 @@
+{
+  "generatedAtSeed": 42,
+  "goal": "Grow second purchases from one-time buyers",
+  "opportunities": {
+    "goal": "Grow second purchases from one-time buyers",
+    "ranked": [
+      {
+        "key": "SPRING_DROP_CREATIVE",
+        "title": "Spring launch — product-drop creative",
+        "segment": "Drop-lookalike audience (creative A/B vs evergreen)",
+        "type": "experiment",
+        "reach": 900,
+        "value": 186.33653846153845,
+        "rawConversion": 13.049645390070921,
+        "upliftPp": 6.895799236224767,
+        "ci": [
+          2.7053810419862314,
+          11.086217430463302
+        ],
+        "pValue": 0.00767815896478341,
+        "verdict": "real_lift",
+        "accepted": true,
+        "score": 11564.454236434594,
+        "reason": "Significant +6.9% incremental lift (p=0.008, 95% CI excludes 0).",
+        "evidence": {
+          "conv_t": 92,
+          "n_t": 705,
+          "conv_c": 12,
+          "n_c": 195
+        },
+        "bareLlm": {
+          "accepted": false,
+          "reason": "Sample too small for reliable conversion rate signal"
+        }
+      },
+      {
+        "key": "SECOND_PURCHASE_SMS",
+        "title": "Second-purchase SMS to one-time buyers",
+        "segment": "Customers with exactly one order, 30–180 days ago",
+        "type": "experiment",
+        "reach": 770,
+        "value": 165.56565656565655,
+        "rawConversion": 14.077669902912621,
+        "upliftPp": 6.182933060807358,
+        "ci": [
+          1.0941479120688886,
+          11.271718209545828
+        ],
+        "pValue": 0.041328380821575195,
+        "verdict": "real_lift",
+        "accepted": true,
+        "score": 7882.346562198375,
+        "reason": "Significant +6.2% incremental lift (p=0.041, 95% CI excludes 0).",
+        "evidence": {
+          "conv_t": 87,
+          "n_t": 618,
+          "conv_c": 12,
+          "n_c": 152
+        },
+        "bareLlm": {
+          "accepted": true,
+          "reason": "14.1% CR is strong for SMS retargeting to past buyers"
+        }
+      }
+    ],
+    "rejected": [
+      {
+        "key": "UNDERSERVED_WORKWEAR",
+        "title": "Underserved: new workwear buyers",
+        "segment": "First purchase Workwear, signed up 2026",
+        "type": "segment",
+        "reach": 202,
+        "value": 1069.7128712871288,
+        "rawConversion": null,
+        "upliftPp": null,
+        "ci": null,
+        "pValue": null,
+        "verdict": "needs_test",
+        "accepted": false,
+        "score": 0,
+        "reason": "202 high-value customers (avg LTV $1070) barely targeted (0% send coverage). Design a holdout to measure incremental lift before scaling.",
+        "evidence": {},
+        "bareLlm": {
+          "accepted": false,
+          "reason": "n/a"
+        }
+      },
+      {
+        "key": "CROSS_CATEGORY_SMS",
+        "title": "Cross-category SMS to first-time buyers",
+        "segment": "First-time buyers who bought a single category",
+        "type": "experiment",
+        "reach": 714,
+        "value": 168.26388888888889,
+        "rawConversion": 11.049723756906078,
+        "upliftPp": 4.032179897256954,
+        "ci": [
+          -0.6166644786445318,
+          8.68102427315844
+        ],
+        "pValue": 0.12674861682424376,
+        "verdict": "no_significant_lift",
+        "accepted": false,
+        "score": 0,
+        "reason": "Raw conversion 11.0% but incremental lift +4.0% is not significant (p=0.127, 95% CI [-0.6%, +8.7%] includes 0) (note: power=0.22 to detect a 3% effect).",
+        "evidence": {
+          "conv_t": 60,
+          "n_t": 543,
+          "conv_c": 12,
+          "n_c": 171
+        },
+        "bareLlm": {
+          "accepted": true,
+          "reason": "11% CR well above typical SMS baseline of 1-3%"
+        }
+      },
+      {
+        "key": "VIP_LOYALTY_BLAST",
+        "title": "VIP loyalty blast",
+        "segment": "Top-tier VIP big spenders",
+        "type": "experiment",
+        "reach": 665,
+        "value": 176.52857142857144,
+        "rawConversion": 42.119565217391305,
+        "upliftPp": 0.032023129849212406,
+        "ci": [
+          -7.516112273393598,
+          7.580158533092023
+        ],
+        "pValue": 0.9933655884338173,
+        "verdict": "no_significant_lift",
+        "accepted": false,
+        "score": 0,
+        "reason": "Raw conversion 42.1% but incremental lift +0.0% is not significant (p=0.993, 95% CI [-7.5%, +7.6%] includes 0) (note: power=0.12 to detect a 3% effect).",
+        "evidence": {
+          "conv_t": 155,
+          "n_t": 368,
+          "conv_c": 125,
+          "n_c": 297
+        },
+        "bareLlm": {
+          "accepted": true,
+          "reason": "42.1% CR is exceptional for most channels/verticals"
+        }
+      },
+      {
+        "key": "RETARGET_NEAR_MISS",
+        "title": "Browse retargeting (broad)",
+        "segment": "Recently lapsing browsers",
+        "type": "experiment",
+        "reach": 595,
+        "value": 171.46666666666667,
+        "rawConversion": 10.364145658263306,
+        "upliftPp": 0.7002801120448182,
+        "ci": [
+          -4.20757683612367,
+          5.608137060213307
+        ],
+        "pValue": 0.7810833279315472,
+        "verdict": "no_significant_lift",
+        "accepted": false,
+        "score": 0,
+        "reason": "Raw conversion 10.4% but incremental lift +0.7% is not significant (p=0.781, 95% CI [-4.2%, +5.6%] includes 0) (note: power=0.20 to detect a 3% effect).",
+        "evidence": {
+          "conv_t": 37,
+          "n_t": 357,
+          "conv_c": 23,
+          "n_c": 238
+        },
+        "bareLlm": {
+          "accepted": false,
+          "reason": "10.4% is decent but needs context on benchmarks"
+        }
+      },
+      {
+        "key": "Q4_SURGE",
+        "title": "Double down on the Q4 order surge",
+        "segment": "All customers, Q4",
+        "type": "seasonality",
+        "reach": 129,
+        "value": 400.4130613276069,
+        "rawConversion": null,
+        "upliftPp": null,
+        "ci": null,
+        "pValue": null,
+        "verdict": "explained_by_seasonality",
+        "accepted": false,
+        "score": 0,
+        "reason": "Window sits +28412 above its local trend; the seasonal component contributes +28865 (102% of it). Seasonal strength 0.76.",
+        "evidence": {},
+        "bareLlm": {
+          "accepted": false,
+          "reason": "n/a"
+        }
+      },
+      {
+        "key": "SPRING_EVERGREEN_CREATIVE",
+        "title": "Spring launch — evergreen creative",
+        "segment": "Drop-lookalike audience (creative A/B vs product-drop)",
+        "type": "experiment",
+        "reach": 299,
+        "value": 144.875,
+        "rawConversion": 8.547008547008547,
+        "upliftPp": 2.393162393162393,
+        "ci": [
+          -4.4597712938892915,
+          9.246096080214079
+        ],
+        "pValue": 0.5298705891830671,
+        "verdict": "no_significant_lift",
+        "accepted": false,
+        "score": 0,
+        "reason": "Raw conversion 8.5% but incremental lift +2.4% is not significant (p=0.530, 95% CI [-4.5%, +9.2%] includes 0) (note: power=0.12 to detect a 3% effect).",
+        "evidence": {
+          "conv_t": 20,
+          "n_t": 234,
+          "conv_c": 4,
+          "n_c": 65
+        },
+        "bareLlm": {
+          "accepted": false,
+          "reason": "8.5% is solid but n=299 too small for confidence"
+        }
+      }
+    ],
+    "contrastUsd": 0.001611,
+    "generatedFromSeed": 42
+  },
+  "activation": {
+    "opportunity": {
+      "key": "SECOND_PURCHASE_SMS",
+      "title": "Second-purchase SMS to one-time buyers",
+      "segment": "Customers with exactly one order, 30–180 days ago",
+      "type": "experiment",
+      "reach": 770,
+      "value": 165.56565656565655,
+      "rawConversion": 14.077669902912621,
+      "upliftPp": 6.182933060807358,
+      "ci": [
+        1.0941479120688886,
+        11.271718209545828
+      ],
+      "pValue": 0.041328380821575195,
+      "verdict": "real_lift",
+      "accepted": true,
+      "score": 7882.346562198375,
+      "reason": "Significant +6.2% incremental lift (p=0.041, 95% CI excludes 0).",
+      "evidence": {
+        "conv_t": 87,
+        "n_t": 618,
+        "conv_c": 12,
+        "n_c": 152
+      }
+    },
+    "audience": {
+      "label": "One-time buyers",
+      "channel": "sms",
+      "filter": "is_one_time_buyer = TRUE",
+      "reach": 1939,
+      "persuadableReach": 797,
+      "persuadableFilter": "sms_responder = TRUE",
+      "sampleMembers": [
+        2110,
+        2734,
+        1087,
+        256,
+        1129,
+        3713,
+        3592,
+        4311
+      ]
+    },
+    "brief": "**CREATIVE BRIEF: Second Purchase SMS**\n\n**Objective:** Drive repeat purchase from one-time buyers via SMS with +6.2pp lift potential\n\n**Audience:** 797 one-time customers (persuadable, SMS-receptive)\n\n**Tone:** Aspirational, on-brand; position shopping as lifestyle choice, not transaction\n\n**Key Message:** Highlight new arrivals, styling inspiration, or exclusive access—anchor to quality/community, never discounting premium pieces\n\n**CTA:** Time-sensitive but premium-feeling (\"Shop New Arrivals\" / \"Early Access for Our Customers\")",
+    "variants": [
+      {
+        "id": "V1",
+        "channel": "sms",
+        "text": "New arrivals just landed. Discover what's next in your style story. Early access for our customers only. Shop now → [link]"
+      },
+      {
+        "id": "V2",
+        "channel": "sms",
+        "text": "Welcome back. Explore curated pieces crafted for those who know quality. Exclusive new collection available today → [link]"
+      }
+    ],
+    "guardrail": {
+      "allowed": true,
+      "details": [
+        {
+          "allowed": true,
+          "violatedRule": null,
+          "reason": "Aspirational tone, no discounts, no urgency language, no premium collection specifics."
+        },
+        {
+          "allowed": true,
+          "violatedRule": null,
+          "reason": "Aspirational tone, no discounts, no urgency language, aligns with premium brand positioning."
+        }
+      ]
+    },
+    "sync": {
+      "destination": "Braze (SMS journey)",
+      "simulated": true,
+      "membersSynced": 797,
+      "artifactPath": "runs/board/activation/sms_sync.json"
+    },
+    "measurement": {
+      "treatmentN": 638,
+      "controlN": 159,
+      "treatmentConv": 116,
+      "controlConv": 13,
+      "upliftPp": 10.005717552887365,
+      "ci": [
+        4.800385036237053,
+        15.211050069537677
+      ],
+      "pValue": 0.002178100710396702,
+      "verdict": "real_lift",
+      "reason": "Significant +10.0% incremental lift (p=0.002, 95% CI excludes 0)."
+    },
+    "memoryWritten": true,
+    "costUsd": 0.002565
+  },
+  "bandit": {
+    "impressions": 6000,
+    "learnedBest": [
+      "exclusive_access",
+      "social_proof",
+      "urgency"
+    ],
+    "oracleBest": [
+      "exclusive_access",
+      "social_proof",
+      "urgency"
+    ],
+    "converged": true,
+    "banditRate": 0.1675,
+    "randomRate": 0.13133333333333333,
+    "globalBestRate": 0.13999999999999999,
+    "oracleRate": 0.18200000000000002,
+    "liftVsHoldout": 0.27538071065989866,
+    "liftVsGlobalBest": 0.19642857142857162,
+    "globalBestVariant": "social_proof"
+  }
+}

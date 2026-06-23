@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+/* Lightweight markdown styling for the /how-it-works page. */
+.md h1 {
+  @apply text-3xl font-bold text-white mt-2 mb-4;
+}
+.md h2 {
+  @apply text-xl font-semibold text-emerald-300 mt-8 mb-3;
+}
+.md p {
+  @apply text-slate-300 leading-relaxed my-3;
+}
+.md ul,
+.md ol {
+  @apply text-slate-300 my-3 ml-5 space-y-1.5 list-disc;
+}
+.md ol {
+  @apply list-decimal;
+}
+.md strong {
+  @apply text-white font-semibold;
+}
+.md em {
+  @apply text-slate-200 not-italic font-medium;
+}
+.md code {
+  @apply bg-slate-800 text-emerald-300 px-1.5 py-0.5 rounded text-sm;
+}
+.md a {
+  @apply text-sky-400 underline;
+}

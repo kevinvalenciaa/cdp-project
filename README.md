@@ -1,44 +1,68 @@
-# Lift Compass
+# Lift Compass — a causally-credible Agentic CDP
 
-A transparent, warehouse-native **closed-loop Agentic CDP** prototype: it ranks marketing opportunities by **reach × value × incremental uplift**, produces reviewable draft work, (simulated-)activates the audience, **proves** each one with a designed holdout, and optimizes the message with a bandit — differentiating on **causal credibility and auditability**, not more automation.
+A working prototype of the [Agentic CDP](https://hightouch.com/blog/the-agentic-cdp) Hightouch announced in June 2026: agents that run continuously and hand a marketer a short, **ranked, proven** list of opportunities with draft work — instead of a blank canvas.
 
-It is a faithful, honest prototype of the [Agentic CDP](https://hightouch.com/blog/the-agentic-cdp) Hightouch announced in June 2026. New to it? Read [`docs/EXPLAINER.md`](docs/EXPLAINER.md) (plain language, no jargon).
+Its differentiator is **causal credibility**: it ranks opportunities by **reach × value × incremental uplift** (not raw conversion) and **proves each one with a holdout**. A separable **Verifier** rejects anything the data can't support — and visibly catches a planted trap that a normal LLM falls for.
 
-> **Prototype, not a product.** The agents, data queries, statistics, verifier, memory, and bandit are real and working. The customer data is **synthetic** (with a known answer key, so results are provably correct). Campaign sending and outcomes are **simulated**. See the "What's real vs. simulated" section below.
+> **New here? Read [`docs/EXPLAINER.md`](docs/EXPLAINER.md)** (plain language, no jargon), or open the `/how-it-works` page in the UI.
 
-## The loop
+> **Prototype, not a product.** The agents, data queries, statistics, verifier, memory, and bandit are **real and working**. The customer data is **synthetic** (with a known answer key, so results are *provably* correct — see `packages/core/GROUND_TRUTH.md`). Campaign sending and outcomes are **simulated**. The harness is **context-engineering, not RL** — the bandit is a separate AI-Decisioning analog.
 
-`goal → discover opportunities → draft work (audience + messaging + creative brief) → AMP-analog assets → (simulated) activation → measure incremental lift with a holdout → optimize per-segment message (bandit) → write verified outcomes to compounding memory → smarter next run`
+## The loop (closed)
+
+```
+goal → discover ranked opportunities → draft work (audience + messaging + creative brief)
+     → AMP-analog assets → (simulated) activation → measure incremental lift with a holdout
+     → optimize the per-segment message (bandit) → write verified outcomes to memory → smarter next run
+```
 
 ## Three Hightouch systems, kept distinct
-
 - **Agentic CDP** — the long-running, context-engineered agent harness (what this mirrors).
-- **AMP** — turns ideas into campaign assets (thin analog here: variant drafter + creative brief).
-- **AI Decisioning** — a *separate* RL/bandit product (analogized here in `packages/core/src/decisioning`, never conflated with the harness).
+- **AMP** (Agentic Marketing Platform) — turns ideas into campaign assets (a thin analog: brief + variant drafter).
+- **AI Decisioning** — a *separate* RL/bandit product (analogized in `packages/core/src/decisioning`, never conflated with the harness).
 
-## Layout
+## Architecture
 
-| Path | What |
-|---|---|
-| `packages/core` | TypeScript backend: warehouse seed, MCP servers, harness, agents, activation, decisioning, outcomes, memory, durable orchestration |
-| `services/stats` | Python Stats-Verifier MCP (statsmodels STL, scipy, CUPED) |
-| `apps/ui` | Next.js opportunity board + `/how-it-works` page |
-| `docs/` | EXPLAINER, DESIGN_DECISIONS, FANOUT_VS_RAG |
+| Component | Where | What |
+|---|---|---|
+| Synthetic warehouse | `packages/core/src/warehouse` | DuckDB, deterministic, planted ground truth (`GROUND_TRUTH.md`) |
+| **Read-only Warehouse MCP** | `packages/core/src/mcp-warehouse` | `list_tables`/`get_schema`/`run_sql`/`run_metric` (semantic layer, errors out-of-scope)/`design_holdout`; audit log + result signatures |
+| **Stats Verifier MCP** (Python) | `services/stats` | STL seasonality, two-proportion test, CUPED, power, `verify_lift_claim` |
+| **Agent harness** | `packages/core/src/harness` | `make_plan`/`update_plan`, file-buffer scratchpad, subagents, model tiering, cost ledger |
+| **Opportunity engine + Verifier** | `packages/core/src/engine` | explore → verify (stats gate) → rank by reach×value×uplift; bare-LLM contrast |
+| Fan-out + guardrails | `packages/core/src/engine/fanout.ts`, `src/guardrails` | parallel Haiku classification; composable-context business rules |
+| **Compounding memory** | `packages/core/src/memory` | typed multi-level insights, verified-only write gate, temporal validity |
+| **Durable execution** | `packages/core/src/durable` | step-journaled checkpoints; crash-resume |
+| Activation + AMP-analog | `packages/core/src/activation` | audience compiler, creative brief, variant drafter, simulated connectors |
+| AI-Decisioning bandit | `packages/core/src/decisioning` | contextual Thompson-sampling per segment |
+| Opportunity board UI | `apps/ui` | Next.js static board + `/how-it-works` |
+
+See [`docs/DESIGN_DECISIONS.md`](docs/DESIGN_DECISIONS.md) for the build-vs-buy rationale and [`docs/FANOUT_VS_RAG.md`](docs/FANOUT_VS_RAG.md).
 
 ## Quick start
 
 ```bash
-pnpm setup            # installs Node + Python deps (uv)
+pnpm setup            # install Node + Python (uv) deps
 pnpm seed             # build the synthetic warehouse + plant ground truth
-pnpm ground-truth     # prove the planted signals are recoverable
-pnpm mcp:warehouse    # start the read-only warehouse MCP server
-# Phase 2+ (the agent loop) needs ANTHROPIC_API_KEY in .env:
-pnpm demo             # run the closed-loop demo
-pnpm verify           # full automated verification suite
+pnpm ground-truth     # prove the planted signals are recoverable (10/10)
+
+# Each phase is independently runnable (★ = needs ANTHROPIC_API_KEY in .env):
+pnpm opportunities ★  # ranked board + bare-LLM contrast (the differentiator)
+pnpm demo          ★  # the live agent harness trace
+pnpm fanout        ★  # Haiku fan-out classifier + guardrails
+pnpm durable          # compounding memory + crash-resume (no key)
+pnpm activate      ★  # draft work → simulated activation → measured lift
+pnpm bandit           # AI-Decisioning bandit (no key)
+
+pnpm board         ★  # generate board.json + build the static UI (apps/ui/out)
+pnpm ui:dev        ★  # serve the board at localhost:3000
+
+pnpm verify           # automated suite: build + typecheck + unit tests + stats tests
 ```
+*If Sonnet 4.6 is congested, prefix `MODEL_REASONING=claude-haiku-4-5-20251001` — the harness also auto-falls back to Haiku.*
 
-See [`docs/`](docs) and the build plan for the full design. Verification (automated + a manual checklist) is in the plan's §9.
-
-## Status
-
-Built in public, phase by phase. See the task list / commit history for current progress.
+## What it proves (vs. the ground-truth answer key)
+- **Catches the trap:** the VIP campaign (42% conversion) has ~0 incremental lift (CI includes 0) → demoted; a bare LLM accepts it.
+- **Rejects seasonality:** the Q4 order surge is flagged "explained by seasonality," not a real change.
+- **Surfaces the real win:** second-purchase SMS, +6.2pp lift (p=0.041), confirmed on activation (+10pp targeting persuadables).
+- **Compounds:** run 2 skips the killed trap from memory; crash-resume replays journaled steps; the bandit beats "human marketing" by ~20%.
