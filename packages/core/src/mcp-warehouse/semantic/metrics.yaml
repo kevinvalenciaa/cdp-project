@@ -1,0 +1,68 @@
+# Governed semantic layer. run_metric resolves ONLY these metrics/dimensions and
+# errors out-of-scope (it never guesses). This is the "can't produce subtly-wrong
+# numbers across runs" property — route audited/KPI questions here; fall back to
+# guarded run_sql only for genuine ad-hoc exploration.
+
+metrics:
+  total_revenue:
+    description: Total order revenue.
+    table: orders
+    sql: "SUM(revenue)"
+  order_count:
+    description: Number of orders.
+    table: orders
+    sql: "COUNT(*)"
+  avg_order_value:
+    description: Average order value.
+    table: orders
+    sql: "AVG(revenue)"
+  customer_count:
+    description: Number of customers.
+    table: customer_360
+    sql: "COUNT(*)"
+  one_time_buyer_count:
+    description: Customers with exactly one order.
+    table: customer_360
+    sql: "COUNT(*) FILTER (WHERE is_one_time_buyer)"
+  repeat_purchase_rate:
+    description: Share of customers with 2+ orders.
+    table: customer_360
+    sql: "AVG(CASE WHEN n_orders >= 2 THEN 1.0 ELSE 0.0 END)"
+  churn_rate:
+    description: Share of customers with no order in the churn window.
+    table: customer_360
+    sql: "AVG(CASE WHEN is_churn_risk THEN 1.0 ELSE 0.0 END)"
+  avg_ltv:
+    description: Average customer lifetime revenue.
+    table: customer_360
+    sql: "AVG(total_revenue)"
+  total_ltv:
+    description: Total lifetime revenue across customers.
+    table: customer_360
+    sql: "SUM(total_revenue)"
+  conversion_rate:
+    description: Campaign send conversion rate.
+    table: campaign_sends
+    sql: "AVG(converted)"
+  campaign_revenue:
+    description: Revenue attributed to campaign sends.
+    table: campaign_sends
+    sql: "SUM(revenue)"
+
+dimensions:
+  region: { table: customer_360, sql: "region" }
+  value_tier: { table: customer_360, sql: "value_tier" }
+  acquisition_channel: { table: customer_360, sql: "acquisition_channel" }
+  first_category: { table: customer_360, sql: "first_category" }
+  is_one_time_buyer: { table: customer_360, sql: "is_one_time_buyer" }
+  is_churn_risk: { table: customer_360, sql: "is_churn_risk" }
+  order_channel: { table: orders, sql: "channel" }
+  campaign_id: { table: campaign_sends, sql: "campaign_id" }
+  treatment: { table: campaign_sends, sql: "treatment" }
+  variant: { table: campaign_sends, sql: "variant" }
+
+# Columns that may be used in run_metric/design_holdout filters (allowlist => no injection).
+filterable:
+  customer_360: [region, value_tier, acquisition_channel, first_category, n_orders, total_revenue, avg_order_value, categories_purchased, is_one_time_buyer, is_churn_risk, sms_responder, email_responder]
+  orders: [channel, revenue]
+  campaign_sends: [campaign_id, treatment, converted, variant]

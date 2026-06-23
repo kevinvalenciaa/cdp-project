@@ -1,0 +1,6 @@
+{"case": "second_purchase_sms", "conv_t": 224, "n_t": 1600, "conv_c": 32, "n_c": 400, "label": "real_lift"}
+{"case": "cross_category_sms", "conv_t": 110, "n_t": 1000, "conv_c": 23, "n_c": 330, "label": "real_lift"}
+{"case": "spring_drop_vs_evergreen", "conv_t": 94, "n_t": 720, "conv_c": 61, "n_c": 720, "label": "real_lift"}
+{"case": "vip_loyalty_trap", "conv_t": 162, "n_t": 385, "conv_c": 132, "n_c": 315, "label": "no_significant_lift"}
+{"case": "retarget_near_miss", "conv_t": 95, "n_t": 900, "conv_c": 57, "n_c": 600, "label": "no_significant_lift"}
+{"case": "large_confident_null", "conv_t": 600, "n_t": 3000, "conv_c": 600, "n_c": 3000, "label": "no_significant_lift"}

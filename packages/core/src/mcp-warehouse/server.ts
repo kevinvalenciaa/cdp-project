@@ -13,6 +13,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { Warehouse } from "./warehouse.js";
 import { audit } from "./audit.js";
+import { designHoldout, metricCatalog, runMetric, type Filter } from "./semantic.js";
+
+const filterSchema = z.object({ column: z.string(), op: z.string(), value: z.any() });
 
 const wh = await Warehouse.open();
 const server = new McpServer({ name: "lift-warehouse", version: "0.1.0" });
@@ -68,6 +71,54 @@ server.registerTool(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       audit({ tool: "run_sql", status: "error", sql, error: message });
+      return fail(message);
+    }
+  },
+);
+
+server.registerTool(
+  "run_metric",
+  {
+    title: "Run metric (semantic layer)",
+    description: `Resolve a GOVERNED metric from the semantic layer (errors out-of-scope; never guesses). Prefer this over run_sql for KPIs. Metrics: ${metricCatalog().metrics.join(", ")}. Dimensions: ${metricCatalog().dimensions.join(", ")}.`,
+    inputSchema: {
+      metric: z.string().describe("A metric name from the catalog."),
+      groupBy: z.array(z.string()).optional().describe("Dimension names to group by."),
+      filters: z.array(filterSchema).optional().describe("Filters: {column, op, value}."),
+    },
+  },
+  async ({ metric, groupBy, filters }) => {
+    try {
+      const res = await runMetric(wh, metric, groupBy, filters as Filter[] | undefined);
+      audit({ tool: "run_metric", status: "ok", metric, groupBy, sql: res.sql, rowCount: res.rowCount, resultHash: res.resultHash });
+      return ok(res);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      audit({ tool: "run_metric", status: "error", metric, error: message });
+      return fail(message);
+    }
+  },
+);
+
+server.registerTool(
+  "design_holdout",
+  {
+    title: "Design holdout",
+    description:
+      "Construct a matched treatment/control split for a customer_360 segment (deterministic hash split + covariate-balance check). Use to measure incremental lift where no holdout was pre-assigned.",
+    inputSchema: {
+      filters: z.array(filterSchema).describe("Segment definition: filters on customer_360."),
+      holdoutFraction: z.number().optional().describe("Control fraction in (0,1); default 0.2."),
+    },
+  },
+  async ({ filters, holdoutFraction }) => {
+    try {
+      const res = await designHoldout(wh, filters as Filter[], holdoutFraction ?? 0.2);
+      audit({ tool: "design_holdout", status: "ok", filters, balanced: res.balanced });
+      return ok(res);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      audit({ tool: "design_holdout", status: "error", error: message });
       return fail(message);
     }
   },

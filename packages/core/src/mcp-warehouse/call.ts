@@ -17,8 +17,15 @@ if (!tool) {
   process.exit(1);
 }
 
+const raw = rest.join(" ").trim();
 const args: Record<string, unknown> =
-  tool === "run_sql" ? { sql: rest.join(" ") } : tool === "get_schema" && rest[0] ? { table: rest[0] } : {};
+  tool === "run_sql"
+    ? { sql: raw }
+    : tool === "get_schema" && rest[0]
+      ? { table: rest[0] }
+      : raw.startsWith("{")
+        ? (JSON.parse(raw) as Record<string, unknown>) // run_metric / design_holdout take JSON args
+        : {};
 
 const transport = new StdioClientTransport({
   command: resolve(REPO_ROOT, "node_modules/.bin/tsx"),
