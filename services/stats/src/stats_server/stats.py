@@ -148,40 +148,43 @@ def assess_seasonality(
         raise ValueError("invalid window")
 
     res = STL(y, period=period, robust=True).fit()
+    trend = np.asarray(res.trend)
     seasonal = np.asarray(res.seasonal)
     resid = np.asarray(res.resid)
-    adjusted = y - seasonal  # seasonally adjusted
 
     mask = np.zeros(n, dtype=bool)
     mask[window_start:window_end] = True
 
-    def change(a: np.ndarray) -> float:
-        win = float(np.mean(a[mask]))
-        rest = float(np.mean(a[~mask])) if (~mask).any() else float(np.mean(a))
-        return (win / rest - 1) if rest != 0 else 0.0
+    # Measure the window's elevation above its OWN LOCAL TREND (so a growth trend is not
+    # mistaken for seasonality), and ask how much of that elevation is the seasonal component.
+    raw_dev = float(np.mean(y[mask] - trend[mask]))
+    seasonal_dev = float(np.mean(seasonal[mask]))
+    resid_std = float(np.std(resid))
+    frac_seasonal = abs(seasonal_dev) / (abs(raw_dev) + 1e-9)
 
-    raw_change = change(y)
-    adj_change = change(adjusted)
-    resid_rel_std = float(np.std(resid) / np.mean(y)) if np.mean(y) != 0 else 0.0
+    rest = ~mask
+    raw_change = float(np.mean(y[mask]) / np.mean(y[rest]) - 1) if rest.any() and np.mean(y[rest]) != 0 else 0.0
 
     var_resid = float(np.var(resid))
     var_seasonal_resid = float(np.var(seasonal + resid))
     seasonal_strength = max(0.0, 1 - var_resid / var_seasonal_resid) if var_seasonal_resid > 0 else 0.0
 
-    # If the seasonally-adjusted change is small relative to residual noise (and much
-    # smaller than the raw change), the elevation is seasonal, not behavioral.
-    explained = abs(adj_change) < max(0.05, 1.5 * resid_rel_std) and abs(adj_change) < 0.5 * abs(raw_change)
+    # The window's elevation-above-trend is seasonal if the seasonal component explains
+    # most of it (and the elevation is meaningfully above residual noise).
+    explained = frac_seasonal > 0.6 and abs(raw_dev) > 1.0 * resid_std
     verdict = "explained_by_seasonality" if explained else "real_change"
 
     return {
         "raw_change": raw_change,
-        "seasonally_adjusted_change": adj_change,
+        "deviation_above_trend": raw_dev,
+        "seasonal_contribution": seasonal_dev,
+        "frac_explained_by_seasonality": frac_seasonal,
         "seasonal_strength": seasonal_strength,
-        "resid_rel_std": resid_rel_std,
+        "resid_std": resid_std,
         "verdict": verdict,
         "explanation": (
-            f"Raw window change {raw_change:+.1%} collapses to {adj_change:+.1%} after removing "
-            f"the seasonal component (seasonal strength {seasonal_strength:.2f})."
+            f"Window sits {raw_dev:+.0f} above its local trend; the seasonal component contributes "
+            f"{seasonal_dev:+.0f} ({frac_seasonal * 100:.0f}% of it). Seasonal strength {seasonal_strength:.2f}."
         ),
     }
 
