@@ -1,0 +1,25 @@
+# Composable-context business rules. These are injected as CONTEXT into the agents
+# (not hard-coded as prompt afterthoughts) and checked before any recommendation is
+# surfaced — directly answering Hightouch's failure mode where agents "proposed discounts
+# on premium products that never go on sale because nobody had told them not to."
+#
+# Versioned and editable by the marketing team (the "you control the strategy" surface).
+
+version: 1
+rules:
+  - id: premium_no_discount
+    rule: >
+      Never propose discounts, promo codes, coupons, or sales on premium products or
+      never-on-sale collections (e.g., the Fall Flagship collection, premium Outerwear).
+      These maintain full price to protect brand equity and never go on sale.
+  - id: seasonality_not_opportunity
+    rule: >
+      Do not present an expected seasonal increase (e.g., a Q4 holiday sales lift) as a new
+      opportunity or a meaningful change in customer behavior. It is normal seasonality.
+  - id: premium_brand_tone
+    rule: >
+      Messaging for premium lines must stay aspirational and on-brand. No aggressive
+      discount/urgency language (e.g., "CLEARANCE", "blowout", "everything must go") for premium products.
+  - id: frequency_cap
+    rule: >
+      Do not propose sending more than 2 messages to the same customer within a single week.
