@@ -1,0 +1,28 @@
+# deps
+node_modules/
+.pnpm-store/
+services/stats/.venv/
+**/__pycache__/
+*.pyc
+
+# build
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# data + run artifacts (generated; reproducible from seed)
+packages/core/data/*.duckdb
+packages/core/data/*.duckdb.wal
+runs/
+**/audit.log
+
+# env / secrets
+.env
+.env.local
+!.env.example
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,33 @@
+{
+  "name": "lift-compass",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lift Compass — a closed-loop Agentic CDP prototype (warehouse-native, causally-credible marketing opportunity engine).",
+  "packageManager": "pnpm@9.15.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "setup": "pnpm install && pnpm stats:sync",
+    "stats:sync": "cd services/stats && uv sync",
+    "seed": "pnpm --filter @lift/core seed",
+    "ground-truth": "pnpm --filter @lift/core ground-truth",
+    "mcp:warehouse": "pnpm --filter @lift/core mcp:warehouse",
+    "mcp:call": "tsx packages/core/src/mcp-warehouse/call.ts",
+    "stats:serve": "cd services/stats && uv run stats-server",
+    "demo": "pnpm --filter @lift/core demo",
+    "ui:dev": "pnpm --filter @lift/ui dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint",
+    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm stats:test",
+    "stats:test": "cd services/stats && uv run pytest -q"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "tsx": "^4.19.2",
+    "vitest": "^2.1.8",
+    "@types/node": "^22.10.5"
+  }
+}
