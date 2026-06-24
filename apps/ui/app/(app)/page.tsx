@@ -1,18 +1,14 @@
-import { Inbox } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
-import { EmptyState } from "@/components/common/EmptyState";
+import { InboxClient } from "@/components/inbox/InboxClient";
+import { getProvider } from "@/server/data-provider";
 
-export default function OpportunitiesPage() {
+export default async function OpportunitiesPage() {
+  const provider = await getProvider();
+  const [run, goals] = await Promise.all([provider.getLatestRun(), provider.listGoals()]);
   return (
     <>
       <PageHeader title="Opportunities" description="A ranked, self-refilling inbox of proven marketing opportunities." />
-      <div className="p-5 lg:p-8">
-        <EmptyState
-          icon={Inbox}
-          title="No discovery run yet"
-          description="Pick a goal and run discovery — the agents will surface proven, holdout-tested opportunities here."
-        />
-      </div>
+      <InboxClient initialRun={run} goals={goals} />
     </>
   );
 }

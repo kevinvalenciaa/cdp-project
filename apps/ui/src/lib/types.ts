@@ -137,3 +137,15 @@ export type EngineEvent =
   | { kind: "cost"; usd: number }
   | { kind: "run_finished"; result: RunDetail }
   | { kind: "error"; message: string };
+
+/** Streaming events emitted while approving + launching an opportunity. */
+export type ActivationEvent =
+  | { kind: "act_started"; title: string }
+  | { kind: "step"; label: string }
+  | { kind: "act_finished"; result: ActivationResult }
+  | { kind: "error"; message: string };
+
+export interface GuardrailRule {
+  id: string;
+  rule: string;
+}
