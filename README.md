@@ -54,10 +54,10 @@ pnpm durable          # compounding memory + crash-resume (no key)
 pnpm activate      ★  # draft work → simulated activation → measured lift
 pnpm bandit           # AI-Decisioning bandit (no key)
 
-pnpm board         ★  # generate board.json + build the static UI (apps/ui/out)
-pnpm ui:dev        ★  # serve the board at localhost:3000
+pnpm board:data    ★  # regenerate the demo fixture (apps/ui/public/board.json)
+pnpm ui:dev           # the product app at localhost:3000 (demo mode — instant, no key)
 
-pnpm verify           # automated suite: build + typecheck + unit tests + stats tests
+pnpm verify           # automated suite: build (core+ui) + typecheck + unit tests + stats tests
 ```
 *If Sonnet 4.6 is congested, prefix `MODEL_REASONING=claude-haiku-4-5-20251001` — the harness also auto-falls back to Haiku.*
 
@@ -66,3 +66,21 @@ pnpm verify           # automated suite: build + typecheck + unit tests + stats 
 - **Rejects seasonality:** the Q4 order surge is flagged "explained by seasonality," not a real change.
 - **Surfaces the real win:** second-purchase SMS, +6.2pp lift (p=0.041), confirmed on activation (+10pp targeting persuadables).
 - **Compounds:** run 2 skips the killed trap from memory; crash-resume replays journaled steps; the bandit beats "human marketing" by ~20%.
+
+## The product app (Lift Compass UI)
+
+`apps/ui` is a Next.js app — the marketer's "Opportunity Inbox": pick a goal → run discovery → watch the agents work → review proven opportunities → approve & launch → see measured results. Screens: Opportunities, Activity, Launched & Measuring, Memory, Settings.
+
+One env flag (`LIFT_MODE`) swaps the data source behind an identical UI:
+- **`demo`** (default) — deterministic, instant, $0, no API/Python. Reads the `board.json` fixture and scripts the streamed activity. Deployable to Vercel; the shareable artifact.
+- **`live`** — the real `@lift/core` engine, streamed over SSE (Server-Sent Events). Runs a real ~45s discovery, persists it, and renders the same UI.
+
+```bash
+pnpm ui:dev                          # demo mode (no key) → localhost:3000
+LIFT_MODE=live pnpm ui:dev           # live mode (needs ANTHROPIC_API_KEY + the seeded warehouse)
+```
+
+## Deploy
+
+- **Demo → Vercel** (the shareable URL): `vercel` (uses `vercel.json`; `LIFT_MODE=demo`, no key, no Python). The live engine never loads, so no native deps are needed at runtime.
+- **Live → one container**: `docker build -t lift-compass . && docker run -e ANTHROPIC_API_KEY=... -p 3000:3000 lift-compass` (the `Dockerfile` installs Node 20 + Python 3.11 + uv, seeds the warehouse, and runs `LIFT_MODE=live next start`). Put it behind basic auth before exposing publicly.
