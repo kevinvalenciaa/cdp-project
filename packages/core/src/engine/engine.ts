@@ -151,7 +151,7 @@ export async function underservedOpportunity(wh: Client): Promise<Opportunity> {
 }
 
 /** The bare LLM (no statistical verifier): judges on raw conversion only — gets fooled by the trap. */
-async function bareLlmJudge(client: Anthropic, ledger: CostLedger, opp: Opportunity): Promise<{ accepted: boolean; reason: string }> {
+export async function bareLlmJudge(client: Anthropic, ledger: CostLedger, opp: Opportunity): Promise<{ accepted: boolean; reason: string }> {
   if (opp.rawConversion == null) return { accepted: false, reason: "n/a" };
   const prompt =
     `You are a busy performance marketer doing a quick gut-check by conversion rate (no time to run experiments). ` +

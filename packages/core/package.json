@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "seed": "tsx src/warehouse/seed.ts",
     "ground-truth": "tsx src/warehouse/ground-truth.ts",
@@ -15,7 +23,8 @@
     "activate": "tsx src/run/activate-demo.ts",
     "bandit": "tsx src/run/bandit-demo.ts",
     "board:data": "tsx src/run/board-data.ts",
-    "build": "tsc -p tsconfig.json",
+    "stream:test": "tsx src/run/stream-test.ts",
+    "build": "tsc -p tsconfig.json && mkdir -p dist/guardrails dist/mcp-warehouse/semantic && cp src/guardrails/guardrails.yaml dist/guardrails/ && cp src/mcp-warehouse/semantic/metrics.yaml dist/mcp-warehouse/semantic/",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
