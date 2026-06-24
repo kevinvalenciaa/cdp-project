@@ -2,11 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
+/* Dark Mode (OLED) — deep-slate, calm, trustworthy. Dark-only product. */
+@layer base {
+  :root,
+  .dark {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 96%;
+    --card: 222 44% 6%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 44% 7%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 217 33% 14%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 11%;
+    --muted-foreground: 215 18% 60%;
+    --accent: 217 33% 15%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 15%;
+    --input: 217 33% 15%;
+    --ring: 217 91% 60%;
+    --radius: 0.625rem;
+
+    --chart-1: 217 91% 60%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 350 89% 60%;
+    --chart-5: 270 80% 65%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 25% 78%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 12%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 217 33% 12%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  /* Visible focus rings for keyboard nav (a11y). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
 }
 
-/* Lightweight markdown styling for the /how-it-works page. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Markdown styling for the /how-it-works page. */
 .md h1 {
   @apply text-3xl font-bold text-white mt-2 mb-4;
 }
