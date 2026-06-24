@@ -94,7 +94,7 @@ export interface RunDetail {
   goal: string;
   generatedAtSeed?: number;
   opportunities: { ranked: Opportunity[]; rejected: Opportunity[] };
-  activation: ActivationResult;
+  activation?: ActivationResult; // demo bundles it; live computes it on approve
   bandit: BanditResult;
   costUsd?: number;
   finishedAt?: string;

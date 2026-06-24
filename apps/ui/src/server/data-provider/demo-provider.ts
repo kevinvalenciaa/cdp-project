@@ -97,7 +97,7 @@ export const demoProvider: DataProvider = {
   },
 
   async *streamActivation(_key, signal) {
-    const result = RUN.activation;
+    const result = RUN.activation!;
     yield { kind: "act_started", title: result.opportunity.title };
     for (const label of [
       "Compiling the audience…",
@@ -114,11 +114,11 @@ export const demoProvider: DataProvider = {
   },
 
   async getActivation() {
-    return RUN.activation;
+    return RUN.activation!;
   },
 
   async listActivations(): Promise<ActivationSummary[]> {
-    const a: ActivationResult = RUN.activation;
+    const a: ActivationResult = RUN.activation!;
     return [
       {
         opportunityKey: a.opportunity.key,

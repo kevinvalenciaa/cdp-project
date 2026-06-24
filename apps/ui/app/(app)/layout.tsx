@@ -3,6 +3,9 @@ import { AppSidebar } from "@/components/shell/AppSidebar";
 import { TopBar } from "@/components/shell/TopBar";
 import { MODE } from "@/lib/mode";
 
+// Always render fresh (live data updates per request; harmless for demo).
+export const dynamic = "force-dynamic";
+
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen">
