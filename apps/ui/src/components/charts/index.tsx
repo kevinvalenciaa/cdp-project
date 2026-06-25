@@ -5,20 +5,21 @@ import type { BanditResult, Opportunity } from "@/lib/types";
 import { moneyCompact, monthlyImpact } from "@/lib/format";
 
 const C = {
-  blue: "#3b82f6",
-  emerald: "#10b981",
-  amber: "#f59e0b",
-  rose: "#f43f5e",
-  slate: "#475569",
-  axis: "#64748b",
+  blue: "#007A92", // teal (primary)
+  emerald: "#006B34", // green (positive)
+  amber: "#B25100", // warning
+  rose: "#D3003B", // coral (risk)
+  slate: "#C7C2C3", // neutral comparison bar
+  axis: "#696365",
 };
 
 const tooltipStyle = {
-  background: "#0b1220",
-  border: "1px solid #1e293b",
+  background: "#FFFFFF",
+  border: "1px solid #E0DEDF",
   borderRadius: 8,
   fontSize: 12,
-  color: "#e2e8f0",
+  color: "#302D2E",
+  boxShadow: "0 4px 8px rgba(0,0,0,.06)",
 };
 
 /** Horizontal ranking of accepted opportunities by estimated monthly impact. */
@@ -33,17 +34,17 @@ export function RankingBar({ opportunities }: { opportunities: Opportunity[] }) 
           type="category"
           dataKey="name"
           width={200}
-          tick={{ fill: "#cbd5e1", fontSize: 12 }}
+          tick={{ fill: "#4B494A", fontSize: 12 }}
           tickLine={false}
           axisLine={false}
         />
         <Tooltip
-          cursor={{ fill: "#1e293b55" }}
+          cursor={{ fill: "#0000000a" }}
           contentStyle={tooltipStyle}
           formatter={(v) => [`${moneyCompact(Number(v))}/mo`, "est. impact"]}
         />
         <Bar dataKey="impact" fill={C.blue} radius={[0, 4, 4, 0]} barSize={22} isAnimationActive={false}>
-          <LabelList dataKey="impact" position="right" formatter={(v) => `${moneyCompact(Number(v))}/mo`} fill="#94a3b8" fontSize={11} />
+          <LabelList dataKey="impact" position="right" formatter={(v) => `${moneyCompact(Number(v))}/mo`} fill="#8F8A8B" fontSize={11} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -59,14 +60,14 @@ export function TreatmentControlBar({ treatmentRate, controlRate }: { treatmentR
   return (
     <ResponsiveContainer width="100%" height={160}>
       <BarChart data={data} margin={{ left: 0, right: 12, top: 12, bottom: 0 }}>
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "#1e293b" }} />
-        <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" width={36} />
-        <Tooltip cursor={{ fill: "#1e293b55" }} contentStyle={tooltipStyle} formatter={(v) => [`${Number(v).toFixed(1)}%`, "conversion"]} />
+        <XAxis dataKey="name" tick={{ fill: "#8F8A8B", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "#E0DEDF" }} />
+        <YAxis tick={{ fill: "#696365", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" width={36} />
+        <Tooltip cursor={{ fill: "#0000000a" }} contentStyle={tooltipStyle} formatter={(v) => [`${Number(v).toFixed(1)}%`, "conversion"]} />
         <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={64} isAnimationActive={false}>
           {data.map((d) => (
             <Cell key={d.name} fill={d.fill} />
           ))}
-          <LabelList dataKey="rate" position="top" formatter={(v) => `${Number(v).toFixed(1)}%`} fill="#cbd5e1" fontSize={11} />
+          <LabelList dataKey="rate" position="top" formatter={(v) => `${Number(v).toFixed(1)}%`} fill="#4B494A" fontSize={11} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -84,14 +85,14 @@ export function BanditChart({ bandit }: { bandit: BanditResult }) {
   return (
     <ResponsiveContainer width="100%" height={170}>
       <BarChart data={data} margin={{ left: 0, right: 12, top: 14, bottom: 0 }}>
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "#1e293b" }} />
-        <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" width={36} />
-        <Tooltip cursor={{ fill: "#1e293b55" }} contentStyle={tooltipStyle} formatter={(v) => [`${Number(v).toFixed(1)}%`, "conversion"]} />
+        <XAxis dataKey="name" tick={{ fill: "#8F8A8B", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "#E0DEDF" }} />
+        <YAxis tick={{ fill: "#696365", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" width={36} />
+        <Tooltip cursor={{ fill: "#0000000a" }} contentStyle={tooltipStyle} formatter={(v) => [`${Number(v).toFixed(1)}%`, "conversion"]} />
         <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={48} isAnimationActive={false}>
           {data.map((d) => (
             <Cell key={d.name} fill={d.fill} />
           ))}
-          <LabelList dataKey="rate" position="top" formatter={(v) => `${Number(v).toFixed(1)}%`} fill="#cbd5e1" fontSize={11} />
+          <LabelList dataKey="rate" position="top" formatter={(v) => `${Number(v).toFixed(1)}%`} fill="#4B494A" fontSize={11} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>

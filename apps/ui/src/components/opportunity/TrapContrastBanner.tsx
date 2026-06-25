@@ -3,31 +3,32 @@ import type { Opportunity } from "@/lib/types";
 import { pct } from "@/lib/format";
 import { StatusPill } from "@/components/common/StatusPill";
 
-/** The headline: a high-conversion campaign a normal AI accepts but the Verifier rejects. */
+/** Our differentiator, in Hightouch's idiom: a high-conversion campaign a generic AI
+ *  would approve but the Verifier rejects for having no incremental lift. */
 export function TrapContrastBanner({ trap }: { trap: Opportunity }) {
   if (!trap.bareLlm) return null;
   return (
-    <section className="rounded-xl border border-rose-500/20 bg-rose-500/[0.06] p-5">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-rose-300">
+    <section className="rounded-xl border border-ht-danger/20 bg-ht-danger-bg/50 p-5">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ht-danger-text">
         <ShieldAlert className="h-4 w-4" aria-hidden />
-        The trap a normal AI falls for
+        Caught before it cost you
       </div>
-      <div className="mt-2 text-lg font-medium text-foreground">
+      <div className="mt-2 text-base font-medium text-foreground">
         {trap.title}
         {trap.rawConversion != null && <span className="text-muted-foreground"> — {pct(trap.rawConversion)} conversion</span>}
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border border-border/60 bg-background/40 p-3.5">
+        <div className="rounded-lg border border-border bg-card p-3.5 shadow-ht-xs">
           <StatusPill tone="rose">
-            <ThumbsUp className="h-3 w-3" aria-hidden /> Bare LLM: accept
+            <ThumbsUp className="h-3 w-3" aria-hidden /> A generic AI approves
           </StatusPill>
-          <p className="mt-2 text-sm text-slate-300">“{trap.bareLlm.reason}”</p>
+          <p className="mt-2 text-sm text-muted-foreground">“{trap.bareLlm.reason}”</p>
         </div>
-        <div className="rounded-lg border border-border/60 bg-background/40 p-3.5">
+        <div className="rounded-lg border border-border bg-card p-3.5 shadow-ht-xs">
           <StatusPill tone="emerald">
-            <XCircle className="h-3 w-3" aria-hidden /> Verifier: reject
+            <XCircle className="h-3 w-3" aria-hidden /> The verifier rejects it
           </StatusPill>
-          <p className="mt-2 text-sm text-slate-300">{trap.reason}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{trap.reason}</p>
         </div>
       </div>
     </section>

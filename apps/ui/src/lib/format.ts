@@ -40,9 +40,35 @@ export function verdictMeta(verdict: string): { label: string; tone: Tone } {
 }
 
 export const TONE_CLASSES: Record<Tone, string> = {
-  emerald: "bg-emerald-500/10 text-emerald-300 ring-emerald-500/25",
-  amber: "bg-amber-500/10 text-amber-300 ring-amber-500/25",
-  rose: "bg-rose-500/10 text-rose-300 ring-rose-500/25",
-  blue: "bg-sky-500/10 text-sky-300 ring-sky-500/25",
-  slate: "bg-slate-700/30 text-slate-300 ring-slate-600/40",
+  emerald: "bg-ht-green-bg text-ht-green ring-ht-green-border",
+  amber: "bg-ht-warning-bg text-ht-warning ring-ht-warning/25",
+  rose: "bg-ht-danger-bg text-ht-danger-text ring-ht-danger/25",
+  blue: "bg-ht-teal-tint text-ht-teal ring-ht-teal/25",
+  slate: "bg-ht-100 text-ht-700 ring-ht-300",
 };
+
+/** Hightouch-style "$X estimated incremental revenue". */
+export function impactLabel(o: Opportunity): string {
+  return `${moneyCompact(monthlyImpact(o))}/mo estimated incremental revenue`;
+}
+
+/** Deterministic "Found at H:MM AM" timestamp from the opportunity key. */
+export function foundAt(key: string): string {
+  let h = 0;
+  for (const c of key) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const hour = 1 + (h % 5);
+  const min = h % 60;
+  return `Found at ${hour}:${String(min).padStart(2, "0")} AM`;
+}
+
+/** The datasets the agent used (provenance chips). */
+export function sourceChips(o: Opportunity): string[] {
+  if (o.type === "seasonality") return ["Order history", "Campaign calendar"];
+  if (o.type === "segment") return ["Purchase history", "Campaign coverage"];
+  return ["Purchase history", "Campaign performance"];
+}
+
+/** The draft work the agent already produced. */
+export function draftWorkChips(o: Opportunity): string[] {
+  return [`${o.reach.toLocaleString()} customers identified`, "Messaging drafted", "Lift measurement configured"];
+}

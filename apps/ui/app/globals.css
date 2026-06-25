@@ -2,45 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dark Mode (OLED) — deep-slate, calm, trustworthy. Dark-only product. */
+/* Hightouch product theme — light, warm-neutral grays, teal primary, dark-teal nav rail. */
 @layer base {
-  :root,
-  .dark {
-    --background: 222 47% 4%;
-    --foreground: 210 40% 96%;
-    --card: 222 44% 6%;
-    --card-foreground: 210 40% 96%;
-    --popover: 222 44% 7%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 8%;
-    --secondary: 217 33% 14%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 217 33% 11%;
-    --muted-foreground: 215 18% 60%;
-    --accent: 217 33% 15%;
-    --accent-foreground: 210 40% 96%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 15%;
-    --input: 217 33% 15%;
-    --ring: 217 91% 60%;
-    --radius: 0.625rem;
+  :root {
+    --background: 0 0% 96%; /* #F5F5F5 app bg */
+    --foreground: 340 3% 18%; /* #302D2E text-primary */
+    --card: 0 0% 100%;
+    --card-foreground: 340 3% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 340 3% 18%;
+    --primary: 190 100% 29%; /* #007A92 teal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 98%; /* #FAFAFA */
+    --secondary-foreground: 340 3% 18%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 330 3% 40%; /* #696365 text-muted */
+    --accent: 0 0% 95%;
+    --accent-foreground: 340 3% 18%;
+    --destructive: 343 100% 41%; /* #D3003B */
+    --destructive-foreground: 0 0% 100%;
+    --border: 330 3% 87%; /* #E0DEDF */
+    --input: 330 3% 87%;
+    --ring: 190 100% 29%;
+    --radius: 0.5rem;
 
-    --chart-1: 217 91% 60%;
-    --chart-2: 160 84% 39%;
-    --chart-3: 38 92% 50%;
-    --chart-4: 350 89% 60%;
-    --chart-5: 270 80% 65%;
+    --chart-teal: 190 100% 29%;
+    --chart-green: 149 100% 21%;
+    --chart-coral: 343 100% 41%;
+    --chart-neutral: 0 0% 78%;
 
-    --sidebar-background: 222 47% 5%;
-    --sidebar-foreground: 210 25% 78%;
-    --sidebar-primary: 217 91% 60%;
+    /* dark-teal nav rail (their real app) */
+    --sidebar-background: 168 45% 12%; /* near-black teal */
+    --sidebar-foreground: 160 10% 86%;
+    --sidebar-primary: 188 65% 46%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 12%;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 217 33% 12%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 168 42% 18%; /* active pill */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 168 35% 17%;
+    --sidebar-ring: 188 65% 46%;
   }
 
   * {
@@ -48,9 +47,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
-  /* Visible focus rings for keyboard nav (a11y). */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
@@ -66,32 +64,32 @@
   }
 }
 
-/* Markdown styling for the /how-it-works page. */
+/* Markdown styling for the /how-it-works page (light). */
 .md h1 {
-  @apply text-3xl font-bold text-white mt-2 mb-4;
+  @apply text-3xl font-semibold text-foreground mt-2 mb-4;
 }
 .md h2 {
-  @apply text-xl font-semibold text-emerald-300 mt-8 mb-3;
+  @apply text-xl font-semibold text-primary mt-8 mb-3;
 }
 .md p {
-  @apply text-slate-300 leading-relaxed my-3;
+  @apply text-muted-foreground leading-relaxed my-3;
 }
 .md ul,
 .md ol {
-  @apply text-slate-300 my-3 ml-5 space-y-1.5 list-disc;
+  @apply text-muted-foreground my-3 ml-5 space-y-1.5 list-disc;
 }
 .md ol {
   @apply list-decimal;
 }
 .md strong {
-  @apply text-white font-semibold;
+  @apply text-foreground font-semibold;
 }
 .md em {
-  @apply text-slate-200 not-italic font-medium;
+  @apply text-foreground/90 not-italic font-medium;
 }
 .md code {
-  @apply bg-slate-800 text-emerald-300 px-1.5 py-0.5 rounded text-sm;
+  @apply bg-muted text-primary px-1.5 py-0.5 rounded text-sm font-mono;
 }
 .md a {
-  @apply text-sky-400 underline;
+  @apply text-primary underline;
 }

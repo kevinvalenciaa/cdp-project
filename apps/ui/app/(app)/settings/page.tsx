@@ -31,7 +31,7 @@ export default async function SettingsPage() {
           <div className="space-y-2">
             {guardrails.map((r) => (
               <div key={r.id} className="rounded-lg border border-border bg-card/40 p-3.5">
-                <div className="font-mono text-xs text-amber-300">{r.id}</div>
+                <div className="font-mono text-xs text-ht-warning">{r.id}</div>
                 <p className="mt-1 text-sm text-slate-300">{r.rule}</p>
               </div>
             ))}

@@ -6,11 +6,11 @@ export function ModeBadge({ mode }: { mode: "demo" | "live" }) {
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1",
-        live ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/25" : "bg-amber-500/10 text-amber-300 ring-amber-500/25",
+        live ? "bg-ht-green-bg text-ht-green ring-ht-green-border" : "bg-ht-teal-tint text-ht-teal ring-primary/20",
       )}
       title={live ? "Live mode — running the real engine" : "Demo mode — deterministic, no API cost"}
     >
-      <span className={cn("h-1.5 w-1.5 rounded-full", live ? "bg-emerald-400" : "bg-amber-400")} aria-hidden />
+      <span className={cn("h-1.5 w-1.5 rounded-full", live ? "bg-ht-green" : "bg-ht-teal")} aria-hidden />
       {live ? "Live" : "Demo"} mode
     </span>
   );

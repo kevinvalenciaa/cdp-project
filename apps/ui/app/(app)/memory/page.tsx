@@ -12,10 +12,10 @@ export default async function MemoryPage() {
 
   return (
     <>
-      <PageHeader title="Memory" description="Verified insights that compound across runs — only Verifier-passed claims are stored." />
+      <PageHeader title="Insights" description="Verified insights that compound across runs — only Verifier-passed claims are stored." />
       <div className="p-5 lg:p-8">
         {insights.length === 0 ? (
-          <EmptyState icon={Brain} title="Memory is empty" description="Verified outcomes are recorded here so the next run starts smarter." />
+          <EmptyState icon={Brain} title="No insights yet" description="Verified outcomes are recorded here so the next run starts smarter." />
         ) : (
           <div className="overflow-hidden rounded-xl border border-border">
             <Table>
