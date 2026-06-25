@@ -33,7 +33,7 @@ export default async function MemoryPage() {
                   return (
                     <TableRow key={`${r.subject}-${i}`}>
                       <TableCell className="font-mono text-xs text-muted-foreground">{r.subject}</TableCell>
-                      <TableCell className="text-sm text-slate-200">{r.claim}</TableCell>
+                      <TableCell className="text-sm text-foreground">{r.claim}</TableCell>
                       <TableCell>
                         <StatusPill tone={m.tone}>{m.label}</StatusPill>
                       </TableCell>

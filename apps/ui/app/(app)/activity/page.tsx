@@ -12,7 +12,7 @@ export default async function ActivityPage() {
       <PageHeader title="Activity" description="Watch the agents work — planning, investigating, rejecting, and confirming." />
       <div className="p-5 lg:p-8">
         {events.length > 0 ? (
-          <div className="rounded-xl border border-border bg-card/40 p-5">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-ht-xs">
             <div className="mb-3 text-sm font-medium text-foreground">Latest discovery run</div>
             <ActivityFeed events={events} />
           </div>

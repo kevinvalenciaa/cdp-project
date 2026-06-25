@@ -17,7 +17,7 @@ export default async function SettingsPage() {
           </h2>
           <div className="flex flex-wrap gap-2">
             {goals.map((g) => (
-              <span key={g.id} className="rounded-full border border-border bg-card/50 px-3 py-1.5 text-sm text-slate-200">
+              <span key={g.id} className="rounded-full border border-border bg-card px-3 py-1.5 text-sm text-foreground shadow-ht-xs">
                 {g.label}
               </span>
             ))}
@@ -30,9 +30,9 @@ export default async function SettingsPage() {
           </h2>
           <div className="space-y-2">
             {guardrails.map((r) => (
-              <div key={r.id} className="rounded-lg border border-border bg-card/40 p-3.5">
+              <div key={r.id} className="rounded-lg border border-border bg-card p-3.5 shadow-ht-xs">
                 <div className="font-mono text-xs text-ht-warning">{r.id}</div>
-                <p className="mt-1 text-sm text-slate-300">{r.rule}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{r.rule}</p>
               </div>
             ))}
           </div>
