@@ -29,7 +29,7 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "lint": "pnpm -r --if-present lint",
-    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm stats:test",
+    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm stats:test && pnpm --filter @lift/core stream:test",
     "stats:test": "cd services/stats && uv run pytest -q"
   },
   "devDependencies": {
