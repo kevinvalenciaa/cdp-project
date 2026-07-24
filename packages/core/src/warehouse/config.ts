@@ -117,7 +117,11 @@ export const CAMPAIGNS: PlantedCampaign[] = [
     audience: "first_time_single_category",
     treatmentRate: 0.11,
     holdoutRate: 0.07, // +4pp TRUE lift — supports the churn-prevention cross-sell archetype
-    holdoutFraction: 0.25,
+    // Balanced 50/50 holdout is deliberate: +4pp at pooled p̄=0.09 needs ~800/arm for 80%
+    // power at α=.05 — a small unbalanced control leaves the TRUE lift undetectable, which
+    // is a seed bug, not a finding. (Detecting it is the Verifier's job; giving the planted
+    // truth enough power to be recoverable is the seed's job.)
+    holdoutFraction: 0.5,
     expectedVerdict: "real_lift",
   },
   {
@@ -160,7 +164,10 @@ export const CAMPAIGNS: PlantedCampaign[] = [
     treatmentRate: 0.085, // ...than evergreen creative on a similar audience (archetype 1 signal)
     holdoutRate: 0.06,
     holdoutFraction: 0.2,
-    expectedVerdict: "real_lift",
+    // The +2.5pp is planted-real but deliberately underpowered (z≈1 even at full pool):
+    // the archetype-1 story is that DROP creative wins the A/B, not that evergreen's small
+    // lift is independently provable. The Verifier should reject it as insignificant.
+    expectedVerdict: "near_miss_insignificant",
   },
 ];
 
