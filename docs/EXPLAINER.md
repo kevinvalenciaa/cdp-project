@@ -14,10 +14,10 @@ Lift Compass replaces the blank screen (and the confident guess) with a short, r
 
 ## Meet the team (the agents), in plain terms
 
-- **The Explorer** — a brainstormer that proposes ideas worth trying ("maybe one-time buyers come back if we text them an offer").
-- **The Investigators** — detectives, each sent to test one idea against the real data and report back a short summary.
-- **The Prioritizer** — the manager who ranks ideas by *how many customers it reaches × how much each is worth × how likely it is to actually work*.
-- **The Verifier** — the skeptic, and the most important character. It challenges every idea and throws out anything the data can't back up.
+- **The Explorer** — a brainstormer that proposes ideas worth trying ("maybe one-time buyers come back if we text them an offer"). Ideas it can't test yet are listed honestly as "unexplored" rather than quietly dropped. *(in code: `engine/explorer.ts`)*
+- **The Investigators** — detectives, each sent to test one idea against the real data and report back a short summary. *(in code: `engine/engine.ts` per-candidate verification, plus the deep-dive subagent in `harness/subagent.ts`)*
+- **The Prioritizer** — the manager who ranks ideas by *how many customers it reaches × how much each is worth × how much lift we proved*. The formula is visible arithmetic, not AI judgment. *(in code: `engine/prioritize.ts`)*
+- **The Verifier** — the skeptic, and the most important character. It challenges every idea twice: first with real statistics, then a second check that the written claim matches the evidence. Anything that fails either check is thrown out. *(in code: `services/stats` + `engine/groundedness.ts`)*
 - **The helpers** — the **warehouse** (the company's big filing cabinet of data); the **secure doorway (MCP)** the agents must use to read it (read-only, every peek logged); the **statistician** (a small service that runs the real math); the **notebook (memory)** where proven lessons are written down; and the **optimizer (bandit)** that learns which version of a message works best.
 
 ## How a run goes, step by step
