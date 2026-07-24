@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { config } from "../shared/env.js";
 import { CostLedger } from "../shared/cost.js";
+import { mapLimit } from "../shared/concurrency.js";
 import type { Creative, CreativeStyle } from "./creatives.js";
 
 export interface Classification {
@@ -18,20 +19,6 @@ export interface FanoutResult {
   agreement: number; // share where classified style == intended style
   styleCounts: Record<string, number>;
   discountLedShare: number;
-}
-
-/** Run an async fn over items with a bounded concurrency pool (rate-limit friendly). */
-async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-  async function worker(): Promise<void> {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i] as T);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return results;
 }
 
 async function classifyOne(client: Anthropic, ledger: CostLedger, creative: Creative): Promise<Classification> {
