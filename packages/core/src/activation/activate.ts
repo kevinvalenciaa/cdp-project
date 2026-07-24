@@ -91,7 +91,9 @@ export async function activateOpportunity(runId: string, preferKey = "SECOND_PUR
       subjectType: "campaign",
       claim: `Activated ${opp.title}: measured +${measurement.upliftPp.toFixed(1)}pp (${measurement.verdict}) on ${audience.persuadableReach} persuadables`,
       verdict: measurement.verdict,
-      evidence: JSON.stringify(out),
+      // Traceable memory: the outcome numbers plus the run + the query fingerprints that
+      // justified activating this opportunity in the first place.
+      evidence: JSON.stringify({ ...out, runIds: [runId], fingerprints: opp.provenance?.queries.map((q) => q.fingerprint) ?? [] }),
       confidence: 0.92,
     });
     memoryWritten = true;

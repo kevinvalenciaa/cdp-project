@@ -36,6 +36,7 @@ async function main(): Promise<void> {
   const r2 = await durableRun("p5-run2");
   console.log(`\nRUN 2 (memory has ${r2.priorInsightCount} insights):`);
   for (const s of r2.skippedFromMemory) console.log(`  ⏭️  skipped ${s.subject} — ${s.claim}`);
+  for (const s of r2.revalidated) console.log(`  ♻️  revalidated ${s.subject} (stale dead-end re-verified, still holds) — ${s.claim}`);
   console.log(`  re-verified ${r2.executedThisRun}; skipped ${r2.skippedFromMemory.length} known dead-ends without re-litigating.`);
 
   // CRASH + RESUME — durability isolated from memory (noMemory) for a clean journal demo.

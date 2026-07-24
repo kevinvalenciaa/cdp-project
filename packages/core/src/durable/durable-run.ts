@@ -1,5 +1,6 @@
 import { connectStats, connectWarehouse } from "../harness/mcp-client.js";
-import { Memory, type InsightRecord, type SubjectType } from "../memory/store.js";
+import { Memory } from "../memory/store.js";
+import { DEAD_END_VERDICTS, toInsight } from "../memory/insights.js";
 import {
   discoverCampaigns,
   seasonalityOpportunity,
@@ -9,40 +10,20 @@ import {
 import type { Opportunity } from "../engine/types.js";
 import { CrashError, Journal } from "./journal.js";
 
-const DEAD_END_VERDICTS = new Set(["no_significant_lift", "explained_by_seasonality"]);
-
-function subjectType(o: Opportunity): SubjectType {
-  return o.type === "experiment" ? "campaign" : o.type === "seasonality" ? "initiative" : "audience";
-}
-
-function toInsight(o: Opportunity, runId: string): Omit<InsightRecord, "id" | "createdAt" | "validUntil"> {
-  const claim = o.accepted
-    ? `${o.title}: verified +${o.upliftPp?.toFixed(1)}pp incremental lift (p=${o.pValue?.toFixed(3)})`
-    : o.verdict === "explained_by_seasonality"
-      ? `${o.title}: seasonal pattern, not a real behavior change`
-      : o.verdict === "needs_test"
-        ? `${o.title}: untargeted high-value cohort; needs a designed holdout to prove lift`
-        : `${o.title}: high raw conversion but NO incremental lift — not persuadable`;
-  return {
-    runId,
-    subject: o.key,
-    subjectType: subjectType(o),
-    claim,
-    verdict: o.verdict,
-    evidence: JSON.stringify(o.evidence),
-    confidence: o.accepted ? 0.9 : 0.8,
-  };
-}
-
 export interface DurableRunResult {
   runId: string;
   resumedSteps: string[];
   executedThisRun: number;
   opportunities: Opportunity[];
   skippedFromMemory: { subject: string; claim: string }[];
+  /** Stale dead-ends that were cheaply re-verified and re-confirmed this run. */
+  revalidated: { subject: string; claim: string }[];
   insightsWritten: number;
   priorInsightCount: number;
 }
+
+/** Dead-end insights younger than this are trusted outright; older ones get re-verified. */
+const FRESH_DAYS = 14;
 
 /**
  * Run the opportunity verification pipeline as durable, journaled steps, consulting and
@@ -69,6 +50,7 @@ export async function durableRun(
 
   const opportunities: Opportunity[] = [];
   const skippedFromMemory: { subject: string; claim: string }[] = [];
+  const revalidated: { subject: string; claim: string }[] = [];
   let insightsWritten = 0;
   let executedThisRun = 0;
 
@@ -76,8 +58,20 @@ export async function durableRun(
     for (const cand of candidates) {
       const known = prior.find((p) => p.subject === cand.key && DEAD_END_VERDICTS.has(p.verdict));
       if (known) {
-        skippedFromMemory.push({ subject: cand.key, claim: known.claim });
-        continue; // do not re-verify a dead-end already proven in memory
+        const fresh = Date.now() - Date.parse(known.lastValidated ?? known.createdAt) < FRESH_DAYS * 86_400_000;
+        if (fresh) {
+          skippedFromMemory.push({ subject: cand.key, claim: known.claim });
+          continue; // recently-confirmed dead-end — do not re-litigate
+        }
+        // Stale dead-end: cheap deterministic re-verification (SQL + stats, no LLM). If it
+        // still holds, refresh last_validated and grow confidence a notch; if the verdict
+        // CHANGED, fall through to the normal path so the new truth supersedes the old one.
+        const recheck = await cand.make();
+        if (DEAD_END_VERDICTS.has(recheck.verdict)) {
+          await memory.revalidate(known.id, Math.min(0.95, known.confidence + 0.02));
+          revalidated.push({ subject: cand.key, claim: known.claim });
+          continue;
+        }
       }
       const { result, cached } = await journal.step(`verify:${cand.key}`, () => cand.make());
       const opp = result as Opportunity;
@@ -109,6 +103,7 @@ export async function durableRun(
     executedThisRun,
     opportunities,
     skippedFromMemory,
+    revalidated,
     insightsWritten,
     priorInsightCount: prior.length,
   };
