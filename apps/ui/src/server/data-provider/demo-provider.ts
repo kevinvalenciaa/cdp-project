@@ -40,14 +40,31 @@ function buildActivity(run: RunDetail): EngineEvent[] {
   const events: EngineEvent[] = [];
   const candidates = [...run.opportunities.rejected, ...run.opportunities.ranked]; // rejections first, build to the wins
   events.push({ kind: "run_started", goal: run.goal, candidateCount: candidates.length });
+  // Mirror the live engine's stage narrative: explorer → hypotheses → verify → prioritize.
+  events.push({ kind: "explorer_started", probeCount: candidates.length });
+  for (const o of candidates.slice(0, 3)) {
+    events.push({
+      kind: "hypothesis_proposed",
+      text: o.hypothesis?.rationale ? `[${o.key}] ${o.hypothesis.rationale}` : `[${o.key}] ${o.segment} looks worth testing against the goal.`,
+      matchedProbe: true,
+    });
+  }
   events.push({ kind: "planning", text: "Planning the investigation — scanning campaigns, segments, and the order time-series." });
   let cost = 0;
   for (const o of candidates) {
     events.push({ kind: "candidate_started", key: o.key, title: o.title });
-    events.push({ kind: "candidate_verified", key: o.key, title: o.title, category: category(o), detail: o.reason });
+    events.push({
+      kind: "candidate_verified",
+      key: o.key,
+      title: o.title,
+      category: category(o),
+      detail: o.reason,
+      grounded: o.accepted ? (o.grounded ? o.grounded.verdict === "pass" : true) : undefined,
+    });
     cost += 0.015;
     events.push({ kind: "cost", usd: Number(cost.toFixed(3)) });
   }
+  events.push({ kind: "prioritizing", acceptedCount: run.opportunities.ranked.length, formula: "reach × value × verified uplift" });
   events.push({ kind: "run_finished", result: run });
   return events;
 }

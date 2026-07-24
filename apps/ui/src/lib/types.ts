@@ -20,6 +20,14 @@ export interface Opportunity {
   reason: string;
   bareLlm?: { accepted: boolean; reason: string };
   evidence?: Record<string, unknown>;
+  // New engine fields (optional — older board.json fixtures predate them).
+  naiveClaim?: string | null;
+  provenance?: {
+    queries: { sql: string; resultHash: string; fingerprint: string }[];
+    stats: { tool: string; args: Record<string, unknown>; verdict: string } | null;
+  };
+  hypothesis?: { rationale: string; source: "llm" | "static" };
+  grounded?: { verdict: "pass" | "demote" | "n/a"; reason: string };
 }
 
 export interface AudienceDef {
@@ -125,7 +133,10 @@ export interface ActivationSummary {
 /** Streaming events emitted during a discovery run (live SSE + demo script). */
 export type EngineEvent =
   | { kind: "run_started"; goal: string; candidateCount: number }
+  | { kind: "explorer_started"; probeCount: number }
+  | { kind: "hypothesis_proposed"; text: string; matchedProbe: boolean }
   | { kind: "planning"; text: string }
+  | { kind: "memory_hit"; subject: string; claim: string }
   | { kind: "candidate_started"; key: string; title: string }
   | {
       kind: "candidate_verified";
@@ -133,7 +144,10 @@ export type EngineEvent =
       title: string;
       category: "found" | "rejected-trap" | "rejected-seasonal" | "needs-test";
       detail: string;
+      /** Verifier check #2 (groundedness) — present for accepted candidates in live runs. */
+      grounded?: boolean;
     }
+  | { kind: "prioritizing"; acceptedCount: number; formula: string }
   | { kind: "cost"; usd: number }
   | { kind: "run_finished"; result: RunDetail }
   | { kind: "error"; message: string };

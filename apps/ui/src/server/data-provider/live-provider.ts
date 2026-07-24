@@ -37,11 +37,17 @@ function categoryOf(o: { accepted: boolean; verdict: string }): Category {
   return "rejected-trap";
 }
 
-function toRunDetail(result: { ranked: unknown[]; rejected: unknown[]; generatedFromSeed: number }, bandit: unknown, goal: string): RunDetail {
+function toRunDetail(
+  result: { ranked: unknown[]; rejected: unknown[]; generatedFromSeed: number },
+  bandit: unknown,
+  goal: string,
+  activation?: ActivationResult,
+): RunDetail {
   return {
     goal,
     generatedAtSeed: result.generatedFromSeed,
     opportunities: { ranked: result.ranked as Opportunity[], rejected: result.rejected as Opportunity[] },
+    activation,
     bandit: bandit as BanditResult,
   };
 }
@@ -107,23 +113,51 @@ export const liveProvider: DataProvider = {
         push(e);
       };
       try {
+        // The run_finished handoff is deferred until after the engine resolves so we can
+        // attach a DRAFT activation for the top opportunity (the Plan tab's content) before
+        // persisting — this is what keeps live mode at parity with the demo fixture.
+        let finished: { result: Parameters<typeof toRunDetail>[0]; bandit: unknown } | null = null;
         await runEngineStreaming(
           goal,
           (ce: EngineStreamEvent) => {
             if (ce.kind === "run_started") emit({ kind: "run_started", goal: ce.goal, candidateCount: ce.candidateCount });
+            else if (ce.kind === "explorer_started") emit({ kind: "explorer_started", probeCount: ce.probeCount });
+            else if (ce.kind === "hypothesis_proposed")
+              emit({ kind: "hypothesis_proposed", text: `[${ce.hypothesis.key}] ${ce.hypothesis.rationale}`, matchedProbe: ce.matchedProbe });
             else if (ce.kind === "planning") emit({ kind: "planning", text: ce.text });
+            else if (ce.kind === "memory_hit") emit({ kind: "memory_hit", subject: ce.subject, claim: ce.claim });
             else if (ce.kind === "candidate_started") emit({ kind: "candidate_started", key: ce.key, title: ce.title });
             else if (ce.kind === "candidate_verified")
-              emit({ kind: "candidate_verified", key: ce.opportunity.key, title: ce.opportunity.title, category: categoryOf(ce.opportunity), detail: ce.opportunity.reason });
+              emit({
+                kind: "candidate_verified",
+                key: ce.opportunity.key,
+                title: ce.opportunity.title,
+                category: categoryOf(ce.opportunity),
+                detail: ce.opportunity.reason,
+                grounded: ce.opportunity.grounded && ce.opportunity.grounded.verdict !== "n/a" ? ce.opportunity.grounded.verdict === "pass" : undefined,
+              });
+            else if (ce.kind === "prioritizing") emit({ kind: "prioritizing", acceptedCount: ce.acceptedCount, formula: ce.formula });
             else if (ce.kind === "cost") emit({ kind: "cost", usd: ce.usd });
-            else if (ce.kind === "run_finished") {
-              const detail = toRunDetail(ce.result, ce.bandit, goal);
-              store.saveRun(detail, activity);
-              push({ kind: "run_finished", result: detail });
-            }
+            else if (ce.kind === "run_finished") finished = { result: ce.result, bandit: ce.bandit };
           },
-          { withBareLlmContrast: true },
+          { withBareLlmContrast: true, memory: true },
         );
+        if (finished) {
+          const { result, bandit } = finished as { result: Parameters<typeof toRunDetail>[0]; bandit: unknown };
+          let activation: ActivationResult | undefined;
+          const top = (result.ranked as Opportunity[])[0];
+          if (top) {
+            emit({ kind: "planning", text: `Drafting a launch plan for “${top.title}”…` });
+            try {
+              activation = (await activateOpportunity(`live-${Date.now()}`, top.key)) as unknown as ActivationResult;
+            } catch {
+              /* draft is best-effort — the Plan tab shows its pre-launch placeholder */
+            }
+          }
+          const detail = toRunDetail(result, bandit, goal, activation);
+          store.saveRun(detail, activity);
+          push({ kind: "run_finished", result: detail });
+        }
       } catch (e) {
         push({ kind: "error", message: String(e) });
       } finally {

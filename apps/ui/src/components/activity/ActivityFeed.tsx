@@ -1,6 +1,6 @@
 "use client";
 
-import { Brain, CheckCheck, CheckCircle2, CircleDashed, Clock, Flag, Loader2, XCircle } from "lucide-react";
+import { Brain, CheckCheck, CheckCircle2, CircleDashed, Clock, Flag, Lightbulb, ListOrdered, Loader2, ShieldCheck, Telescope, XCircle } from "lucide-react";
 import type { EngineEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/common/StatusPill";
@@ -37,10 +37,43 @@ export function ActivityFeed({ events, streaming }: { events: EngineEvent[]; str
               <span className="text-muted-foreground"> for “{e.goal}”</span>
             </Row>
           );
+        if (e.kind === "explorer_started")
+          return (
+            <Row key={i} icon={<Telescope className="h-4 w-4 text-ht-teal" />}>
+              <span className="text-foreground">Explorer proposing hypotheses</span>
+              <span className="text-muted-foreground"> across {e.probeCount} candidates</span>
+            </Row>
+          );
+        if (e.kind === "hypothesis_proposed")
+          return (
+            <Row key={i} icon={<Lightbulb className="h-4 w-4 text-ht-teal" />}>
+              <span className="text-foreground/80">{e.text}</span>
+              {!e.matchedProbe && (
+                <StatusPill tone="slate" className="ml-2 align-middle">
+                  unexplored
+                </StatusPill>
+              )}
+            </Row>
+          );
         if (e.kind === "planning")
           return (
             <Row key={i} icon={<Brain className="h-4 w-4 text-ht-teal" />}>
               <span className="text-foreground/80">{e.text}</span>
+            </Row>
+          );
+        if (e.kind === "memory_hit")
+          return (
+            <Row key={i} icon={<Brain className="h-4 w-4 text-muted-foreground" />}>
+              <span className="text-muted-foreground">
+                Skipping {e.subject} — memory: {e.claim}
+              </span>
+            </Row>
+          );
+        if (e.kind === "prioritizing")
+          return (
+            <Row key={i} icon={<ListOrdered className="h-4 w-4 text-ht-teal" />}>
+              <span className="text-foreground">Ranking {e.acceptedCount} verified opportunities</span>
+              <span className="text-muted-foreground"> by {e.formula}</span>
             </Row>
           );
         if (e.kind === "candidate_started")
@@ -57,6 +90,11 @@ export function ActivityFeed({ events, streaming }: { events: EngineEvent[]; str
               <StatusPill tone={meta.tone} className="ml-2 align-middle">
                 {meta.label}
               </StatusPill>
+              {e.grounded !== undefined && (
+                <StatusPill tone={e.grounded ? "emerald" : "rose"} className="ml-1.5 align-middle">
+                  <ShieldCheck className="h-3 w-3" /> {e.grounded ? "grounded" : "ungrounded"}
+                </StatusPill>
+              )}
             </Row>
           );
         }

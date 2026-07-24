@@ -106,7 +106,7 @@ export function OpportunityDetail({
                 </span>
               ))}
             </div>
-            {!o.accepted && o.bareLlm && (
+            {!o.accepted && o.bareLlm?.accepted && (
               <div className="rounded-lg border border-ht-danger/20 bg-ht-danger-bg/60 p-3 text-xs text-muted-foreground">
                 A generic AI would <span className="text-ht-danger-text">approve</span> this: “{o.bareLlm.reason}” — the Verifier rejected it.
               </div>
@@ -114,26 +114,34 @@ export function OpportunityDetail({
           </TabsContent>
 
           {/* Plan */}
-          {o.accepted && activation && (
+          {o.accepted && (
             <TabsContent value="plan" className="space-y-4 px-6 py-5">
-              <div className="rounded-lg border border-border bg-ht-50 p-3 text-sm">
-                <div className="flex items-center gap-2 text-foreground">
-                  <Users className="h-4 w-4 text-muted-foreground" aria-hidden />
-                  {activation.audience.label}
+              {activation ? (
+                <>
+                  <div className="rounded-lg border border-border bg-ht-50 p-3 text-sm">
+                    <div className="flex items-center gap-2 text-foreground">
+                      <Users className="h-4 w-4 text-muted-foreground" aria-hidden />
+                      {activation.audience.label}
+                    </div>
+                    <div className="mt-1 text-muted-foreground">
+                      reach {activation.audience.reach.toLocaleString()} · <span className="text-ht-green">{activation.audience.persuadableReach.toLocaleString()} persuadable</span> · {activation.audience.channel}
+                    </div>
+                  </div>
+                  {activation.variants.map((v) => (
+                    <div key={v.id} className="rounded-lg border border-border bg-card p-3 text-sm text-foreground">
+                      <span className="mr-2 font-mono text-xs text-muted-foreground">{v.id}</span>
+                      {v.text}
+                    </div>
+                  ))}
+                  <StatusPill tone="emerald">
+                    <CheckCircle2 className="h-3 w-3" aria-hidden /> guardrail clear
+                  </StatusPill>
+                </>
+              ) : (
+                <div className="rounded-lg border border-dashed border-border bg-ht-50 p-4 text-sm text-muted-foreground">
+                  Draft plan generates on launch — approve to compile the audience, draft on-brand variants, and run the brand guardrails.
                 </div>
-                <div className="mt-1 text-muted-foreground">
-                  reach {activation.audience.reach.toLocaleString()} · <span className="text-ht-green">{activation.audience.persuadableReach.toLocaleString()} persuadable</span> · {activation.audience.channel}
-                </div>
-              </div>
-              {activation.variants.map((v) => (
-                <div key={v.id} className="rounded-lg border border-border bg-card p-3 text-sm text-foreground">
-                  <span className="mr-2 font-mono text-xs text-muted-foreground">{v.id}</span>
-                  {v.text}
-                </div>
-              ))}
-              <StatusPill tone="emerald">
-                <CheckCircle2 className="h-3 w-3" aria-hidden /> guardrail clear
-              </StatusPill>
+              )}
 
               {launching && (
                 <div className="flex items-center gap-2 rounded-lg border border-border bg-ht-50 p-3 text-sm text-muted-foreground">
