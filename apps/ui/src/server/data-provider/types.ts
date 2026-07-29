@@ -1,3 +1,4 @@
+import type { DecisionBundle, EventBatch, IngestAck } from "@lift/protocol";
 import type {
   ActivationEvent,
   ActivationResult,
@@ -31,6 +32,10 @@ export interface DataProvider {
   listActivations(): Promise<ActivationSummary[]>;
   getBandit(): Promise<BanditResult>;
   listMemory(): Promise<InsightRecord[]>;
+  /** The current decision bundle for devices (etag = content-hash bundle_id), or null if none compiled. */
+  getBundle(): Promise<{ bundle: DecisionBundle; etag: string } | null>;
+  /** Accept a device event batch (durable, deduped by batch_id). */
+  ingest(batch: EventBatch): Promise<IngestAck>;
 }
 
 export function sleep(ms: number, signal?: AbortSignal): Promise<void> {

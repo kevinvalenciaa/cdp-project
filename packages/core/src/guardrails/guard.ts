@@ -6,7 +6,7 @@ import { parse as parseYaml } from "yaml";
 import { config } from "../shared/env.js";
 import type { CostLedger } from "../shared/cost.js";
 
-interface Rule {
+export interface Rule {
   id: string;
   rule: string;
 }

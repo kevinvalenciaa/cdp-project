@@ -208,7 +208,7 @@ export function OpportunityDetail({
                         · {activation.audience.channel}
                       </div>
                       <code className="mt-2 block rounded bg-card px-2 py-1 font-mono text-[11px] text-muted-foreground">
-                        persuadable: {activation.audience.persuadableFilter}
+                        persuadable: {activation.audience.persuadableSql}
                       </code>
                     </div>
                   </section>

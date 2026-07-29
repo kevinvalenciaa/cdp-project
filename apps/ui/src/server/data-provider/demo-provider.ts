@@ -10,10 +10,32 @@ import type {
   Opportunity,
   RunDetail,
 } from "@/lib/types";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { DecisionBundleSchema, type DecisionBundle } from "@lift/protocol";
+import { ingestBatch } from "@/server/delivery/ingest-store";
 import boardData from "../../../public/board.json";
 import { type DataProvider, sleep } from "./types";
 
 const RUN = boardData as unknown as RunDetail;
+
+/**
+ * The compiled bundle fixture sits next to board.json (both written by core's
+ * board-data script). Lazy fs read rather than a static import so the app
+ * builds and runs before the fixture exists; schema-parsed once, then cached.
+ */
+let bundleCache: { bundle: DecisionBundle; etag: string } | null | undefined;
+function loadBundleFixture(): { bundle: DecisionBundle; etag: string } | null {
+  if (bundleCache !== undefined) return bundleCache;
+  try {
+    const raw = JSON.parse(readFileSync(resolve(process.cwd(), "public/bundle.json"), "utf8"));
+    const bundle = DecisionBundleSchema.parse(raw);
+    bundleCache = { bundle, etag: bundle.bundle_id };
+  } catch {
+    bundleCache = null; // fixture not generated yet — /api/bundle 404s honestly
+  }
+  return bundleCache;
+}
 
 const GOALS: Goal[] = [
   { id: "second-purchase", label: "Grow second purchases from one-time buyers", preset: true },
@@ -160,5 +182,17 @@ export const demoProvider: DataProvider = {
 
   async listMemory() {
     return memoryFrom(RUN);
+  },
+
+  async getBundle() {
+    return loadBundleFixture();
+  },
+
+  async ingest(batch) {
+    // Demo ingest is file writes only — no core import, no duckdb, no LLM.
+    // The memory uplink happens in listMemory: suppression aggregates read
+    // back as observed_delivery insights, so the "next-run context" beat works
+    // with zero spend.
+    return ingestBatch(batch).ack;
   },
 };

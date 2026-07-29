@@ -1,4 +1,13 @@
-import { activateOpportunity, Memory, runBandit, runEngineStreaming, type EngineStreamEvent } from "@lift/core";
+import {
+  activateOpportunity,
+  compileDecisionBundle,
+  connectWarehouse,
+  Memory,
+  runBandit,
+  runEngineStreaming,
+  type EngineStreamEvent,
+} from "@lift/core";
+import type { DecisionBundle } from "@lift/protocol";
 import type {
   ActivationEvent,
   ActivationResult,
@@ -11,6 +20,7 @@ import type {
   Opportunity,
   RunDetail,
 } from "@/lib/types";
+import { ingestBatch } from "@/server/delivery/ingest-store";
 import { store } from "@/server/store";
 import { release, tryAcquire } from "@/server/run-lock";
 import { type DataProvider, sleep } from "./types";
@@ -152,7 +162,7 @@ export const liveProvider: DataProvider = {
           if (top) {
             emit({ kind: "planning", text: `Drafting a launch plan for “${top.title}”…` });
             try {
-              activation = (await activateOpportunity(`live-${Date.now()}`, top.key)) as unknown as ActivationResult;
+              activation = await activateOpportunity(`live-${Date.now()}`, top.key);
             } catch {
               /* draft is best-effort — the Plan tab shows its pre-launch placeholder */
             }
@@ -183,7 +193,7 @@ export const liveProvider: DataProvider = {
         push({ kind: "step", label });
       }
       try {
-        const result = (await activateOpportunity(`live-${Date.now()}`, key)) as unknown as ActivationResult;
+        const result = await activateOpportunity(`live-${Date.now()}`, key);
         store.addActivation({
           opportunityKey: result.opportunity.key,
           title: result.opportunity.title,
@@ -203,13 +213,13 @@ export const liveProvider: DataProvider = {
   },
 
   async getActivation(key) {
-    return (await activateOpportunity(`live-${Date.now()}`, key)) as unknown as ActivationResult;
+    return activateOpportunity(`live-${Date.now()}`, key);
   },
   async listActivations(): Promise<ActivationSummary[]> {
     return store.listActivations();
   },
   async getBandit(): Promise<BanditResult> {
-    return runBandit(42) as unknown as BanditResult;
+    return runBandit(42);
   },
   async listMemory(): Promise<InsightRecord[]> {
     const mem = await Memory.open();
@@ -217,11 +227,35 @@ export const liveProvider: DataProvider = {
     mem.close();
     return records.map((r) => ({
       subject: r.subject,
-      subjectType: String(r.subjectType),
+      subjectType: r.subjectType,
       claim: r.claim,
       verdict: r.verdict,
       confidence: r.confidence,
       validUntil: r.validUntil,
     }));
   },
+
+  async getBundle() {
+    // Compile from the latest stored run's draft activation; cache by the
+    // activation identity so repeated polls reuse the content-hashed bundle.
+    const run = store.getLatestRun();
+    const activation = run?.activation;
+    if (!activation) return null;
+    const cacheKey = `${activation.opportunity.key}|${activation.sync?.artifactPath ?? "unsynced"}`;
+    if (liveBundleCache?.key === cacheKey) return liveBundleCache.value;
+    const wh = await connectWarehouse();
+    try {
+      const bundle: DecisionBundle = await compileDecisionBundle(wh, "live-bundle", activation);
+      liveBundleCache = { key: cacheKey, value: { bundle, etag: bundle.bundle_id } };
+      return liveBundleCache.value;
+    } finally {
+      await wh.close();
+    }
+  },
+
+  async ingest(batch) {
+    return ingestBatch(batch).ack;
+  },
 };
+
+let liveBundleCache: { key: string; value: { bundle: DecisionBundle; etag: string } } | null = null;

@@ -1,95 +1,32 @@
-// Shared UI types. These mirror @lift/core's outputs (board.json shape) plus a few
-// product-level additions. Both the demo and live data providers satisfy these.
+// UI types. Wire/domain shapes come STRAIGHT from their sources of truth —
+// type-only re-exports (erased by verbatimModuleSyntax, so the demo runtime
+// never loads core) instead of the 165 hand-copied mirror lines that used to
+// live here and drift. Only genuinely UI-local view types are declared below.
 
-export type Verdict = "real_lift" | "no_significant_lift" | "explained_by_seasonality" | "needs_test";
+import type { ActivationResult as CoreActivationResult, InsightRecord as CoreInsightRecord } from "@lift/core";
 
-export interface Opportunity {
-  key: string;
-  title: string;
-  segment: string;
-  type: "experiment" | "seasonality" | "segment";
-  reach: number;
-  value: number;
-  rawConversion: number | null;
-  upliftPp: number | null;
-  ci: [number, number] | null;
-  pValue: number | null;
-  verdict: Verdict;
-  accepted: boolean;
-  score: number;
-  reason: string;
-  bareLlm?: { accepted: boolean; reason: string };
-  evidence?: Record<string, unknown>;
-  // New engine fields (optional — older board.json fixtures predate them).
-  naiveClaim?: string | null;
-  provenance?: {
-    queries: { sql: string; resultHash: string; fingerprint: string }[];
-    stats: { tool: string; args: Record<string, unknown>; verdict: string } | null;
-  };
-  hypothesis?: { rationale: string; source: "llm" | "static" };
-  grounded?: { verdict: "pass" | "demote" | "n/a"; reason: string };
-}
+export type {
+  Verdict,
+  Opportunity,
+  AudienceDef,
+  Variant,
+  ActivationResult,
+  BanditResult,
+  Rule as GuardrailRule,
+} from "@lift/core";
 
-export interface AudienceDef {
-  label: string;
-  channel: "sms" | "email" | "push";
-  reach: number;
-  persuadableReach: number;
-  persuadableFilter: string;
-  sampleMembers: number[];
-}
+/** The holdout measurement block, as core computes it. */
+export type Measurement = CoreActivationResult["measurement"];
 
-export interface Variant {
-  id: string;
-  channel: string;
-  text: string;
-}
+/** The UI renders a projection of memory records; core keeps ids/evidence. */
+export type InsightRecord = Pick<
+  CoreInsightRecord,
+  "subject" | "subjectType" | "claim" | "verdict" | "confidence" | "validUntil"
+>;
 
-export interface Measurement {
-  treatmentN: number;
-  controlN: number;
-  treatmentConv: number;
-  controlConv: number;
-  upliftPp: number;
-  ci: [number, number];
-  pValue: number;
-  verdict: string;
-}
-
-export interface ActivationResult {
-  opportunity: Opportunity;
-  audience: AudienceDef;
-  brief: string;
-  variants: Variant[];
-  guardrail: { allowed: boolean };
-  sync: { destination: string; membersSynced: number; artifactPath: string } | null;
-  measurement: Measurement;
-  memoryWritten: boolean;
-  costUsd: number;
-}
-
-export interface BanditResult {
-  impressions: number;
-  learnedBest: string[];
-  oracleBest: string[];
-  converged: boolean;
-  banditRate: number;
-  randomRate: number;
-  globalBestRate: number;
-  oracleRate: number;
-  liftVsHoldout: number;
-  liftVsGlobalBest: number;
-  globalBestVariant: string;
-}
-
-export interface InsightRecord {
-  subject: string;
-  subjectType: string;
-  claim: string;
-  verdict: string;
-  confidence: number;
-  validUntil: string;
-}
+// ---------------------------------------------------------------------------
+// UI-local view types (not mirrors — these exist only for the product UI).
+// ---------------------------------------------------------------------------
 
 export interface Goal {
   id: string;
@@ -97,13 +34,13 @@ export interface Goal {
   preset: boolean;
 }
 
-/** The full payload behind the board (the existing board.json fixture). */
+/** The full payload behind the board (the board.json fixture / live run). */
 export interface RunDetail {
   goal: string;
   generatedAtSeed?: number;
-  opportunities: { ranked: Opportunity[]; rejected: Opportunity[] };
-  activation?: ActivationResult; // demo bundles it; live computes it on approve
-  bandit: BanditResult;
+  opportunities: { ranked: import("@lift/core").Opportunity[]; rejected: import("@lift/core").Opportunity[] };
+  activation?: CoreActivationResult; // demo bundles it; live computes it on approve
+  bandit: import("@lift/core").BanditResult;
   costUsd?: number;
   finishedAt?: string;
 }
@@ -156,10 +93,5 @@ export type EngineEvent =
 export type ActivationEvent =
   | { kind: "act_started"; title: string }
   | { kind: "step"; label: string }
-  | { kind: "act_finished"; result: ActivationResult }
+  | { kind: "act_finished"; result: CoreActivationResult }
   | { kind: "error"; message: string };
-
-export interface GuardrailRule {
-  id: string;
-  rule: string;
-}

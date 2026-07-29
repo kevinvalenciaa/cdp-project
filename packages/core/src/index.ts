@@ -4,6 +4,8 @@ export { runEngineStreaming, type EngineStreamEvent } from "./engine/engine-stre
 export type { Opportunity, EngineResult, Verdict, Hypothesis } from "./engine/types.js";
 export type { Provenance, QueryProvenance, StatsProvenance } from "./engine/provenance.js";
 export { activateOpportunity, type ActivationResult } from "./activation/activate.js";
+export { applyFrequencyCap, type CapResult } from "./activation/caps.js";
+export type { Rule } from "./guardrails/guard.js";
 export { predicateToSql, type Predicate, type PredicateLeaf, type PredicateOp } from "./activation/predicate.js";
 export type { AudienceDef } from "./activation/audience.js";
 export type { Variant, SyncResult } from "./activation/connectors.js";
