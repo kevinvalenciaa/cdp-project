@@ -88,8 +88,14 @@ export function evaluateBundle(bundle: DecisionBundle, ctx: EvalCtx, ledger: rea
     }
 
     // 4. Arm selection over the shipped posteriors (server learns; device selects).
+    // "attr:<name>" resolves the segment per user — e.g. "attr:value_tier"
+    // keys the posteriors by THIS user's tier, which is what makes the
+    // selection personalisation rather than a global best.
+    const segmentKey = c.segment_key.startsWith("attr:")
+      ? String(ctx.attrs[c.segment_key.slice(5)] ?? "")
+      : c.segment_key;
     const seed = ctx.seed ?? fnv1a(`${ctx.deviceId}|${bundle.bundle_id}`);
-    const arm = selectArm(bundle.policy, c.segment_key, c.arms, new Rng(seed));
+    const arm = selectArm(bundle.policy, segmentKey, c.arms, new Rng(seed));
     return {
       outcome: "delivered",
       surface: ctx.surface,

@@ -8,4 +8,9 @@ export { predicateToSql, type Predicate, type PredicateLeaf, type PredicateOp } 
 export type { AudienceDef } from "./activation/audience.js";
 export type { Variant, SyncResult } from "./activation/connectors.js";
 export { runBandit, SCENARIO, type BanditResult } from "./decisioning/bandit.js";
+export { initPolicy, selectVariant, update, posteriorBest, type PolicyState } from "./decisioning/policy.js";
 export { Memory, type InsightRecord, type SubjectType } from "./memory/store.js";
+export { compileDecisionBundle, dataAnchorIso, DELIVERY_CAPS, FREQUENCY_CAP } from "./delivery/compile.js";
+export { learnPosteriors } from "./delivery/posteriors.js";
+export { bundlePath, etagOf, readBundle, writeBundle } from "./delivery/bundle-store.js";
+export { connectWarehouse, connectStats } from "./harness/mcp-client.js";

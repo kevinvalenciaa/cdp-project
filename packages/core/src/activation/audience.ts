@@ -13,7 +13,7 @@ async function rows(wh: Client, sql: string): Promise<Record<string, unknown>[]>
  * Predicates are canonical; SQL is generated from them (predicateToSql), never hand-written —
  * the same predicate ships to the device via the delivery bundle.
  */
-const AUDIENCE: Record<string, { label: string; filter: Predicate; persuadableFilter: Predicate; channel: "sms" | "email" | "push" }> = {
+export const AUDIENCE: Record<string, { label: string; filter: Predicate; persuadableFilter: Predicate; channel: "sms" | "email" | "push" }> = {
   SECOND_PURCHASE_SMS: {
     label: "One-time buyers",
     filter: { column: "is_one_time_buyer", op: "=", value: true },

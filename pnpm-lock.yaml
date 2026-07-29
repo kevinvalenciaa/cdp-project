@@ -120,6 +120,9 @@ importers:
       '@duckdb/node-api':
         specifier: 1.5.4-r.1
         version: 1.5.4-r.1
+      '@lift/protocol':
+        specifier: workspace:^
+        version: link:../protocol
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
@@ -132,6 +135,10 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
+    devDependencies:
+      '@lift/sdk':
+        specifier: workspace:^
+        version: link:../sdk
 
   packages/protocol:
     dependencies:

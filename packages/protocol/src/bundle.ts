@@ -84,7 +84,12 @@ export const CampaignSchema = z.object({
   /** Higher wins arbitration when several campaigns are eligible for one surface. */
   priority: z.number().int(),
   eligibility: PredicateSchema,
-  /** Key into PolicySnapshot.segments for arm selection. */
+  /**
+   * Key into PolicySnapshot.segments for arm selection. Two forms:
+   *   - a literal segment name ("mid")
+   *   - "attr:<attribute>" — resolved per user from ctx.attrs at decision time
+   *     (e.g. "attr:value_tier" keys the posteriors by the user's tier).
+   */
   segment_key: z.string().min(1),
   caps: z.array(CapSchema).default([]),
   arms: z.array(ArmSchema).min(1),
