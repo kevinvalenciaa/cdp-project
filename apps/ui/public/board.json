@@ -54,7 +54,7 @@
           }
         },
         "hypothesis": {
-          "rationale": "Limited-time spring drops may drive faster second purchases vs. evergreen creative.",
+          "rationale": "Scarcity/urgency messaging may drive repeat purchases faster than evergreen creative.",
           "source": "llm"
         },
         "bareLlm": {
@@ -116,7 +116,7 @@
           }
         },
         "hypothesis": {
-          "rationale": "Test send frequency and day-of-week to maximize open/conversion for one-time buyers.",
+          "rationale": "Test send frequency and day-of-week to maximize conversion for one-time buyers.",
           "source": "llm"
         },
         "bareLlm": {
@@ -178,7 +178,7 @@
           }
         },
         "hypothesis": {
-          "rationale": "Target customers most likely to expand purchases; highest conversion potential.",
+          "rationale": "Current scope limits reach; test bundling complementary categories to drive repeat purchase.",
           "source": "llm"
         },
         "bareLlm": {
@@ -336,12 +336,12 @@
           }
         },
         "hypothesis": {
-          "rationale": "Cart abandoners show higher intent than browsers; likely higher second-purchase ROI.",
+          "rationale": "Combine lapsing browsers with one-time buyer data to catch high-intent repeat candidates.",
           "source": "llm"
         },
         "bareLlm": {
           "accepted": true,
-          "reason": "10.6% conversion is strong. Sample size adequate for scaling."
+          "reason": "10.6% conversion rate is strong, sample size adequate"
         }
       },
       {
@@ -458,29 +458,35 @@
         }
       }
     ],
-    "contrastUsd": 0.006414,
+    "contrastUsd": 0.006508999999999999,
     "generatedFromSeed": 42,
     "explorer": {
       "source": "llm",
       "surplus": [
         {
-          "key": "INCENTIVE_TIERED_DISCOUNT",
-          "title": "Test tiered discounts by first-purchase value",
-          "rationale": "Higher-value first buyers may need smaller incentive; lower-value buyers need stronger push.",
+          "key": "INCENTIVE_SECOND_PURCHASE",
+          "title": "Introduce tiered discount for repeat buyers",
+          "rationale": "Offer modest incentive (5–10% off) in SECOND_PURCHASE_SMS to lower friction for repeat.",
           "kind": "experiment"
         },
         {
-          "key": "REACTIVATION_WINBACK",
-          "title": "Winback campaign for 180+ day inactive one-time buyers",
-          "rationale": "Customers beyond 180 days need different messaging; test special offer to re-engage.",
-          "kind": "experiment"
+          "key": "CART_ABANDONMENT_ONE_TIME",
+          "title": "Retarget one-time buyers who abandon carts",
+          "rationale": "High-intent segment; cart abandonment recovery may convert faster than cold outreach.",
+          "kind": "segment"
+        },
+        {
+          "key": "CATEGORY_AFFINITY_UPSELL",
+          "title": "Recommend complementary categories based on first purchase",
+          "rationale": "Personalized cross-sell in SMS/email increases relevance and repeat purchase likelihood.",
+          "kind": "segment"
         }
       ]
     },
     "skippedFromMemory": [],
     "costByStage": {
-      "explorer": 0.0032900000000000004,
-      "bareLlm": 0.001772,
+      "explorer": 0.0033949999999999996,
+      "bareLlm": 0.001762,
       "groundedness": 0.001352
     }
   },
@@ -546,10 +552,20 @@
     "audience": {
       "label": "One-time buyers",
       "channel": "sms",
-      "filter": "is_one_time_buyer = TRUE",
+      "filter": {
+        "column": "is_one_time_buyer",
+        "op": "=",
+        "value": true
+      },
+      "persuadableFilter": {
+        "column": "sms_responder",
+        "op": "=",
+        "value": true
+      },
+      "filterSql": "is_one_time_buyer = TRUE",
+      "persuadableSql": "sms_responder = TRUE",
       "reach": 1939,
       "persuadableReach": 797,
-      "persuadableFilter": "sms_responder = TRUE",
       "sampleMembers": [
         2110,
         2734,
@@ -561,17 +577,24 @@
         4311
       ]
     },
-    "brief": "**CREATIVE BRIEF: Second Purchase SMS Campaign**\n\n**Objective:** Drive repeat purchase among one-time buyers via SMS with +6.2pp lift potential.\n\n**Tone:** Aspirational, exclusive, on-brand—position as invitation to complete their style story.\n\n**Key Message:** Highlight new arrivals and collections that complement their first purchase; emphasize belonging to our community.\n\n**Creative Approach:** Personalized product recommendations (no discounts); leverage scarcity/exclusivity; focus on quality and self-expression.\n\n**CTA:** \"Discover what's next\" or similar non-discount incentive; direct to curated collection page.",
+    "cap": {
+      "ruleId": "weekly_2",
+      "windowDays": 7,
+      "maxSends": 2,
+      "excluded": 0,
+      "anchor": "2026-04-25"
+    },
+    "brief": "**CREATIVE BRIEF: Second Purchase SMS Campaign**\n\n**Objective:** Drive repeat purchase among one-time buyers via aspirational messaging that reinforces brand value without discounting premium products.\n\n**Tone:** Confident, curated, exclusive—celebrate their first choice and invite them into the next chapter of their style journey.\n\n**Key Message:** Position new arrivals as natural complements to their existing purchase; emphasize craftsmanship, exclusivity, and belonging to a discerning community.\n\n**Creative Direction:** Feature complementary pieces, styling inspiration, or limited-availability items; leverage social proof (\"favorites this season\") to create urgency without price reduction.\n\n**Call-to-Action:** \"Discover what's next\" or \"Complete your collection\"—personal, forward-looking, premium.",
     "variants": [
       {
         "id": "V1",
         "channel": "sms",
-        "text": "Your style story continues. Explore new arrivals curated to complement your first piece. Discover what's next: [link]"
+        "text": "Your refined taste is showing. Discover curated pieces that complete the vision you've already started. See what's next → [link]"
       },
       {
         "id": "V2",
         "channel": "sms",
-        "text": "Welcome to the community. Premium new collections just arrived—crafted for those who know quality. See what speaks to you: [link]"
+        "text": "Welcome to the inner circle. New arrivals this season—handpicked to complement your style. Explore exclusives → [link]"
       }
     ],
     "guardrail": {
@@ -580,12 +603,12 @@
         {
           "allowed": true,
           "violatedRule": null,
-          "reason": "Aspirational tone, no discounts, no urgency language, no seasonality misrepresentation."
+          "reason": "Aspirational tone, no discounts or urgency language, aligns with premium brand positioning."
         },
         {
           "allowed": true,
           "violatedRule": null,
-          "reason": "Aspirational tone, no discounts, appropriate for premium products."
+          "reason": "Aspirational tone, no discounts, exclusivity messaging appropriate for premium brand."
         }
       ]
     },
@@ -610,7 +633,7 @@
       "reason": "Significant +10.0% incremental lift (p=0.002, 95% CI excludes 0)."
     },
     "memoryWritten": true,
-    "costUsd": 0.0026
+    "costUsd": 0.002681
   },
   "bandit": {
     "impressions": 6000,
