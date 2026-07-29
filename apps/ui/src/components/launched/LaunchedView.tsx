@@ -97,7 +97,8 @@ export function LaunchedView({
         </h2>
         <div className="grid gap-4 rounded-xl border border-border bg-card p-4 shadow-ht-xs md:grid-cols-2">
           <div>
-            <div className="grid grid-cols-3 gap-2">
+            {/* stays readable at 320px — three truncated cards side by side did not */}
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {bandit.learnedBest.map((v, i) => {
                 const optimal = v === bandit.oracleBest[i];
                 return (

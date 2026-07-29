@@ -1,6 +1,6 @@
 import { ShieldAlert, ThumbsUp, XCircle } from "lucide-react";
 import type { Opportunity } from "@/lib/types";
-import { pct } from "@/lib/format";
+import { pctFromPercent } from "@/lib/format";
 import { StatusPill } from "@/components/common/StatusPill";
 
 /** Our differentiator, in Hightouch's idiom: a high-conversion campaign a generic AI
@@ -15,7 +15,9 @@ export function TrapContrastBanner({ trap }: { trap: Opportunity }) {
       </div>
       <div className="mt-2 text-base font-medium text-foreground">
         {trap.title}
-        {trap.rawConversion != null && <span className="text-muted-foreground"> — {pct(trap.rawConversion)} conversion</span>}
+        {trap.rawConversion != null && (
+          <span className="text-muted-foreground"> — {pctFromPercent(trap.rawConversion)} raw conversion, but no incremental lift</span>
+        )}
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-3.5 shadow-ht-xs">

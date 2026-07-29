@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, ChevronsLeft } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BOTTOM_ITEMS, NAV_GROUPS, type NavItem } from "./nav-items";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
@@ -36,13 +36,13 @@ function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void 
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col bg-sidebar">
-      {/* Wordmark + collapse */}
-      <div className="flex items-center justify-between px-4 pb-3 pt-4">
+      {/* Wordmark. No collapse control — the rail is fixed-width on desktop and becomes
+          an overlay drawer below lg, so a collapse chevron would be decoration. */}
+      <div className="flex items-center px-4 pb-3 pt-4">
         <div className="flex items-center gap-2">
           <span className="h-5 w-5 rounded-[5px] bg-ht-green-accent" aria-hidden />
           <span className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">Hightouch</span>
         </div>
-        <ChevronsLeft className="h-4 w-4 text-sidebar-foreground/40" aria-hidden />
       </div>
 
       <WorkspaceSwitcher />

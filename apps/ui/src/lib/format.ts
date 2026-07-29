@@ -1,7 +1,22 @@
 import type { Opportunity } from "./types";
 
+/**
+ * UNIT CONVENTIONS — the codebase carries two, and mixing them is a real bug we shipped once.
+ *
+ *   FRACTION  0…1        `bandit.*Rate`, and anything from `decisioning`.        → use `pct()`
+ *   PERCENT   0…100      `Opportunity.rawConversion`, derived conversion rates.  → use `pctFromPercent()`
+ *   POINTS    difference `Opportunity.upliftPp`, `ci`, `measurement.upliftPp`.   → use `pp()`
+ *
+ * A percentage-POINT difference may only be subtracted from a PERCENT rate — never from a fraction.
+ */
+
+/** Format a FRACTION (0…1) as a percentage. `pct(0.1675)` → `"16.8%"`. */
 export const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
-export const money = (x: number) => `$${Math.round(x).toLocaleString()}`;
+
+/** Format a value already in PERCENT units (0…100). `pctFromPercent(13.068)` → `"13.1%"`. */
+export const pctFromPercent = (x: number, d = 1) => `${x.toFixed(d)}%`;
+
+/** Format a percentage-POINT difference. `pp(6.95)` → `"+6.9pp"`. */
 export const pp = (x: number) => `${x >= 0 ? "+" : ""}${x.toFixed(1)}pp`;
 
 /** Estimated monthly revenue impact: reach × uplift × value-per-conversion. */
@@ -20,6 +35,41 @@ export function liftLabel(o: Opportunity): string {
   const ci = o.ci ? ` · CI [${o.ci[0].toFixed(1)}, ${o.ci[1].toFixed(1)}]` : "";
   const p = o.pValue == null ? "" : ` · p=${o.pValue.toFixed(3)}`;
   return `${pp(o.upliftPp)}${ci}${p}`;
+}
+
+/**
+ * The holdout (control) conversion rate, in PERCENT units.
+ *
+ * `rawConversion` is the treatment rate in percent and `upliftPp` is the incremental
+ * difference in percentage points, so the control rate is a plain subtraction. Getting
+ * this wrong is what produced "Converts 1306.8% vs 1299.9% holdout".
+ */
+export function controlRate(o: Opportunity): number | null {
+  if (o.rawConversion == null || o.upliftPp == null) return null;
+  return Math.max(0, o.rawConversion - o.upliftPp);
+}
+
+/** A lift is significant when its 95% CI excludes zero. */
+export function isSignificant(o: Opportunity): boolean {
+  if (!o.ci) return false;
+  const [lo, hi] = o.ci;
+  return lo > 0 || hi < 0;
+}
+
+/**
+ * Confidence as a percentage, the way marketers read it — not a p-value.
+ * Mirrors Hightouch AI Decisioning's "98% confidence" treatment.
+ */
+export function confidenceLabel(o: Opportunity): string | null {
+  if (o.pValue == null) return null;
+  return `${Math.min(99, Math.floor((1 - o.pValue) * 100))}% confidence`;
+}
+
+/** How many times the treatment rate beats the holdout — the headline the chart should state. */
+export function liftMultiple(o: Opportunity): number | null {
+  const control = controlRate(o);
+  if (control == null || control <= 0 || o.rawConversion == null) return null;
+  return o.rawConversion / control;
 }
 
 export type Tone = "emerald" | "amber" | "rose" | "blue" | "slate";
@@ -47,18 +97,13 @@ export const TONE_CLASSES: Record<Tone, string> = {
   slate: "bg-ht-100 text-ht-700 ring-ht-300",
 };
 
-/** Hightouch-style "$X estimated incremental revenue". */
-export function impactLabel(o: Opportunity): string {
-  return `${moneyCompact(monthlyImpact(o))}/mo estimated incremental revenue`;
-}
-
-/** Deterministic "Found at H:MM AM" timestamp from the opportunity key. */
-export function foundAt(key: string): string {
-  let h = 0;
-  for (const c of key) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  const hour = 1 + (h % 5);
-  const min = h % 60;
-  return `Found at ${hour}:${String(min).padStart(2, "0")} AM`;
+/**
+ * The arithmetic behind the impact figure, shown so a reader can reconstruct it.
+ * Quantum Metric's pattern: never present an estimate without its inputs.
+ */
+export function impactBasis(o: Opportunity): string | null {
+  if (o.upliftPp == null) return null;
+  return `${o.reach.toLocaleString()} customers × ${pp(o.upliftPp)} × $${Math.round(o.value)} per conversion`;
 }
 
 /** The datasets the agent used (provenance chips). */

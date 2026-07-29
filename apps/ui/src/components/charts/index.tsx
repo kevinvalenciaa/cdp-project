@@ -1,8 +1,8 @@
 "use client";
 
+import type { ReactElement } from "react";
 import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { BanditResult, Opportunity } from "@/lib/types";
-import { moneyCompact, monthlyImpact } from "@/lib/format";
+import type { BanditResult } from "@/lib/types";
 
 const C = {
   blue: "#007A92", // teal (primary)
@@ -22,46 +22,44 @@ const tooltipStyle = {
   boxShadow: "0 4px 8px rgba(0,0,0,.06)",
 };
 
-/** Horizontal ranking of accepted opportunities by estimated monthly impact. */
-export function RankingBar({ opportunities }: { opportunities: Opportunity[] }) {
-  const data = opportunities.map((o) => ({ name: o.title, impact: Math.round(monthlyImpact(o)) }));
-  if (data.length === 0) return null;
+/**
+ * Recharts renders bare SVG with no accessible name, and its tooltips are pointer-only —
+ * so a screen-reader user gets nothing at all. Wrap every chart in a labelled figure that
+ * states the finding in words, and hide the decorative SVG beneath it.
+ */
+function ChartFigure({ label, height, children }: { label: string; height: number; children: ReactElement }) {
   return (
-    <ResponsiveContainer width="100%" height={Math.max(120, data.length * 56)}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 48, top: 4, bottom: 4 }}>
-        <XAxis type="number" hide />
-        <YAxis
-          type="category"
-          dataKey="name"
-          width={200}
-          tick={{ fill: "#4B494A", fontSize: 12 }}
-          tickLine={false}
-          axisLine={false}
-        />
-        <Tooltip
-          cursor={{ fill: "#0000000a" }}
-          contentStyle={tooltipStyle}
-          formatter={(v) => [`${moneyCompact(Number(v))}/mo`, "est. impact"]}
-        />
-        <Bar dataKey="impact" fill={C.blue} radius={[0, 4, 4, 0]} barSize={22} isAnimationActive={false}>
-          <LabelList dataKey="impact" position="right" formatter={(v) => `${moneyCompact(Number(v))}/mo`} fill="#8F8A8B" fontSize={11} />
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <figure className="m-0" role="img" aria-label={label}>
+      <div aria-hidden style={{ height }}>
+        <ResponsiveContainer width="100%" height={height}>
+          {children}
+        </ResponsiveContainer>
+      </div>
+    </figure>
   );
 }
 
-/** Treatment vs control conversion (the evidence behind a lift). */
+/**
+ * Treatment vs holdout conversion (the evidence behind a lift).
+ *
+ * Both rates arrive in PERCENT units (e.g. `13.07` for 13.07%) — see the unit conventions
+ * in `lib/format.ts`. Do NOT multiply by 100 here; doing so is what once rendered
+ * "1306.8% vs 1299.9%" and flattened a 2.1x effect into two identical bars.
+ */
 export function TreatmentControlBar({ treatmentRate, controlRate }: { treatmentRate: number; controlRate: number }) {
   const data = [
-    { name: "Control", rate: controlRate * 100, fill: C.slate },
-    { name: "Treatment", rate: treatmentRate * 100, fill: C.emerald },
+    { name: "Holdout", rate: controlRate, fill: C.slate },
+    { name: "Treatment", rate: treatmentRate, fill: C.emerald },
   ];
   return (
-    <ResponsiveContainer width="100%" height={160}>
+    <ChartFigure
+      height={160}
+      label={`Conversion rate: treatment ${treatmentRate.toFixed(1)} percent, holdout ${controlRate.toFixed(1)} percent.`}
+    >
       <BarChart data={data} margin={{ left: 0, right: 12, top: 12, bottom: 0 }}>
         <XAxis dataKey="name" tick={{ fill: "#8F8A8B", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "#E0DEDF" }} />
-        <YAxis tick={{ fill: "#696365", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" width={36} />
+        {/* width fits a three-digit tick ("100%") without clipping the leading digit */}
+        <YAxis tick={{ fill: "#696365", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" width={48} />
         <Tooltip cursor={{ fill: "#0000000a" }} contentStyle={tooltipStyle} formatter={(v) => [`${Number(v).toFixed(1)}%`, "conversion"]} />
         <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={64} isAnimationActive={false}>
           {data.map((d) => (
@@ -70,11 +68,11 @@ export function TreatmentControlBar({ treatmentRate, controlRate }: { treatmentR
           <LabelList dataKey="rate" position="top" formatter={(v) => `${Number(v).toFixed(1)}%`} fill="#4B494A" fontSize={11} />
         </Bar>
       </BarChart>
-    </ResponsiveContainer>
+    </ChartFigure>
   );
 }
 
-/** Bandit vs baselines — conversion rate by strategy. */
+/** Bandit vs baselines — conversion rate by strategy. Rates arrive as FRACTIONS. */
 export function BanditChart({ bandit }: { bandit: BanditResult }) {
   const data = [
     { name: "Random", rate: bandit.randomRate * 100, fill: C.slate },
@@ -83,10 +81,13 @@ export function BanditChart({ bandit }: { bandit: BanditResult }) {
     { name: "Oracle", rate: bandit.oracleRate * 100, fill: C.blue },
   ];
   return (
-    <ResponsiveContainer width="100%" height={170}>
+    <ChartFigure
+      height={170}
+      label={`Conversion rate by strategy: ${data.map((d) => `${d.name} ${d.rate.toFixed(1)} percent`).join(", ")}.`}
+    >
       <BarChart data={data} margin={{ left: 0, right: 12, top: 14, bottom: 0 }}>
         <XAxis dataKey="name" tick={{ fill: "#8F8A8B", fontSize: 12 }} tickLine={false} axisLine={{ stroke: "#E0DEDF" }} />
-        <YAxis tick={{ fill: "#696365", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" width={36} />
+        <YAxis tick={{ fill: "#696365", fontSize: 11 }} tickLine={false} axisLine={false} unit="%" width={48} />
         <Tooltip cursor={{ fill: "#0000000a" }} contentStyle={tooltipStyle} formatter={(v) => [`${Number(v).toFixed(1)}%`, "conversion"]} />
         <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={48} isAnimationActive={false}>
           {data.map((d) => (
@@ -95,6 +96,6 @@ export function BanditChart({ bandit }: { bandit: BanditResult }) {
           <LabelList dataKey="rate" position="top" formatter={(v) => `${Number(v).toFixed(1)}%`} fill="#4B494A" fontSize={11} />
         </Bar>
       </BarChart>
-    </ResponsiveContainer>
+    </ChartFigure>
   );
 }

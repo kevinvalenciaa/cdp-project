@@ -1,15 +1,45 @@
 "use client";
 
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Rocket, Send, Users } from "lucide-react";
+import { CheckCircle2, Circle, FlaskConical, Loader2, Rocket, Send, Users } from "lucide-react";
 import type { ActivationEvent, ActivationResult, Opportunity } from "@/lib/types";
-import { liftLabel, moneyCompact, monthlyImpact, pct, sourceChips, verdictMeta } from "@/lib/format";
+import {
+  confidenceLabel,
+  controlRate,
+  impactBasis,
+  isSignificant,
+  liftLabel,
+  liftMultiple,
+  moneyCompact,
+  monthlyImpact,
+  pctFromPercent,
+  pp,
+  sourceChips,
+  verdictMeta,
+} from "@/lib/format";
+import { LiftIntervalBar } from "@/components/opportunity/LiftIntervalBar";
 import { useEventStream } from "@/lib/use-event-stream";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/common/StatusPill";
 import { TreatmentControlBar } from "@/components/charts";
+
+/**
+ * The creative brief comes back from the model as light markdown. Rendering it raw leaks
+ * literal `**` into the UI, so resolve just the bold runs — the only syntax it actually uses.
+ */
+function renderBold(text: string) {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="font-medium text-foreground">
+        {part}
+      </strong>
+    ) : (
+      part
+    ),
+  );
+}
 
 export function OpportunityDetail({
   opportunity,
@@ -43,7 +73,7 @@ export function OpportunityDetail({
   }
 
   if (!o) return null;
-  const control = o.rawConversion != null && o.upliftPp != null ? Math.max(0, o.rawConversion - o.upliftPp / 100) : null;
+  const control = controlRate(o);
   const vm = verdictMeta(o.verdict);
 
   return (
@@ -79,9 +109,54 @@ export function OpportunityDetail({
           {/* Analysis */}
           <TabsContent value="analysis" className="space-y-4 px-6 py-5">
             <p className="text-sm leading-relaxed text-foreground">{o.reason}</p>
+
+            {/* Incremental lift, drawn against zero. Whether the interval crosses zero is the
+                whole readout — no p-value literacy required. */}
+            {o.upliftPp != null && (
+              <div className="rounded-lg border border-border bg-ht-50 p-3.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Incremental lift vs holdout</div>
+                  {confidenceLabel(o) && (
+                    <span
+                      className={`inline-flex items-center gap-1 text-xs ${isSignificant(o) ? "text-ht-green" : "text-muted-foreground"}`}
+                    >
+                      {isSignificant(o) ? (
+                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                      ) : (
+                        <Circle className="h-3.5 w-3.5" aria-hidden />
+                      )}
+                      {confidenceLabel(o)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-1 text-lg font-semibold tabular-nums text-foreground">{pp(o.upliftPp)}</div>
+
+                <div className="mt-2">
+                  <LiftIntervalBar estimate={o.upliftPp} ci={o.ci ?? null} />
+                </div>
+
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {isSignificant(o)
+                    ? "The 95% confidence interval excludes 0%, so this lift is statistically significant."
+                    : "Not statistically significant — the 95% confidence interval overlaps 0%."}
+                </p>
+              </div>
+            )}
+
+            {/* The underlying rates. */}
             {control != null && o.rawConversion != null && (
               <div className="rounded-lg border border-border bg-ht-50 p-3.5">
                 <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Treatment vs. holdout conversion</div>
+                <div className="mt-1 text-sm font-semibold text-foreground">
+                  {(() => {
+                    const m = liftMultiple(o);
+                    return m != null && m >= 1.1 ? `Treatment converts ${m.toFixed(1)}× the holdout` : "Treatment converts above the holdout";
+                  })()}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {pctFromPercent(o.rawConversion)} treatment vs {pctFromPercent(control)} holdout
+                </div>
                 <div className="mt-2">
                   <TreatmentControlBar treatmentRate={o.rawConversion} controlRate={control} />
                 </div>
@@ -118,28 +193,81 @@ export function OpportunityDetail({
             <TabsContent value="plan" className="space-y-4 px-6 py-5">
               {activation ? (
                 <>
-                  <div className="rounded-lg border border-border bg-ht-50 p-3 text-sm">
-                    <div className="flex items-center gap-2 text-foreground">
-                      <Users className="h-4 w-4 text-muted-foreground" aria-hidden />
-                      {activation.audience.label}
+                  <section>
+                    <h3 className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Audience</h3>
+                    <div className="rounded-lg border border-border bg-ht-50 p-3 text-sm">
+                      <div className="flex items-center gap-2 text-foreground">
+                        <Users className="h-4 w-4 text-muted-foreground" aria-hidden />
+                        {activation.audience.label}
+                      </div>
+                      <div className="mt-1 tabular-nums text-muted-foreground">
+                        reach {activation.audience.reach.toLocaleString()} ·{" "}
+                        <span className="text-ht-green">
+                          {activation.audience.persuadableReach.toLocaleString()} persuadable
+                        </span>{" "}
+                        · {activation.audience.channel}
+                      </div>
+                      <code className="mt-2 block rounded bg-card px-2 py-1 font-mono text-[11px] text-muted-foreground">
+                        persuadable: {activation.audience.persuadableFilter}
+                      </code>
                     </div>
-                    <div className="mt-1 text-muted-foreground">
-                      reach {activation.audience.reach.toLocaleString()} · <span className="text-ht-green">{activation.audience.persuadableReach.toLocaleString()} persuadable</span> · {activation.audience.channel}
+                  </section>
+
+                  {/* Holdout stated before launch, not discovered afterwards. Framing the control
+                      group at authoring time is what makes the later lift number credible. */}
+                  <section>
+                    <h3 className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      How we will prove it
+                    </h3>
+                    <div className="rounded-lg border border-border bg-ht-50 p-3 text-sm">
+                      <div className="flex items-center gap-2 text-foreground">
+                        <FlaskConical className="h-4 w-4 text-muted-foreground" aria-hidden />
+                        Randomised holdout, measured after launch
+                      </div>
+                      <p className="mt-1 text-muted-foreground">
+                        A share of the audience is deliberately withheld. Lift is the difference between the two groups —
+                        so the result is causal, not correlational.
+                      </p>
                     </div>
-                  </div>
-                  {activation.variants.map((v) => (
-                    <div key={v.id} className="rounded-lg border border-border bg-card p-3 text-sm text-foreground">
-                      <span className="mr-2 font-mono text-xs text-muted-foreground">{v.id}</span>
-                      {v.text}
+                  </section>
+
+                  <section>
+                    <h3 className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Drafted messaging · {activation.variants.length} variants
+                    </h3>
+                    <div className="space-y-2">
+                      {activation.variants.map((v) => (
+                        <div key={v.id} className="rounded-lg border border-border bg-card p-3 text-sm text-foreground">
+                          <span className="mr-2 font-mono text-xs text-muted-foreground">{v.id}</span>
+                          {v.text}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                  <StatusPill tone="emerald">
-                    <CheckCircle2 className="h-3 w-3" aria-hidden /> guardrail clear
-                  </StatusPill>
+                    <div className="mt-2">
+                      <StatusPill tone="emerald">
+                        <CheckCircle2 className="h-3 w-3" aria-hidden /> passes brand guardrails
+                      </StatusPill>
+                    </div>
+                  </section>
+
+                  {activation.brief && (
+                    <section>
+                      <h3 className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                        Creative brief
+                      </h3>
+                      <div className="whitespace-pre-line rounded-lg border border-border bg-ht-50 p-3 text-sm leading-relaxed text-muted-foreground">
+                        {renderBold(activation.brief)}
+                      </div>
+                    </section>
+                  )}
                 </>
               ) : (
                 <div className="rounded-lg border border-dashed border-border bg-ht-50 p-4 text-sm text-muted-foreground">
-                  Draft plan generates on launch — approve to compile the audience, draft on-brand variants, and run the brand guardrails.
+                  <p className="font-medium text-foreground">Draft work compiles on approval.</p>
+                  <p className="mt-1">
+                    Approving compiles the audience from the warehouse, drafts on-brand message variants, runs the brand
+                    guardrails, and configures the holdout that will measure incremental lift.
+                  </p>
                 </div>
               )}
 

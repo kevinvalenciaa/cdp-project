@@ -14,7 +14,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar mode={MODE} />
-        <main className="flex-1">{children}</main>
+        <main id="main" className="flex-1">
+          {children}
+        </main>
       </div>
     </div>
   );

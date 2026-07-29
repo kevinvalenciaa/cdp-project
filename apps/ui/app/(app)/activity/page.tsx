@@ -1,4 +1,5 @@
-import { Activity } from "lucide-react";
+import Link from "next/link";
+import { Activity, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
@@ -17,7 +18,19 @@ export default async function ActivityPage() {
             <ActivityFeed events={events} />
           </div>
         ) : (
-          <EmptyState icon={Activity} title="No activity yet" description="Run a discovery to see the agents work." />
+          <EmptyState
+            icon={Activity}
+            title="No activity yet"
+            description="Every plan, query, rejection and confirmation the agents make shows up here as it happens."
+            action={
+              <Link
+                href="/opportunities"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-ht-teal-hover"
+              >
+                Run a discovery <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            }
+          />
         )}
       </div>
     </>

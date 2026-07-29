@@ -1,4 +1,5 @@
-import { Brain } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Brain } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { StatusPill } from "@/components/common/StatusPill";
@@ -15,16 +16,37 @@ export default async function MemoryPage() {
       <PageHeader title="Insights" description="Verified insights that compound across runs — only Verifier-passed claims are stored." />
       <div className="p-5 lg:p-8">
         {insights.length === 0 ? (
-          <EmptyState icon={Brain} title="No insights yet" description="Verified outcomes are recorded here so the next run starts smarter." />
+          <EmptyState
+            icon={Brain}
+            title="No insights yet"
+            description="Verified outcomes are recorded here so the next run starts smarter — and skips what has already been ruled out."
+            action={
+              <Link
+                href="/opportunities"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-ht-teal-hover"
+              >
+                Run a discovery <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            }
+          />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
+          <div className="overflow-x-auto rounded-xl border border-border">
             <Table>
+              <caption className="sr-only">
+                Verified insights carried between runs, with the Verifier&apos;s verdict and confidence for each.
+              </caption>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[28%]">Subject</TableHead>
-                  <TableHead>Insight</TableHead>
-                  <TableHead className="w-[120px]">Verdict</TableHead>
-                  <TableHead className="w-[110px] text-right">Confidence</TableHead>
+                  <TableHead scope="col" className="w-[28%]">
+                    Subject
+                  </TableHead>
+                  <TableHead scope="col">Insight</TableHead>
+                  <TableHead scope="col" className="w-[120px]">
+                    Verdict
+                  </TableHead>
+                  <TableHead scope="col" className="w-[110px] text-right">
+                    Confidence
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

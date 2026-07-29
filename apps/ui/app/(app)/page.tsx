@@ -1,17 +1,29 @@
 import Link from "next/link";
-import { ArrowRight, type LucideIcon, Rocket, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, type LucideIcon, Rocket, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
+import { StatusPill } from "@/components/common/StatusPill";
 import { getProvider } from "@/server/data-provider";
-import { moneyCompact, monthlyImpact, pp } from "@/lib/format";
+import { confidenceLabel, isSignificant, moneyCompact, monthlyImpact, pctFromPercent, pp, verdictMeta } from "@/lib/format";
 
-function StatTile({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
+function StatTile({
+  label,
+  value,
+  sub,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: LucideIcon;
+}) {
   return (
     <div className="rounded-lg border border-border bg-card p-4 shadow-ht-xs">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">{label}</span>
         <Icon className="h-4 w-4 text-muted-foreground" aria-hidden />
       </div>
-      <div className="mt-2 font-mono text-2xl font-semibold text-foreground">{value}</div>
+      <div className="mt-2 font-mono text-2xl font-semibold tabular-nums text-foreground">{value}</div>
+      {sub && <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>}
     </div>
   );
 }
@@ -20,46 +32,159 @@ export default async function HomePage() {
   const provider = await getProvider();
   const [run, activations] = await Promise.all([provider.getLatestRun(), provider.listActivations()]);
   const ranked = run?.opportunities.ranked ?? [];
+  const rejected = run?.opportunities.rejected ?? [];
   const totalImpact = ranked.reduce((s, o) => s + monthlyImpact(o), 0);
+  const measured = activations.filter((a) => a.upliftPp != null);
 
   return (
     <>
-      <PageHeader title="Home" description="Your Agentic CDP at a glance — what the agents found while you were away." />
+      <PageHeader
+        title="Home"
+        description="Your Agentic CDP at a glance — what the agents found while you were away."
+        actions={
+          <Link
+            href="/opportunities"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-ht-teal-hover"
+          >
+            Review opportunities <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        }
+      />
       <div className="space-y-6 p-5 lg:p-8">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatTile label="Opportunities ready for review" value={String(ranked.length)} icon={Sparkles} />
-          <StatTile label="Est. incremental revenue" value={`${moneyCompact(totalImpact)}/mo`} icon={TrendingUp} />
-          <StatTile label="Campaigns launched" value={String(activations.length)} icon={Rocket} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatTile
+            label="Ready for review"
+            value={String(ranked.length)}
+            sub={ranked.length ? "proven with a holdout" : "run discovery to begin"}
+            icon={Sparkles}
+          />
+          <StatTile
+            label="Est. incremental revenue"
+            value={`~${moneyCompact(totalImpact)}/mo`}
+            sub="if all are launched"
+            icon={TrendingUp}
+          />
+          {/* The Verifier's work, made countable. This is the differentiator on the first screen. */}
+          <StatTile
+            label="Rejected by the Verifier"
+            value={String(rejected.length)}
+            sub="no provable incremental lift"
+            icon={ShieldCheck}
+          />
+          <StatTile
+            label="Launched"
+            value={String(activations.length)}
+            sub={measured.length ? `${measured.length} measuring lift` : "none in flight"}
+            icon={Rocket}
+          />
         </div>
 
-        <div className="rounded-lg border border-border bg-card shadow-ht-xs">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
-            <div>
-              <h2 className="text-base font-semibold text-foreground">Opportunities</h2>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Proven — what to act on */}
+          <section className="rounded-lg border border-border bg-card shadow-ht-xs">
+            <div className="border-b border-border px-5 py-4">
+              <h2 className="text-base font-semibold text-foreground">Proven opportunities</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                The agents ranked {ranked.length} proven {ranked.length === 1 ? "opportunity" : "opportunities"} by estimated impact.
+                Ranked by reach × value × <em>incremental</em> uplift — not raw conversion.
               </p>
             </div>
-            <Link
-              href="/opportunities"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-ht-teal-hover"
-            >
-              Review opportunities <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </div>
-          <ul className="divide-y divide-border">
-            {ranked.slice(0, 3).map((o, i) => (
-              <li key={o.key} className="flex items-center justify-between gap-3 px-5 py-3">
-                <span className="flex min-w-0 items-center gap-3">
-                  <span className="font-mono text-sm text-muted-foreground">#{i + 1}</span>
-                  <span className="truncate text-sm text-foreground">{o.title}</span>
-                </span>
-                <span className="shrink-0 font-mono text-sm text-ht-green">{moneyCompact(monthlyImpact(o))}/mo</span>
-              </li>
-            ))}
-            {ranked.length === 0 && <li className="px-5 py-6 text-sm text-muted-foreground">No run yet — open Opportunities to run discovery.</li>}
-          </ul>
+            <ul className="divide-y divide-border">
+              {ranked.slice(0, 4).map((o, i) => (
+                <li key={o.key} className="px-5 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="font-mono text-sm tabular-nums text-muted-foreground">#{i + 1}</span>
+                      <span className="truncate text-sm text-foreground">{o.title}</span>
+                    </span>
+                    <span className="shrink-0 font-mono text-sm tabular-nums text-ht-green">
+                      ~{moneyCompact(monthlyImpact(o))}/mo
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 pl-9 text-xs text-muted-foreground">
+                    {o.upliftPp != null && <span className="tabular-nums text-foreground">{pp(o.upliftPp)} lift</span>}
+                    {confidenceLabel(o) && (
+                      <span className={`inline-flex items-center gap-1 ${isSignificant(o) ? "text-ht-green" : ""}`}>
+                        {isSignificant(o) ? (
+                          <CheckCircle2 className="h-3 w-3" aria-hidden />
+                        ) : (
+                          <Circle className="h-3 w-3" aria-hidden />
+                        )}
+                        {confidenceLabel(o)}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              ))}
+              {ranked.length === 0 && (
+                <li className="px-5 py-6 text-sm text-muted-foreground">No run yet — open Opportunities to run discovery.</li>
+              )}
+            </ul>
+          </section>
+
+          {/* Ruled out — why to trust the list above */}
+          <section className="rounded-lg border border-border bg-card shadow-ht-xs">
+            <div className="border-b border-border px-5 py-4">
+              <h2 className="text-base font-semibold text-foreground">Ruled out overnight</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Candidates that convert well but could not be shown to <em>cause</em> the conversion.
+              </p>
+            </div>
+            <ul className="divide-y divide-border">
+              {rejected.slice(0, 4).map((o) => {
+                const m = verdictMeta(o.verdict);
+                return (
+                  <li key={o.key} className="flex items-center justify-between gap-3 px-5 py-3">
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm text-foreground">{o.title}</span>
+                      {o.rawConversion != null && (
+                        <span className="text-xs tabular-nums text-muted-foreground">
+                          {pctFromPercent(o.rawConversion)} raw conversion
+                        </span>
+                      )}
+                    </span>
+                    <StatusPill tone={m.tone}>{m.label}</StatusPill>
+                  </li>
+                );
+              })}
+              {rejected.length === 0 && (
+                <li className="px-5 py-6 text-sm text-muted-foreground">Nothing ruled out yet.</li>
+              )}
+            </ul>
+          </section>
         </div>
+
+        {/* Closing the loop — what was launched and what it actually did */}
+        {activations.length > 0 && (
+          <section className="rounded-lg border border-border bg-card shadow-ht-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Launched &amp; measuring</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">Measured against a holdout after launch.</p>
+              </div>
+              <Link
+                href="/launched"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                View all <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+            <ul className="divide-y divide-border">
+              {activations.slice(0, 3).map((a) => (
+                <li key={a.opportunityKey} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm text-foreground">{a.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {a.destination} · {a.audienceSize.toLocaleString()} customers
+                    </span>
+                  </span>
+                  {a.upliftPp != null && (
+                    <span className="shrink-0 font-mono text-sm tabular-nums text-ht-green">{pp(a.upliftPp)} lift</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </>
   );

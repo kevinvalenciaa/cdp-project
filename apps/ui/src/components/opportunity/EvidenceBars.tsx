@@ -9,8 +9,9 @@ export interface EvidenceBar {
 /** Hightouch's "evidence glance" — a tiny bar chart with exactly one highlighted bar. */
 export function EvidenceBars({ bars }: { bars: EvidenceBar[] }) {
   const max = Math.max(...bars.map((b) => b.value), 0.0001);
+  const label = bars.map((b) => `${b.label} ${b.value.toFixed(1)} percent`).join(", ");
   return (
-    <div className="flex items-end gap-3">
+    <div className="flex items-end gap-3" role="img" aria-label={`Conversion rate: ${label}.`}>
       {bars.map((b) => (
         <div key={b.label} className="flex flex-1 flex-col items-center gap-1.5">
           <div className="flex h-16 w-full items-end justify-center">
