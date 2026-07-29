@@ -1,0 +1,31 @@
+{
+  "name": "@lift/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lift Compass delivery SDK. Evaluates eligibility locally against rules pushed down from the backend. Depends on @lift/protocol only \u2014 no node builtins, no core, loads in Hermes.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@lift/protocol": "workspace:^"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "@types/node": "^22.10.5"
+  }
+}
