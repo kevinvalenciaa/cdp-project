@@ -21,4 +21,14 @@ describe("Thompson-sampling bandit", () => {
     const winners = SCENARIO.trueRate.map((row) => row.indexOf(Math.max(...row)));
     expect(new Set(winners).size).toBeGreaterThan(1);
   });
+
+  it("is byte-identical to the pre-extraction implementation for seed 42", () => {
+    // Frozen output of runBandit(42) captured BEFORE the policy extraction
+    // (initPolicy/selectVariant/update/posteriorBest). The RNG call order is
+    // part of the refactor contract — any drift here means the extraction
+    // changed behaviour, not just structure.
+    const reference =
+      '{"impressions":6000,"learnedBest":["exclusive_access","social_proof","urgency"],"oracleBest":["exclusive_access","social_proof","urgency"],"converged":true,"banditRate":0.1675,"randomRate":0.13133333333333333,"globalBestRate":0.13999999999999999,"oracleRate":0.18200000000000002,"liftVsHoldout":0.27538071065989866,"liftVsGlobalBest":0.19642857142857162,"globalBestVariant":"social_proof"}';
+    expect(JSON.stringify(runBandit(42))).toBe(reference);
+  });
 });
