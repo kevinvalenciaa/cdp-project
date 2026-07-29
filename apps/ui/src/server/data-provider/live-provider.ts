@@ -26,7 +26,10 @@ const GUARDRAILS: GuardrailRule[] = [
   { id: "premium_no_discount", rule: "Never propose discounts or promo codes on premium / never-on-sale collections (e.g., Fall Flagship)." },
   { id: "seasonality_not_opportunity", rule: "Do not present an expected seasonal increase as a new opportunity or a behavior change." },
   { id: "premium_brand_tone", rule: "Premium messaging stays aspirational — no aggressive discount/urgency language." },
-  { id: "frequency_cap", rule: "Do not send more than 2 messages to the same customer within a week." },
+  {
+    id: "frequency_cap",
+    rule: "Max 2 messages per customer per 7 days — machine-enforced (server: activation/caps.ts, device: @lift/sdk frequency ledger), not an LLM judgment.",
+  },
 ];
 
 type Category = "found" | "rejected-trap" | "rejected-seasonal" | "needs-test";
