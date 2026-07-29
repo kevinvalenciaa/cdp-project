@@ -1,6 +1,6 @@
 {
   "protocol_version": 1,
-  "bundle_id": "bnd_a95af1040505",
+  "bundle_id": "bnd_0771235efca5",
   "run_id": "board",
   "generated_at": "2026-04-25T00:00:00.000Z",
   "caps": [
@@ -47,14 +47,14 @@
           "arm_id": "A",
           "template": "banner",
           "title": "Second-purchase SMS to one-time buyers",
-          "body": "Your refined taste is showing. Discover curated pieces that complete the vision you've already started. See what's next → [link]",
+          "body": "Your refined taste is showing. Discover curated pieces that complete the vision you've already started. See what's next",
           "cta": "Shop now"
         },
         {
           "arm_id": "B",
           "template": "modal",
           "title": "Second-purchase SMS to one-time buyers",
-          "body": "Welcome to the inner circle. New arrivals this season—handpicked to complement your style. Explore exclusives → [link]",
+          "body": "Welcome to the inner circle. New arrivals this season—handpicked to complement your style. Explore exclusives",
           "cta": "Shop now"
         }
       ],

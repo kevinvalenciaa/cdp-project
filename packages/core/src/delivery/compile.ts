@@ -43,13 +43,27 @@ export async function dataAnchorIso(wh: Client): Promise<string> {
 /** Two creative slots, mirroring the A/B slots campaign_sends already tracks. */
 const SLOTS = ["A", "B"] as const;
 
+/**
+ * The drafted variants are channel creative (SMS/email) being recompiled for
+ * an in-app surface: channel-only placeholders like "[link]" or a trailing
+ * "Reply STOP..." have no meaning in-app — the CTA button IS the link. Strip
+ * them at compile time; the host never has to clean up copy.
+ */
+function inAppBody(text: string): string {
+  return text
+    .replace(/\s*(?:→|->)?\s*\[link\][.!]?\s*$/i, "")
+    .replace(/\s*\[link\]\s*/gi, " ")
+    .replace(/\s*reply stop to opt out[.!]?\s*$/i, "")
+    .trim();
+}
+
 function armsFrom(activation: ActivationResult): Arm[] {
   return activation.variants.slice(0, SLOTS.length).map((v, i) => ({
     arm_id: SLOTS[i]!,
     // First slot renders inline, second as a takeover — host decides how.
     template: i === 0 ? ("banner" as const) : ("modal" as const),
     title: activation.opportunity.title,
-    body: v.text,
+    body: inAppBody(v.text),
     cta: activation.audience.channel === "email" ? "View collection" : "Shop now",
   }));
 }
