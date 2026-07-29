@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
-import type { EngineEvent, Goal, Opportunity, RunDetail } from "@/lib/types";
+import type { EngineEvent, Opportunity, RunDetail } from "@/lib/types";
 import { useEventStream } from "@/lib/use-event-stream";
 import { moneyCompact, monthlyImpact } from "@/lib/format";
-import { AgentPromptBar } from "@/components/inbox/AgentPromptBar";
+import { PromptInputBox } from "@/components/ui/ai-prompt-box";
 import { ResultsRail } from "@/components/inbox/ResultsRail";
-import { ActivityFeed } from "@/components/activity/ActivityFeed";
+import { InvestigationPlan } from "@/components/inbox/InvestigationPlan";
 import { OpportunityDetail } from "@/components/detail/OpportunityDetail";
 
 /**
@@ -26,7 +26,7 @@ interface Turn {
   failed?: string;
 }
 
-export function InboxClient({ initialRun, goals }: { initialRun: RunDetail | null; goals: Goal[] }) {
+export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
   const [run, setRun] = useState<RunDetail | null>(initialRun);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [selected, setSelected] = useState<Opportunity | null>(null);
@@ -35,7 +35,13 @@ export function InboxClient({ initialRun, goals }: { initialRun: RunDetail | nul
   const running = status === "streaming";
   const feedRef = useRef<HTMLDivElement>(null);
 
-  function send(goal: string) {
+  function send(raw: string) {
+    // The prompt box's Search/Think/Canvas modes wrap the text ("[Think: x]")
+    // and its voice mode emits "[Voice message - Ns]". Unwrap the former,
+    // ignore the latter — the engine wants a goal, not UI chrome.
+    const unwrapped = raw.replace(/^\[(?:Search|Think|Canvas): ([\s\S]*)\]$/, "$1").trim();
+    if (!unwrapped || /^\[Voice message/.test(unwrapped)) return;
+    const goal = unwrapped;
     const id = Date.now();
     setTurns((prev) => [...prev, { id, goal, events: [], run: null }]);
     let streamedCost: number | undefined;
@@ -117,7 +123,7 @@ export function InboxClient({ initialRun, goals }: { initialRun: RunDetail | nul
                     </div>
                     <div className="min-w-0 flex-1 space-y-3">
                       <div className="rounded-2xl rounded-tl-md border border-border bg-card px-4 py-3 shadow-ht-xs">
-                        <ActivityFeed events={turnEvents} streaming={isActive} />
+                        <InvestigationPlan events={turnEvents} streaming={isActive} />
                       </div>
                       {t.failed && (
                         <div
@@ -145,7 +151,7 @@ export function InboxClient({ initialRun, goals }: { initialRun: RunDetail | nul
         {/* The input, pinned to the bottom of the conversation */}
         <div className="sticky bottom-0 border-t border-border bg-background/80 px-5 py-4 backdrop-blur xl:static">
           <div className="mx-auto w-full max-w-2xl">
-            <AgentPromptBar goals={goals} running={running} onSend={send} autoFocus={turns.length === 0} />
+            <PromptInputBox onSend={send} isLoading={running} placeholder="Describe a goal for the agents…" />
             <p className="mt-2 text-center text-[11px] text-muted-foreground">
               Every claim is tested against a holdout before it reaches this screen.
             </p>
