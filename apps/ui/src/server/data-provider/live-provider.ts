@@ -20,7 +20,7 @@ import type {
   Opportunity,
   RunDetail,
 } from "@/lib/types";
-import { ingestBatch } from "@/server/delivery/ingest-store";
+import { ingestBatch, renderDeliveryClaim, type SuppressionAggregate } from "@/server/delivery/ingest-store";
 import { store } from "@/server/store";
 import { release, tryAcquire } from "@/server/run-lock";
 import { type DataProvider, sleep } from "./types";
@@ -254,8 +254,50 @@ export const liveProvider: DataProvider = {
   },
 
   async ingest(batch) {
-    return ingestBatch(batch).ack;
+    const { ack, aggregate } = ingestBatch(batch);
+    // The uplink: device-observed delivery facts land in agent Memory, so the
+    // NEXT explorer run reads what delivery actually did (explorer.ts already
+    // renders prior insights into its prompt — no engine change needed).
+    if (aggregate) await uplinkToMemory(batch.batch_id, aggregate);
+    return ack;
   },
 };
+
+/**
+ * Short-lived Memory open/write/close with jittered retry — memory.duckdb is
+ * single-writer and an activation may hold it briefly. On final failure we log
+ * and move on: events + aggregate are already durable, the aggregate is
+ * cumulative, and write() supersedes per subject, so the NEXT batch self-heals
+ * the insight.
+ */
+async function uplinkToMemory(batchId: string, aggregate: SuppressionAggregate): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const mem = await Memory.open();
+      try {
+        for (const [key, row] of Object.entries(aggregate)) {
+          await mem.write({
+            runId: batchId,
+            subject: `${key}#delivery`,
+            subjectType: "campaign",
+            claim: renderDeliveryClaim(key, row),
+            verdict: "observed_delivery",
+            evidence: JSON.stringify(row),
+            confidence: 1,
+          });
+        }
+      } finally {
+        mem.close();
+      }
+      return;
+    } catch (err) {
+      if (attempt === 2) {
+        console.error(`memory uplink failed after 3 attempts (will self-heal on next batch): ${String(err)}`);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 200 + Math.floor(Math.random() * 200)));
+    }
+  }
+}
 
 let liveBundleCache: { key: string; value: { bundle: DecisionBundle; etag: string } } | null = null;

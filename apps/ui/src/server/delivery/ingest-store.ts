@@ -73,6 +73,20 @@ export interface IngestOutcome {
   aggregate: SuppressionAggregate | null;
 }
 
+/**
+ * One sentence a marketer (and the next explorer run) can read. This exact
+ * string lands in Memory under "<key>#delivery" and is rendered into the
+ * explorer prompt — a fact only the device could have known.
+ */
+export function renderDeliveryClaim(key: string, row: SuppressionAggregate[string]): string {
+  const suppressed = Object.entries(row.suppressed)
+    .map(([rule, n]) => `${n} under ${rule}`)
+    .join(", ");
+  const parts = [`Delivery observed for ${key}: ${row.delivered}/${row.decisions} in-app decisions delivered`];
+  if (suppressed) parts.push(`suppressed ${suppressed}`);
+  return `${parts.join("; ")}.`;
+}
+
 export function ingestBatch(raw: unknown): IngestOutcome {
   const batch = EventBatchSchema.parse(raw);
   const path = batchPath(batch.batch_id);

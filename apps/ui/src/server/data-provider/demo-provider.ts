@@ -13,7 +13,7 @@ import type {
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { DecisionBundleSchema, type DecisionBundle } from "@lift/protocol";
-import { ingestBatch } from "@/server/delivery/ingest-store";
+import { ingestBatch, readSuppressions, renderDeliveryClaim } from "@/server/delivery/ingest-store";
 import boardData from "../../../public/board.json";
 import { type DataProvider, sleep } from "./types";
 
@@ -181,7 +181,22 @@ export const demoProvider: DataProvider = {
   },
 
   async listMemory() {
-    return memoryFrom(RUN);
+    // The fixture's synthesized insights, plus any device-observed delivery
+    // facts from real ingests against this dev server — the "next-run context"
+    // beat, with zero spend: a fact only the device could have known shows up
+    // beside the verifier's insights.
+    const base = memoryFrom(RUN);
+    for (const [key, row] of Object.entries(readSuppressions())) {
+      base.unshift({
+        subject: `${key}#delivery`,
+        subjectType: "campaign",
+        claim: renderDeliveryClaim(key, row),
+        verdict: "observed_delivery",
+        confidence: 1,
+        validUntil: "2026-12-31",
+      });
+    }
+    return base;
   },
 
   async getBundle() {

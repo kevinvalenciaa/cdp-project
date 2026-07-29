@@ -3,8 +3,16 @@ import { dirname, resolve } from "node:path";
 import { REPO_ROOT } from "../shared/env.js";
 import { Db, num } from "../shared/db.js";
 
-/** Verdicts that come from the Verifier — only these may be written (the gate). */
-const VERIFIED_VERDICTS = new Set(["real_lift", "no_significant_lift", "explained_by_seasonality", "needs_test"]);
+/**
+ * Verdicts that may be written (the gate). The first four come from the
+ * Verifier. "observed_delivery" is deliberately different: it is a COUNTED
+ * OBSERVATION off a device delivery ledger (suppressions/renders that
+ * happened), not an inference — the gate exists to stop unverified LLM claims,
+ * and a tallied receipt is the most-verified datum in the system. Delivery
+ * subjects are namespaced ("<KEY>#delivery") so the per-subject supersede
+ * below can never clobber the Verifier's insight for the bare key.
+ */
+const VERIFIED_VERDICTS = new Set(["real_lift", "no_significant_lift", "explained_by_seasonality", "needs_test", "observed_delivery"]);
 
 export type SubjectType = "initiative" | "audience" | "journey" | "campaign" | "message";
 
