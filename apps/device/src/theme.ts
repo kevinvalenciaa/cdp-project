@@ -1,4 +1,4 @@
-import { Easing } from "react-native";
+import { Easing, type FontVariant } from "react-native";
 
 /**
  * Editorial-light design tokens — the storefront's single source of truth.
@@ -35,7 +35,7 @@ export const theme = {
     headline: { fontFamily: "Fraunces_500Medium", fontSize: 22, lineHeight: 27 },
     title: { fontFamily: "Inter_600SemiBold", fontSize: 15, lineHeight: 20 },
     body: { fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 21 },
-    price: { fontFamily: "Inter_500Medium", fontSize: 14, lineHeight: 20, fontVariant: ["tabular-nums"] as const },
+    price: { fontFamily: "Inter_500Medium", fontSize: 14, lineHeight: 20, fontVariant: ["tabular-nums"] as FontVariant[] },
     eyebrow: {
       fontFamily: "Inter_600SemiBold",
       fontSize: 11,
@@ -45,7 +45,7 @@ export const theme = {
     },
     caption: { fontFamily: "Inter_400Regular", fontSize: 12, lineHeight: 16 },
     /** Debug metrics — tabular so counters do not jitter. */
-    mono: { fontFamily: "Inter_500Medium", fontSize: 11, lineHeight: 15, fontVariant: ["tabular-nums"] as const },
+    mono: { fontFamily: "Inter_500Medium", fontSize: 11, lineHeight: 15, fontVariant: ["tabular-nums"] as FontVariant[] },
   },
   motion: {
     fast: 150,
