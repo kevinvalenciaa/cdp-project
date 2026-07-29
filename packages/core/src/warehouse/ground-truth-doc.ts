@@ -81,6 +81,41 @@ export async function seasonalityInflation(db: Db): Promise<number> {
   return q4 / all - 1;
 }
 
+export interface ChannelPreferenceStat {
+  campaign_id: string;
+  channel: string;
+  responderRate: number; // treated conversion rate among channel responders
+  nonResponderRate: number; // treated conversion rate among non-responders
+  ratio: number;
+}
+
+/** Treated conversion by channel-responder flag — proves the planted channel signal is in-data. */
+export async function channelPreferenceStats(db: Db): Promise<Map<string, ChannelPreferenceStat>> {
+  const rows = await db.all<Record<string, unknown>>(`
+    SELECT s.campaign_id, cp.channel,
+      AVG(CASE WHEN (cp.channel='sms' AND c.sms_responder) OR (cp.channel='email' AND c.email_responder) THEN s.converted END) AS responder_rate,
+      AVG(CASE WHEN NOT ((cp.channel='sms' AND c.sms_responder) OR (cp.channel='email' AND c.email_responder)) THEN s.converted END) AS non_responder_rate
+    FROM campaign_sends s
+    JOIN customers c USING (customer_id)
+    JOIN campaigns cp USING (campaign_id)
+    WHERE s.treatment = 1 AND cp.channel IN ('sms', 'email')
+    GROUP BY s.campaign_id, cp.channel;
+  `);
+  const map = new Map<string, ChannelPreferenceStat>();
+  for (const r of rows) {
+    const rr = num(r.responder_rate);
+    const nr = num(r.non_responder_rate);
+    map.set(String(r.campaign_id), {
+      campaign_id: String(r.campaign_id),
+      channel: String(r.channel),
+      responderRate: rr,
+      nonResponderRate: nr,
+      ratio: nr > 0 ? rr / nr : Number.POSITIVE_INFINITY,
+    });
+  }
+  return map;
+}
+
 export async function guardrailStats(db: Db): Promise<{ count: number; example: string }> {
   const row = await db.one<Record<string, unknown>>(`
     SELECT COUNT(*) AS c,
@@ -96,6 +131,7 @@ export async function writeGroundTruth(db: Db, repoRoot: string): Promise<void> 
   const under = await underservedStats(db);
   const seasonal = await seasonalityInflation(db);
   const guard = await guardrailStats(db);
+  const channel = await channelPreferenceStats(db);
 
   const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
   const pp = (x: number) => `${(x * 100).toFixed(1)}pp`;
@@ -135,9 +171,26 @@ ${campaignTable}
 ## 4. Guardrail bait
 **${guard.count}** premium SKUs are flagged \`never_discount\` (e.g., *${guard.example}*). A proposal to discount these must be **blocked** by the composable-context guardrail (Phase 4).
 
+## 5. Channel-preference signal
+Treated conversions land preferentially on channel responders (planted weight 3×), so "which customers respond to SMS" is discoverable **in-data**, and activation's persuadable filter is load-bearing, not cosmetic. Control arms are uniform (organic conversion is channel-independent). Realized treated conversion, responder vs non-responder:
+${[...channel.values()].map((c) => `- \`${c.campaign_id}\` (${c.channel}): ${pct(c.responderRate)} vs ${pct(c.nonResponderRate)} (${c.ratio.toFixed(1)}×)`).join("\n")}
+
+## Schema naming vs the spec's suggested tables
+The spec sketch suggests \`users/events/campaigns/sends/conversions/segments\`. This warehouse models the same six concepts with warehouse-native naming — a deliberate deviation, documented here:
+| Spec concept | Here | Note |
+|---|---|---|
+| \`users\` | \`customers\` | plus the derived \`customer_360\` view |
+| \`events\` | \`orders\` + \`order_items\` | purchase events; no separate clickstream table |
+| \`campaigns\` | \`campaigns\` | 1:1 |
+| \`sends\` | \`campaign_sends\` | includes treatment/holdout arm + variant |
+| \`conversions\` | columns on \`campaign_sends\` | \`converted\`, \`converted_at\`, \`revenue\` — a conversion is a property of a send, not a separate entity |
+| \`segments\` | \`customer_360\` view + TS predicates | segments are governed queries, not a materialized table |
+
+**Note on the trap:** the spec suggests planting an audience that *never converts* regardless of treatment. We invert it: \`VIP_LOYALTY_BLAST\` **always converts (~42%) with zero incremental lift** — the same durable lesson for memory ("not persuadable — don't spend here"), but a sharper demo because raw conversion actively *tempts* a naive ranker.
+
 ## Expected end-to-end behavior
-- Rank by reach × value × **uplift**: \`SECOND_PURCHASE_SMS\` / \`CROSS_CATEGORY_SMS\` high; \`VIP_LOYALTY_BLAST\` demoted.
-- Verifier **rejects** the seasonality spike and the VIP trap with numeric reasons; the bare LLM accepts both.
+- Rank by reach × value × **uplift**: \`SECOND_PURCHASE_SMS\` / \`CROSS_CATEGORY_SMS\` / \`SPRING_DROP_CREATIVE\` high; \`VIP_LOYALTY_BLAST\` demoted.
+- Verifier **rejects** the seasonality spike and the VIP trap with numeric reasons. The bare LLM **accepts the VIP trap** (raw conversion looks great); on the seasonal spike it can only hedge — it lacks the series and the statistics to verify, while the Verifier decomposes and quantifies it.
 - Memory records the rejected trap so a second run does not re-surface it.
 `;
 

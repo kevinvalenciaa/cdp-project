@@ -52,18 +52,27 @@ function normalize(v: unknown): unknown {
 }
 
 export class Warehouse {
-  private constructor(private readonly conn: DuckDBConnection) {}
+  private constructor(
+    private readonly conn: DuckDBConnection,
+    private readonly timeoutMs: number,
+  ) {}
 
-  static async open(): Promise<Warehouse> {
-    // Open the database in READ_ONLY mode — least privilege at the engine level.
+  /**
+   * STRICTLY read-only: least privilege enforced at the engine level, not the prompt level.
+   * No fallback — if the READ_ONLY open fails we fail loudly rather than silently reopening
+   * with write access (a silent fallback would defeat the whole guarantee, and READ_ONLY
+   * cannot create a missing file, which is exactly right: seeding has its own write path).
+   */
+  static async open(opts: { path?: string; timeoutMs?: number } = {}): Promise<Warehouse> {
+    const path = opts.path ?? config.duckdbPath;
     let instance: DuckDBInstance;
     try {
-      instance = await DuckDBInstance.create(config.duckdbPath, { access_mode: "READ_ONLY" });
-    } catch {
-      instance = await DuckDBInstance.create(config.duckdbPath);
+      instance = await DuckDBInstance.create(path, { access_mode: "READ_ONLY" });
+    } catch (e) {
+      throw new Error(`Warehouse could not be opened READ_ONLY at ${path} (did you run \`pnpm seed\`?): ${String(e)}`);
     }
     const conn = await instance.connect();
-    return new Warehouse(conn);
+    return new Warehouse(conn, opts.timeoutMs ?? config.queryTimeoutMs);
   }
 
   async listTables(): Promise<{ name: string; rows: number; description: string }[]> {
@@ -104,10 +113,28 @@ export class Warehouse {
     const safe = assertReadOnly(sql);
     const start = Date.now();
     const exec = this.conn.runAndReadAll(safe);
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`Query exceeded ${config.queryTimeoutMs}ms timeout.`)), config.queryTimeoutMs),
-    );
-    const reader = await Promise.race([exec, timeout]);
+    // The timeout KILLS the query, not just the await: interrupt() aborts execution inside
+    // DuckDB, so a runaway query can't keep burning CPU and serializing later calls on this
+    // connection. The interrupted exec promise rejects too — swallow it so it can't surface
+    // as an unhandled rejection after we've already rejected with the timeout error.
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        try {
+          this.conn.interrupt();
+        } catch {
+          /* best effort */
+        }
+        reject(new Error(`Query exceeded ${this.timeoutMs}ms timeout (query interrupted).`));
+      }, this.timeoutMs);
+    });
+    exec.catch(() => {});
+    let reader: Awaited<typeof exec>;
+    try {
+      reader = await Promise.race([exec, timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
     const allRows = reader.getRowObjects() as Record<string, unknown>[];
     const columns = allRows[0] ? Object.keys(allRows[0]) : [];
     const truncated = allRows.length > MAX_ROWS;

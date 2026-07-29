@@ -1,0 +1,11 @@
+**/node_modules
+**/.next
+**/out
+**/dist
+**/.venv
+runs
+.git
+.env
+.env.local
+*.duckdb
+**/audit.log

@@ -61,6 +61,31 @@ dimensions:
   treatment: { table: campaign_sends, sql: "treatment" }
   variant: { table: campaign_sends, sql: "variant" }
 
+# Aliases -> canonical metric names. Resolution only: a synonym can never point outside
+# the catalog above, so the governed surface stays exactly as big as `metrics:`.
+synonyms:
+  revenue: total_revenue
+  sales: total_revenue
+  aov: avg_order_value
+  orders: order_count
+  ltv: avg_ltv
+  lifetime_value: avg_ltv
+  cvr: conversion_rate
+  conversion: conversion_rate
+  churn: churn_rate
+  customers: customer_count
+  repeat_rate: repeat_purchase_rate
+
+# Documentary only — runMetric stays single-table BY DESIGN. Joins would reintroduce the
+# silent-wrong-number class (fan-out duplication, missed join keys) this layer exists to
+# prevent; customer_360 is the governed pre-join for cross-table questions.
+relationships:
+  - orders.customer_id -> customers.customer_id
+  - order_items.order_id -> orders.order_id
+  - order_items.product_id -> products.product_id
+  - campaign_sends.customer_id -> customers.customer_id
+  - campaign_sends.campaign_id -> campaigns.campaign_id
+
 # Columns that may be used in run_metric/design_holdout filters (allowlist => no injection).
 filterable:
   customer_360: [region, value_tier, acquisition_channel, first_category, n_orders, total_revenue, avg_order_value, categories_purchased, is_one_time_buyer, is_churn_risk, sms_responder, email_responder]

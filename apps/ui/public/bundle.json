@@ -1,0 +1,128 @@
+{
+  "protocol_version": 1,
+  "bundle_id": "bnd_a95af1040505",
+  "run_id": "board",
+  "generated_at": "2026-04-25T00:00:00.000Z",
+  "caps": [
+    {
+      "id": "weekly_2",
+      "scope": "user",
+      "channel": "any",
+      "max": 2,
+      "window": "P7D"
+    },
+    {
+      "id": "session_1",
+      "scope": "session",
+      "channel": "in_app",
+      "max": 1,
+      "window": "session"
+    }
+  ],
+  "campaigns": [
+    {
+      "campaign_id": "c_second_purchase_sms",
+      "opportunity_key": "SECOND_PURCHASE_SMS",
+      "surface": "home_hero",
+      "channel": "in_app",
+      "priority": 10,
+      "eligibility": {
+        "all": [
+          {
+            "column": "is_one_time_buyer",
+            "op": "=",
+            "value": true
+          },
+          {
+            "column": "sms_responder",
+            "op": "=",
+            "value": true
+          }
+        ]
+      },
+      "segment_key": "attr:value_tier",
+      "caps": [],
+      "arms": [
+        {
+          "arm_id": "A",
+          "template": "banner",
+          "title": "Second-purchase SMS to one-time buyers",
+          "body": "Your refined taste is showing. Discover curated pieces that complete the vision you've already started. See what's next → [link]",
+          "cta": "Shop now"
+        },
+        {
+          "arm_id": "B",
+          "template": "modal",
+          "title": "Second-purchase SMS to one-time buyers",
+          "body": "Welcome to the inner circle. New arrivals this season—handpicked to complement your style. Explore exclusives → [link]",
+          "cta": "Shop now"
+        }
+      ],
+      "guardrail_ids": [
+        "premium_no_discount",
+        "seasonality_not_opportunity",
+        "premium_brand_tone"
+      ],
+      "provenance": {
+        "run_id": "board",
+        "opportunity_key": "SECOND_PURCHASE_SMS",
+        "fingerprints": [
+          "88c61ddfbd10fa90",
+          "2a1ef455e0652744"
+        ]
+      }
+    }
+  ],
+  "policy": {
+    "segments": {
+      "high": {
+        "A": {
+          "alpha": 3,
+          "beta": 8
+        },
+        "B": {
+          "alpha": 2,
+          "beta": 21
+        }
+      },
+      "low": {
+        "A": {
+          "alpha": 28,
+          "beta": 174
+        },
+        "B": {
+          "alpha": 29,
+          "beta": 157
+        }
+      },
+      "mid": {
+        "A": {
+          "alpha": 12,
+          "beta": 85
+        },
+        "B": {
+          "alpha": 18,
+          "beta": 88
+        }
+      },
+      "vip": {
+        "A": {
+          "alpha": 1,
+          "beta": 3
+        },
+        "B": {
+          "alpha": 2,
+          "beta": 3
+        }
+      }
+    }
+  },
+  "recent_sends": [
+    {
+      "channel": "sms",
+      "campaign_id": "c_second_purchase_sms",
+      "sent_at": "2026-04-25T00:00:00.000Z"
+    }
+  ],
+  "holdout_fraction": 0
+}

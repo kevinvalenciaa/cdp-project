@@ -20,6 +20,10 @@ rules:
     rule: >
       Messaging for premium lines must stay aspirational and on-brand. No aggressive
       discount/urgency language (e.g., "CLEARANCE", "blowout", "everything must go") for premium products.
-  - id: frequency_cap
-    rule: >
-      Do not propose sending more than 2 messages to the same customer within a single week.
+
+# frequency_cap is NOT a rule here anymore, deliberately. A cap is arithmetic over a send
+# ledger, not a judgment call — an LLM grading creative copy against "max 2 per week" can
+# never enforce it (a message body cannot violate a counter). It is machine-enforced:
+#   - server: activation/caps.ts (deterministic exclusion against campaign_sends)
+#   - device: @lift/sdk frequency.ts (monotonic-clock ledger at delivery time)
+# LLMs author and judge; code counts.

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @lift/protocol build && pnpm --filter @lift/core build && pnpm --filter @lift/ui build",
+  "outputDirectory": "apps/ui/.next",
+  "env": {
+    "LIFT_MODE": "demo"
+  }
+}

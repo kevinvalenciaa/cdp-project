@@ -17,7 +17,10 @@ async function main(): Promise<void> {
 
   console.log(`\n=== Phase 6: activate "${r.opportunity.title}" (verified +${r.opportunity.upliftPp?.toFixed(1)}pp) ===\n`);
   console.log(`AUDIENCE: ${r.audience.label}`);
-  console.log(`  reach=${r.audience.reach}  persuadable=${r.audience.persuadableReach} (${r.audience.persuadableFilter})  channel=${r.audience.channel}`);
+  console.log(`  reach=${r.audience.reach}  persuadable=${r.audience.persuadableReach} (${r.audience.persuadableSql})  channel=${r.audience.channel}`);
+  console.log(
+    `  frequency cap [${r.cap.ruleId}]: max ${r.cap.maxSends}/${r.cap.windowDays}d anchored ${r.cap.anchor} → ${r.cap.excluded} excluded (deterministic, not LLM-judged)`,
+  );
   console.log(`  sample member ids: ${r.audience.sampleMembers.join(", ")}`);
 
   console.log(`\nCREATIVE BRIEF (Agentic CDP draft work):\n${r.brief.split("\n").map((l) => `  ${l}`).join("\n")}`);

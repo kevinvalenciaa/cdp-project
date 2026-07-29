@@ -8,12 +8,15 @@ import { Memory } from "../memory/store.js";
 import { checkAction, type GuardResult } from "../guardrails/guard.js";
 import { simulateActivationOutcome } from "../outcomes/simulator.js";
 import { compileAudience, type AudienceDef } from "./audience.js";
+import { applyFrequencyCap, type CapResult } from "./caps.js";
 import { draftCreativeBrief, draftVariants } from "./creative.js";
 import { syncToDestination, type SyncResult, type Variant } from "./connectors.js";
 
 export interface ActivationResult {
   opportunity: Opportunity;
   audience: AudienceDef;
+  /** Deterministic frequency-cap exclusion (machine-enforced, not LLM-judged). */
+  cap: CapResult;
   brief: string;
   variants: Variant[];
   guardrail: { allowed: boolean; details: GuardResult[] };
@@ -47,16 +50,21 @@ export async function activateOpportunity(runId: string, preferKey = "SECOND_PUR
   // 1. Concrete audience (reach + persuadable sub-segment).
   const audience = await compileAudience(wh, opp.key);
 
+  // 1b. Deterministic frequency cap: exclude members already at max sends in
+  // the window. Arithmetic over campaign_sends — code counts; LLMs never do.
+  const cap = await applyFrequencyCap(wh, audience.filterSql, audience.persuadableSql);
+
   // 2. Agentic-CDP draft work + AMP-analog assets.
   const brief = await draftCreativeBrief(client, ledger, opp, audience);
   const variants = await draftVariants(client, ledger, brief, audience.channel, 2);
 
-  // 3. Guardrail the drafts before any activation.
+  // 3. Guardrail the drafts before any activation — the three JUDGMENT rules
+  // (brand, tone, seasonality) stay with the LLM; the cap above does not.
   const details = await Promise.all(variants.map((v) => checkAction(client, `${audience.channel} message: ${v.text}`, ledger)));
   const guardrail = { allowed: details.every((g) => g.allowed), details };
 
-  // 4. Simulated activation (only if guardrail-clean).
-  const sync = guardrail.allowed ? syncToDestination(runId, audience, brief, variants) : null;
+  // 4. Simulated activation (only if guardrail-clean), capped members excluded.
+  const sync = guardrail.allowed ? syncToDestination(runId, audience, brief, variants, cap) : null;
 
   // 5. Simulated outcome + holdout measurement. We targeted the PERSUADABLE sub-segment
   // (e.g., SMS-responders), who by definition respond better than the broad average — so
@@ -65,7 +73,8 @@ export async function activateOpportunity(runId: string, preferKey = "SECOND_PUR
   const baseT = ev.n_t ? ev.conv_t / ev.n_t : 0.12;
   const trueT = Math.min(0.6, baseT * 1.3);
   const trueC = ev.n_c ? ev.conv_c / ev.n_c : 0.08;
-  const out = simulateActivationOutcome(config.seed, audience.persuadableReach, trueT, trueC);
+  // Measure only who was actually sent to: persuadables minus the cap-excluded.
+  const out = simulateActivationOutcome(config.seed, audience.persuadableReach - cap.excluded, trueT, trueC);
   const test = JSON.parse(
     (await callMcpTool(stats, "verify_lift_claim", { conv_t: out.treatmentConv, n_t: out.treatmentN, conv_c: out.controlConv, n_c: out.controlN })).text,
   );
@@ -89,9 +98,11 @@ export async function activateOpportunity(runId: string, preferKey = "SECOND_PUR
       runId,
       subject: opp.key,
       subjectType: "campaign",
-      claim: `Activated ${opp.title}: measured +${measurement.upliftPp.toFixed(1)}pp (${measurement.verdict}) on ${audience.persuadableReach} persuadables`,
+      claim: `Activated ${opp.title}: measured +${measurement.upliftPp.toFixed(1)}pp (${measurement.verdict}) on ${audience.persuadableReach - cap.excluded} persuadables (${cap.excluded} at frequency cap)`,
       verdict: measurement.verdict,
-      evidence: JSON.stringify(out),
+      // Traceable memory: the outcome numbers plus the run + the query fingerprints that
+      // justified activating this opportunity in the first place.
+      evidence: JSON.stringify({ ...out, runIds: [runId], fingerprints: opp.provenance?.queries.map((q) => q.fingerprint) ?? [] }),
       confidence: 0.92,
     });
     memoryWritten = true;
@@ -102,5 +113,5 @@ export async function activateOpportunity(runId: string, preferKey = "SECOND_PUR
 
   await wh.close();
   await stats.close();
-  return { opportunity: opp, audience, brief, variants, guardrail, sync, measurement, memoryWritten, costUsd: ledger.totalUsd() };
+  return { opportunity: opp, audience, cap, brief, variants, guardrail, sync, measurement, memoryWritten, costUsd: ledger.totalUsd() };
 }

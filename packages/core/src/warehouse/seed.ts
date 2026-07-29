@@ -240,7 +240,9 @@ function eligibleFor(audience: PlantedCampaign["audience"], c: CustomerStats): b
     case "one_time_buyers":
       return c.orders.length === 1 && daysBetween(c.firstDate, parseYmd("2026-04-05")) >= 30 && daysBetween(c.firstDate, parseYmd("2026-04-05")) <= 180;
     case "first_time_single_category":
-      return c.orders.length === 1 && c.categories.size === 1 && c.firstDate.getUTCFullYear() >= 2025;
+      // >= 2024 (not 2025): the cross-category experiment needs ~1,600+ eligible customers
+      // so its planted +4pp lift is powered (see config.ts holdoutFraction note).
+      return c.orders.length === 1 && c.categories.size === 1 && c.firstDate.getUTCFullYear() >= 2024;
     case "vip_high_value":
       return c.value_tier === "vip";
     case "lapsing_browsers":
@@ -259,7 +261,7 @@ function generateCampaignSends(rng: Rng, customers: CustomerStats[]) {
   let sendId = 1;
   const caps: Record<string, number> = {
     one_time_buyers: 2500,
-    first_time_single_category: 1200,
+    first_time_single_category: 2600, // powered for the +4pp cross-category lift (~800+/arm at 50/50)
     vip_high_value: 1200,
     lapsing_browsers: 1500,
     drop_lookalike_a: 900,
@@ -293,8 +295,28 @@ function generateCampaignSends(rng: Rng, customers: CustomerStats[]) {
     const emitArm = (arm: CustomerStats[], treatment: number, rate: number) => {
       const nConv = Math.round(rate * arm.length);
       const shuffled = rng.shuffle(arm);
-      shuffled.forEach((c, idx) => {
-        const converted = idx < nConv ? 1 : 0;
+      // Channel-preference signal (planted, discoverable): TREATED conversions land
+      // preferentially on channel responders (weight 3× for sms_responder on SMS sends,
+      // email analog). Arm-level totals stay EXACT via the quota, so planted rates and
+      // every verdict are untouched — only who-converts within the arm shifts. Control
+      // arms stay uniform: organic conversion is channel-independent (the honest causal
+      // story — the channel only matters when you actually message someone through it).
+      const weightOf = (c: CustomerStats): number =>
+        treatment !== 1 ? 1
+        : camp.channel === "sms" ? (c.sms_responder ? 3 : 1)
+        : camp.channel === "email" ? (c.email_responder ? 3 : 1)
+        : 1;
+      // Efraimidis–Spirakis weighted sampling without replacement, deterministic via rng.
+      const keyed = shuffled.map((c) => ({ c, key: Math.pow(rng.next(), 1 / weightOf(c)) }));
+      const converters = new Set(
+        keyed
+          .slice()
+          .sort((a, b) => b.key - a.key)
+          .slice(0, nConv)
+          .map((x) => x.c.customer_id),
+      );
+      shuffled.forEach((c) => {
+        const converted = converters.has(c.customer_id) ? 1 : 0;
         const sentAt = parseYmd(camp.startDate);
         const convertedAt = converted ? ymd(addDays(sentAt, rng.int(1, 14))) : null;
         const revenue = converted ? Math.round(rng.float(60, 280)) : 0;

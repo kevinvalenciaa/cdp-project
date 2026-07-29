@@ -2,7 +2,7 @@
   "name": "lift-compass",
   "version": "0.1.0",
   "private": true,
-  "description": "Lift Compass — a closed-loop Agentic CDP prototype (warehouse-native, causally-credible marketing opportunity engine).",
+  "description": "Lift Compass \u2014 a closed-loop Agentic CDP prototype (warehouse-native, causally-credible marketing opportunity engine).",
   "packageManager": "pnpm@9.15.2",
   "engines": {
     "node": ">=20"
@@ -29,8 +29,9 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "lint": "pnpm -r --if-present lint",
-    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm stats:test",
-    "stats:test": "cd services/stats && uv run pytest -q"
+    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm stats:test && pnpm --filter @lift/core stream:test",
+    "stats:test": "cd services/stats && uv run pytest -q",
+    "device:dev": "pnpm --filter @lift/protocol build && pnpm --filter @lift/sdk build && pnpm --filter @lift/device dev"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

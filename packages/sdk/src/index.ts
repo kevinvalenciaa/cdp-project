@@ -1,0 +1,10 @@
+export { LiftCompass, SDK_VERSION, type LiftConfig, type DebugState } from "./client.js";
+export { evaluateBundle, type Decision, type EvalCtx } from "./eligibility.js";
+export { matchPredicate, type Attrs, type AttrValue, type MatchResult } from "./predicate.js";
+export { FrequencyLedger, checkCap, type LedgerEntry, type CapCheck } from "./frequency.js";
+export { EventQueue } from "./queue.js";
+export { selectArm } from "./policy.js";
+export { Rng, betaSample, gammaSample, fnv1a } from "./rng.js";
+export { computeSkewMs, elapsedMs, parseWindowMs, type Clock, type ClockSource } from "./clock.js";
+export { MemoryStorage, type StorageAdapter } from "./storage.js";
+export { fetchBundle, postBatch, type BundleFetch, type IngestResult } from "./transport.js";

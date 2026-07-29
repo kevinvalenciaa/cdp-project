@@ -13,11 +13,11 @@ A strong yearly curve (amplitude 0.8, peak ~day 330 / late Nov) plus a weekend b
 | Campaign | Audience | Planted T/C rate | Planted lift | Realized T/C rate | Realized lift | Expected verdict |
 |---|---|---|---|---|---|---|
 | `SECOND_PURCHASE_SMS` | one_time_buyers | 14.0% / 8.0% | 6.0pp | 14.1% / 7.9% (n=618/152) | 6.2pp | **real_lift** |
-| `VIP_LOYALTY_BLAST` | vip_high_value | 42.0% / 42.0% | 0.0pp | 42.1% / 42.1% (n=368/297) | 0.0pp | **no_lift_trap** |
-| `CROSS_CATEGORY_SMS` | first_time_single_category | 11.0% / 7.0% | 4.0pp | 11.0% / 7.0% (n=543/171) | 4.0pp | **real_lift** |
-| `RETARGET_NEAR_MISS` | lapsing_browsers | 10.5% / 9.5% | 1.0pp | 10.4% / 9.7% (n=357/238) | 0.7pp | **near_miss_insignificant** |
-| `SPRING_DROP_CREATIVE` | drop_lookalike_a | 13.0% / 6.0% | 7.0pp | 13.0% / 6.2% (n=705/195) | 6.9pp | **real_lift** |
-| `SPRING_EVERGREEN_CREATIVE` | drop_lookalike_b | 8.5% / 6.0% | 2.5pp | 8.5% / 6.2% (n=234/65) | 2.4pp | **real_lift** |
+| `VIP_LOYALTY_BLAST` | vip_high_value | 42.0% / 42.0% | 0.0pp | 41.9% / 42.0% (n=351/314) | -0.2pp | **no_lift_trap** |
+| `CROSS_CATEGORY_SMS` | first_time_single_category | 11.0% / 7.0% | 4.0pp | 11.0% / 6.9% (n=537/533) | 4.0pp | **real_lift** |
+| `RETARGET_NEAR_MISS` | lapsing_browsers | 10.5% / 9.5% | 1.0pp | 10.6% / 9.3% (n=359/236) | 1.3pp | **near_miss_insignificant** |
+| `SPRING_DROP_CREATIVE` | drop_lookalike_a | 13.0% / 6.0% | 7.0pp | 13.1% / 6.1% (n=704/196) | 6.9pp | **real_lift** |
+| `SPRING_EVERGREEN_CREATIVE` | drop_lookalike_b | 8.5% / 6.0% | 2.5pp | 8.2% / 7.4% (n=146/27) | 0.8pp | **near_miss_insignificant** |
 
 - **`SECOND_PURCHASE_SMS`** — the genuine headline opportunity (Hightouch's "drive more second purchases"). Real ~+6pp lift, should pass.
 - **`VIP_LOYALTY_BLAST`** — the **TRAP**: ~42% raw conversion but **~0 incremental lift** (they convert anyway). Naive propensity ranks it #1; the uplift engine must **demote it** (lift CI includes 0), and the bare LLM (no verifier) should accept it.
@@ -33,7 +33,28 @@ A strong yearly curve (amplitude 0.8, peak ~day 330 / late Nov) plus a weekend b
 ## 4. Guardrail bait
 **15** premium SKUs are flagged `never_discount` (e.g., *Fall Flagship Outerwear 3*). A proposal to discount these must be **blocked** by the composable-context guardrail (Phase 4).
 
+## 5. Channel-preference signal
+Treated conversions land preferentially on channel responders (planted weight 3×), so "which customers respond to SMS" is discoverable **in-data**, and activation's persuadable filter is load-bearing, not cosmetic. Control arms are uniform (organic conversion is channel-independent). Realized treated conversion, responder vs non-responder:
+- `SPRING_EVERGREEN_CREATIVE` (email): 10.1% vs 5.3% (1.9×)
+- `SPRING_DROP_CREATIVE` (email): 17.5% vs 7.0% (2.5×)
+- `SECOND_PURCHASE_SMS` (sms): 24.6% vs 7.2% (3.4×)
+- `VIP_LOYALTY_BLAST` (email): 55.8% vs 24.0% (2.3×)
+- `CROSS_CATEGORY_SMS` (sms): 15.7% vs 7.8% (2.0×)
+
+## Schema naming vs the spec's suggested tables
+The spec sketch suggests `users/events/campaigns/sends/conversions/segments`. This warehouse models the same six concepts with warehouse-native naming — a deliberate deviation, documented here:
+| Spec concept | Here | Note |
+|---|---|---|
+| `users` | `customers` | plus the derived `customer_360` view |
+| `events` | `orders` + `order_items` | purchase events; no separate clickstream table |
+| `campaigns` | `campaigns` | 1:1 |
+| `sends` | `campaign_sends` | includes treatment/holdout arm + variant |
+| `conversions` | columns on `campaign_sends` | `converted`, `converted_at`, `revenue` — a conversion is a property of a send, not a separate entity |
+| `segments` | `customer_360` view + TS predicates | segments are governed queries, not a materialized table |
+
+**Note on the trap:** the spec suggests planting an audience that *never converts* regardless of treatment. We invert it: `VIP_LOYALTY_BLAST` **always converts (~42%) with zero incremental lift** — the same durable lesson for memory ("not persuadable — don't spend here"), but a sharper demo because raw conversion actively *tempts* a naive ranker.
+
 ## Expected end-to-end behavior
-- Rank by reach × value × **uplift**: `SECOND_PURCHASE_SMS` / `CROSS_CATEGORY_SMS` high; `VIP_LOYALTY_BLAST` demoted.
-- Verifier **rejects** the seasonality spike and the VIP trap with numeric reasons; the bare LLM accepts both.
+- Rank by reach × value × **uplift**: `SECOND_PURCHASE_SMS` / `CROSS_CATEGORY_SMS` / `SPRING_DROP_CREATIVE` high; `VIP_LOYALTY_BLAST` demoted.
+- Verifier **rejects** the seasonality spike and the VIP trap with numeric reasons. The bare LLM **accepts the VIP trap** (raw conversion looks great); on the seasonal spike it can only hedge — it lacks the series and the statistics to verify, while the Verifier decomposes and quantifies it.
 - Memory records the rejected trap so a second run does not re-surface it.

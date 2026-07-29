@@ -6,6 +6,7 @@ import { CostLedger } from "../shared/cost.js";
 import type { Plan, ToolDef, TraceEvent } from "../shared/types.js";
 import { agentLoop, localToolDefs, newClient } from "./loop.js";
 import { bridgeTools, callMcpTool, connectStats, connectWarehouse } from "./mcp-client.js";
+import { Memory } from "../memory/store.js";
 import { PlanManager } from "./plan.js";
 import { Scratchpad } from "./scratchpad.js";
 import { runInvestigator } from "./subagent.js";
@@ -133,13 +134,35 @@ export class Harness {
 
   private goal = "";
 
-  async run(goal: string): Promise<RunResult> {
+  /**
+   * Compounding memory, injected at run start: prior VERIFIED insights ride in as a user
+   * turn (not SYSTEM) so the orchestrator can quote or contradict them, capped at 5 to
+   * protect context density. This is what makes run N+1 start from run N's conclusions.
+   */
+  private async memoryBlock(): Promise<string> {
+    try {
+      const memory = await Memory.open();
+      const prior = (await memory.getValid()).sort((a, b) => b.confidence - a.confidence).slice(0, 5);
+      memory.close();
+      if (prior.length === 0) return "";
+      return (
+        `Known VERIFIED insights from prior runs (do not re-litigate; re-verify only if new evidence contradicts):\n` +
+        prior.map((p) => `- [${p.subjectType} ${p.subject}] ${p.claim}`).join("\n") +
+        `\n\n`
+      );
+    } catch {
+      return ""; // memory is an accelerant, never a blocker
+    }
+  }
+
+  async run(goal: string, opts: { noMemory?: boolean } = {}): Promise<RunResult> {
     this.goal = goal;
+    const memoryBlock = opts.noMemory ? "" : await this.memoryBlock();
     const { finalText: loopText } = await agentLoop({
       client: this.client,
       model: config.models.reasoning,
       system: SYSTEM,
-      initialUser: `Goal: ${goal}`,
+      initialUser: `${memoryBlock}Goal: ${goal}`,
       tools: [...localToolDefs(), ...this.mcpTools],
       dispatch: (n, i) => this.dispatch(n, i),
       ledger: this.ledger,

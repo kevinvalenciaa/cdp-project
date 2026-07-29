@@ -10,27 +10,60 @@
         "segment": "Drop-lookalike audience (creative A/B vs evergreen)",
         "type": "experiment",
         "reach": 900,
-        "value": 186.33653846153845,
-        "rawConversion": 13.049645390070921,
-        "upliftPp": 6.895799236224767,
+        "value": 173.55769230769232,
+        "rawConversion": 13.068181818181818,
+        "upliftPp": 6.945732838589981,
         "ci": [
-          2.7053810419862314,
-          11.086217430463302
+          2.766757793795352,
+          11.12470788338461
         ],
-        "pValue": 0.00767815896478341,
+        "pValue": 0.007141461321601872,
         "verdict": "real_lift",
         "accepted": true,
-        "score": 11564.454236434594,
-        "reason": "Significant +6.9% incremental lift (p=0.008, 95% CI excludes 0).",
+        "score": 10849.36826566291,
+        "reason": "Significant +6.9% incremental lift (p=0.007, 95% CI excludes 0).",
+        "naiveClaim": "Campaign \"Spring launch — product-drop creative\" reached ~900 customers and converted at 13.1%.",
         "evidence": {
           "conv_t": 92,
-          "n_t": 705,
+          "n_t": 704,
           "conv_c": 12,
-          "n_c": 195
+          "n_c": 196
+        },
+        "provenance": {
+          "queries": [
+            {
+              "sql": "SELECT treatment, COUNT(*) AS n, SUM(converted) AS conv FROM campaign_sends WHERE campaign_id='SPRING_DROP_CREATIVE' GROUP BY treatment ORDER BY treatment",
+              "resultHash": "1e3f1af3d3202800",
+              "fingerprint": "eb4f9430c95ab38a"
+            },
+            {
+              "sql": "SELECT AVG(revenue) AS v FROM campaign_sends WHERE campaign_id='SPRING_DROP_CREATIVE' AND converted=1",
+              "resultHash": "6a3afee4df3fca99",
+              "fingerprint": "2b8defa05972a820"
+            }
+          ],
+          "stats": {
+            "tool": "verify_lift_claim",
+            "args": {
+              "conv_t": 92,
+              "n_t": 704,
+              "conv_c": 12,
+              "n_c": 196
+            },
+            "verdict": "real_lift"
+          }
+        },
+        "hypothesis": {
+          "rationale": "Scarcity/urgency messaging may drive repeat purchases faster than evergreen creative.",
+          "source": "llm"
         },
         "bareLlm": {
-          "accepted": false,
-          "reason": "Sample too small for reliable conversion rate signal"
+          "accepted": true,
+          "reason": "13.1% conversion is strong. Sample size adequate for gut-check."
+        },
+        "grounded": {
+          "verdict": "pass",
+          "reason": "All figures match: 6.95pp lift, p=0.0071, reach=900. Minor rounding in text acceptable."
         }
       },
       {
@@ -39,7 +72,7 @@
         "segment": "Customers with exactly one order, 30–180 days ago",
         "type": "experiment",
         "reach": 770,
-        "value": 165.56565656565655,
+        "value": 163.58585858585857,
         "rawConversion": 14.077669902912621,
         "upliftPp": 6.182933060807358,
         "ci": [
@@ -49,17 +82,112 @@
         "pValue": 0.041328380821575195,
         "verdict": "real_lift",
         "accepted": true,
-        "score": 7882.346562198375,
+        "score": 7788.091182649178,
         "reason": "Significant +6.2% incremental lift (p=0.041, 95% CI excludes 0).",
+        "naiveClaim": "Campaign \"Second-purchase SMS to one-time buyers\" reached ~770 customers and converted at 14.1%.",
         "evidence": {
           "conv_t": 87,
           "n_t": 618,
           "conv_c": 12,
           "n_c": 152
         },
+        "provenance": {
+          "queries": [
+            {
+              "sql": "SELECT treatment, COUNT(*) AS n, SUM(converted) AS conv FROM campaign_sends WHERE campaign_id='SECOND_PURCHASE_SMS' GROUP BY treatment ORDER BY treatment",
+              "resultHash": "1422886ea75ae51b",
+              "fingerprint": "88c61ddfbd10fa90"
+            },
+            {
+              "sql": "SELECT AVG(revenue) AS v FROM campaign_sends WHERE campaign_id='SECOND_PURCHASE_SMS' AND converted=1",
+              "resultHash": "edfaa241bd78a3df",
+              "fingerprint": "2a1ef455e0652744"
+            }
+          ],
+          "stats": {
+            "tool": "verify_lift_claim",
+            "args": {
+              "conv_t": 87,
+              "n_t": 618,
+              "conv_c": 12,
+              "n_c": 152
+            },
+            "verdict": "real_lift"
+          }
+        },
+        "hypothesis": {
+          "rationale": "Test send frequency and day-of-week to maximize conversion for one-time buyers.",
+          "source": "llm"
+        },
         "bareLlm": {
           "accepted": true,
-          "reason": "14.1% CR is strong for SMS retargeting to past buyers"
+          "reason": "14.1% conversion is strong. Sample size adequate for SMS."
+        },
+        "grounded": {
+          "verdict": "pass",
+          "reason": "All figures match: 6.18pp lift, p=0.0413, reach=770. Text claim consistent with evidence."
+        }
+      },
+      {
+        "key": "CROSS_CATEGORY_SMS",
+        "title": "Cross-category SMS to first-time buyers",
+        "segment": "First-time buyers who bought a single category",
+        "type": "experiment",
+        "reach": 1070,
+        "value": 179.63541666666666,
+        "rawConversion": 10.986964618249534,
+        "upliftPp": 4.045125969093812,
+        "ci": [
+          0.6316388503896166,
+          7.458613087798007
+        ],
+        "pValue": 0.020610424438836317,
+        "verdict": "real_lift",
+        "accepted": true,
+        "score": 7775.13241152233,
+        "reason": "Significant +4.0% incremental lift (p=0.021, 95% CI excludes 0).",
+        "naiveClaim": "Campaign \"Cross-category SMS to first-time buyers\" reached ~1070 customers and converted at 11.0%.",
+        "evidence": {
+          "conv_t": 59,
+          "n_t": 537,
+          "conv_c": 37,
+          "n_c": 533
+        },
+        "provenance": {
+          "queries": [
+            {
+              "sql": "SELECT treatment, COUNT(*) AS n, SUM(converted) AS conv FROM campaign_sends WHERE campaign_id='CROSS_CATEGORY_SMS' GROUP BY treatment ORDER BY treatment",
+              "resultHash": "805f35450b6ea60c",
+              "fingerprint": "2c5ccb159ad5b095"
+            },
+            {
+              "sql": "SELECT AVG(revenue) AS v FROM campaign_sends WHERE campaign_id='CROSS_CATEGORY_SMS' AND converted=1",
+              "resultHash": "87b5d8f5571cf482",
+              "fingerprint": "27a1e072b8909261"
+            }
+          ],
+          "stats": {
+            "tool": "verify_lift_claim",
+            "args": {
+              "conv_t": 59,
+              "n_t": 537,
+              "conv_c": 37,
+              "n_c": 533
+            },
+            "verdict": "real_lift"
+          }
+        },
+        "hypothesis": {
+          "rationale": "Current scope limits reach; test bundling complementary categories to drive repeat purchase.",
+          "source": "llm"
+        },
+        "bareLlm": {
+          "accepted": true,
+          "reason": "11% conversion on first-time buyers is strong. Scale it."
+        },
+        "grounded": {
+          "verdict": "pass",
+          "reason": "All figures match: 4.05pp lift, p=0.0206, reach=1070. No contradictions found."
         }
       }
     ],
@@ -79,39 +207,25 @@
         "accepted": false,
         "score": 0,
         "reason": "202 high-value customers (avg LTV $1070) barely targeted (0% send coverage). Design a holdout to measure incremental lift before scaling.",
-        "evidence": {},
-        "bareLlm": {
-          "accepted": false,
-          "reason": "n/a"
-        }
-      },
-      {
-        "key": "CROSS_CATEGORY_SMS",
-        "title": "Cross-category SMS to first-time buyers",
-        "segment": "First-time buyers who bought a single category",
-        "type": "experiment",
-        "reach": 714,
-        "value": 168.26388888888889,
-        "rawConversion": 11.049723756906078,
-        "upliftPp": 4.032179897256954,
-        "ci": [
-          -0.6166644786445318,
-          8.68102427315844
-        ],
-        "pValue": 0.12674861682424376,
-        "verdict": "no_significant_lift",
-        "accepted": false,
-        "score": 0,
-        "reason": "Raw conversion 11.0% but incremental lift +4.0% is not significant (p=0.127, 95% CI [-0.6%, +8.7%] includes 0) (note: power=0.22 to detect a 3% effect).",
+        "naiveClaim": null,
         "evidence": {
-          "conv_t": 60,
-          "n_t": 543,
-          "conv_c": 12,
-          "n_c": 171
+          "size": 202,
+          "avgLtv": 1069.7128712871288,
+          "coveragePct": 0
         },
-        "bareLlm": {
-          "accepted": true,
-          "reason": "11% CR well above typical SMS baseline of 1-3%"
+        "provenance": {
+          "queries": [
+            {
+              "sql": "SELECT COUNT(*) AS size, AVG(total_revenue) AS value,\n      AVG(CASE WHEN customer_id IN (SELECT DISTINCT customer_id FROM campaign_sends) THEN 1.0 ELSE 0.0 END) AS coverage\n     FROM customer_360 WHERE first_category='Workwear' AND CAST(substr(signup_date,1,4) AS INTEGER)=2026",
+              "resultHash": "9408937fb951177e",
+              "fingerprint": "e1bbd889f8f6720f"
+            }
+          ],
+          "stats": null
+        },
+        "hypothesis": {
+          "rationale": "Enumerated from the campaign catalog.",
+          "source": "llm"
         }
       },
       {
@@ -120,27 +234,56 @@
         "segment": "Top-tier VIP big spenders",
         "type": "experiment",
         "reach": 665,
-        "value": 176.52857142857144,
-        "rawConversion": 42.119565217391305,
-        "upliftPp": 0.032023129849212406,
+        "value": 168.04301075268816,
+        "rawConversion": 41.88034188034188,
+        "upliftPp": -0.15787468016767447,
         "ci": [
-          -7.516112273393598,
-          7.580158533092023
+          -7.671104639166691,
+          7.355355278831342
         ],
-        "pValue": 0.9933655884338173,
+        "pValue": 0.9671478928366337,
         "verdict": "no_significant_lift",
         "accepted": false,
         "score": 0,
-        "reason": "Raw conversion 42.1% but incremental lift +0.0% is not significant (p=0.993, 95% CI [-7.5%, +7.6%] includes 0) (note: power=0.12 to detect a 3% effect).",
+        "reason": "Raw conversion 41.9% but incremental lift -0.2% is not significant (p=0.967, 95% CI [-7.7%, +7.4%] includes 0) (note: power=0.12 to detect a 3% effect).",
+        "naiveClaim": "Campaign \"VIP loyalty blast\" reached ~665 customers and converted at 41.9%.",
         "evidence": {
-          "conv_t": 155,
-          "n_t": 368,
-          "conv_c": 125,
-          "n_c": 297
+          "conv_t": 147,
+          "n_t": 351,
+          "conv_c": 132,
+          "n_c": 314
+        },
+        "provenance": {
+          "queries": [
+            {
+              "sql": "SELECT treatment, COUNT(*) AS n, SUM(converted) AS conv FROM campaign_sends WHERE campaign_id='VIP_LOYALTY_BLAST' GROUP BY treatment ORDER BY treatment",
+              "resultHash": "bb13fa5b5dc841dc",
+              "fingerprint": "985a07998654323e"
+            },
+            {
+              "sql": "SELECT AVG(revenue) AS v FROM campaign_sends WHERE campaign_id='VIP_LOYALTY_BLAST' AND converted=1",
+              "resultHash": "ba00be19be2dcd1d",
+              "fingerprint": "0eb463cd503fe250"
+            }
+          ],
+          "stats": {
+            "tool": "verify_lift_claim",
+            "args": {
+              "conv_t": 147,
+              "n_t": 351,
+              "conv_c": 132,
+              "n_c": 314
+            },
+            "verdict": "no_significant_lift"
+          }
+        },
+        "hypothesis": {
+          "rationale": "Enumerated from the campaign catalog.",
+          "source": "llm"
         },
         "bareLlm": {
           "accepted": true,
-          "reason": "42.1% CR is exceptional for most channels/verticals"
+          "reason": "41.9% conversion is exceptional. Scale immediately."
         }
       },
       {
@@ -149,27 +292,56 @@
         "segment": "Recently lapsing browsers",
         "type": "experiment",
         "reach": 595,
-        "value": 171.46666666666667,
-        "rawConversion": 10.364145658263306,
-        "upliftPp": 0.7002801120448182,
+        "value": 165.95,
+        "rawConversion": 10.584958217270195,
+        "upliftPp": 1.2629243189651098,
         "ci": [
-          -4.20757683612367,
-          5.608137060213307
+          -3.6244871395745304,
+          6.15033577750475
         ],
-        "pValue": 0.7810833279315472,
+        "pValue": 0.6167373044266302,
         "verdict": "no_significant_lift",
         "accepted": false,
         "score": 0,
-        "reason": "Raw conversion 10.4% but incremental lift +0.7% is not significant (p=0.781, 95% CI [-4.2%, +5.6%] includes 0) (note: power=0.20 to detect a 3% effect).",
+        "reason": "Raw conversion 10.6% but incremental lift +1.3% is not significant (p=0.617, 95% CI [-3.6%, +6.2%] includes 0) (note: power=0.21 to detect a 3% effect).",
+        "naiveClaim": "Campaign \"Browse retargeting (broad)\" reached ~595 customers and converted at 10.6%.",
         "evidence": {
-          "conv_t": 37,
-          "n_t": 357,
-          "conv_c": 23,
-          "n_c": 238
+          "conv_t": 38,
+          "n_t": 359,
+          "conv_c": 22,
+          "n_c": 236
+        },
+        "provenance": {
+          "queries": [
+            {
+              "sql": "SELECT treatment, COUNT(*) AS n, SUM(converted) AS conv FROM campaign_sends WHERE campaign_id='RETARGET_NEAR_MISS' GROUP BY treatment ORDER BY treatment",
+              "resultHash": "6ae2b23b3f5381a4",
+              "fingerprint": "aa7a7f12f958ae63"
+            },
+            {
+              "sql": "SELECT AVG(revenue) AS v FROM campaign_sends WHERE campaign_id='RETARGET_NEAR_MISS' AND converted=1",
+              "resultHash": "d381b69adfc97908",
+              "fingerprint": "3447d1d51dbd9c7b"
+            }
+          ],
+          "stats": {
+            "tool": "verify_lift_claim",
+            "args": {
+              "conv_t": 38,
+              "n_t": 359,
+              "conv_c": 22,
+              "n_c": 236
+            },
+            "verdict": "no_significant_lift"
+          }
+        },
+        "hypothesis": {
+          "rationale": "Combine lapsing browsers with one-time buyer data to catch high-intent repeat candidates.",
+          "source": "llm"
         },
         "bareLlm": {
-          "accepted": false,
-          "reason": "10.4% is decent but needs context on benchmarks"
+          "accepted": true,
+          "reason": "10.6% conversion rate is strong, sample size adequate"
         }
       },
       {
@@ -187,10 +359,44 @@
         "accepted": false,
         "score": 0,
         "reason": "Window sits +28412 above its local trend; the seasonal component contributes +28865 (102% of it). Seasonal strength 0.76.",
-        "evidence": {},
+        "naiveClaim": "Order revenue over the past two months is up +59% versus the two months prior, and it is still climbing week over week. The current campaign mix is clearly working.",
+        "evidence": {
+          "weeks": 129,
+          "rawChangePct": 162.5226452226828,
+          "fracSeasonal": 1.015957876774505,
+          "seasonalStrength": 0.7569257973354154
+        },
+        "provenance": {
+          "queries": [
+            {
+              "sql": "SELECT CAST(date_trunc('week', order_date) AS VARCHAR) AS wk, SUM(revenue) AS rev FROM orders GROUP BY 1 ORDER BY 1",
+              "resultHash": "e547780bd5783d57",
+              "fingerprint": "f32aa29d192fae57"
+            },
+            {
+              "sql": "SELECT AVG(revenue) AS v FROM orders",
+              "resultHash": "4f12e95ac4926f07",
+              "fingerprint": "f56b6502da07e367"
+            }
+          ],
+          "stats": {
+            "tool": "assess_seasonality",
+            "args": {
+              "period": 52,
+              "window_start": 92,
+              "window_end": 105,
+              "series_len": 129
+            },
+            "verdict": "explained_by_seasonality"
+          }
+        },
+        "hypothesis": {
+          "rationale": "Enumerated from the campaign catalog.",
+          "source": "llm"
+        },
         "bareLlm": {
           "accepted": false,
-          "reason": "n/a"
+          "reason": "Single snapshot lacks baseline, trend context, seasonality data"
         }
       },
       {
@@ -198,33 +404,91 @@
         "title": "Spring launch — evergreen creative",
         "segment": "Drop-lookalike audience (creative A/B vs product-drop)",
         "type": "experiment",
-        "reach": 299,
-        "value": 144.875,
-        "rawConversion": 8.547008547008547,
-        "upliftPp": 2.393162393162393,
+        "reach": 173,
+        "value": 196.78571428571428,
+        "rawConversion": 8.21917808219178,
+        "upliftPp": 0.8117706747843734,
         "ci": [
-          -4.4597712938892915,
-          9.246096080214079
+          -10.024809937372412,
+          11.648351286941159
         ],
-        "pValue": 0.5298705891830671,
+        "pValue": 0.8870118562586478,
         "verdict": "no_significant_lift",
         "accepted": false,
         "score": 0,
-        "reason": "Raw conversion 8.5% but incremental lift +2.4% is not significant (p=0.530, 95% CI [-4.5%, +9.2%] includes 0) (note: power=0.12 to detect a 3% effect).",
+        "reason": "Raw conversion 8.2% but incremental lift +0.8% is not significant (p=0.887, 95% CI [-10.0%, +11.6%] includes 0) (note: power=0.07 to detect a 3% effect).",
+        "naiveClaim": "Campaign \"Spring launch — evergreen creative\" reached ~173 customers and converted at 8.2%.",
         "evidence": {
-          "conv_t": 20,
-          "n_t": 234,
-          "conv_c": 4,
-          "n_c": 65
+          "conv_t": 12,
+          "n_t": 146,
+          "conv_c": 2,
+          "n_c": 27
+        },
+        "provenance": {
+          "queries": [
+            {
+              "sql": "SELECT treatment, COUNT(*) AS n, SUM(converted) AS conv FROM campaign_sends WHERE campaign_id='SPRING_EVERGREEN_CREATIVE' GROUP BY treatment ORDER BY treatment",
+              "resultHash": "9de0bd8929cca28d",
+              "fingerprint": "30f1956e0ec36a3a"
+            },
+            {
+              "sql": "SELECT AVG(revenue) AS v FROM campaign_sends WHERE campaign_id='SPRING_EVERGREEN_CREATIVE' AND converted=1",
+              "resultHash": "62fc4b44db94908d",
+              "fingerprint": "bbf686e1a4a95a35"
+            }
+          ],
+          "stats": {
+            "tool": "verify_lift_claim",
+            "args": {
+              "conv_t": 12,
+              "n_t": 146,
+              "conv_c": 2,
+              "n_c": 27
+            },
+            "verdict": "no_significant_lift"
+          }
+        },
+        "hypothesis": {
+          "rationale": "Enumerated from the campaign catalog.",
+          "source": "llm"
         },
         "bareLlm": {
           "accepted": false,
-          "reason": "8.5% is solid but n=299 too small for confidence"
+          "reason": "Sample size too small (n=173). Need 300+ conversions for confidence."
         }
       }
     ],
-    "contrastUsd": 0.001611,
-    "generatedFromSeed": 42
+    "contrastUsd": 0.006508999999999999,
+    "generatedFromSeed": 42,
+    "explorer": {
+      "source": "llm",
+      "surplus": [
+        {
+          "key": "INCENTIVE_SECOND_PURCHASE",
+          "title": "Introduce tiered discount for repeat buyers",
+          "rationale": "Offer modest incentive (5–10% off) in SECOND_PURCHASE_SMS to lower friction for repeat.",
+          "kind": "experiment"
+        },
+        {
+          "key": "CART_ABANDONMENT_ONE_TIME",
+          "title": "Retarget one-time buyers who abandon carts",
+          "rationale": "High-intent segment; cart abandonment recovery may convert faster than cold outreach.",
+          "kind": "segment"
+        },
+        {
+          "key": "CATEGORY_AFFINITY_UPSELL",
+          "title": "Recommend complementary categories based on first purchase",
+          "rationale": "Personalized cross-sell in SMS/email increases relevance and repeat purchase likelihood.",
+          "kind": "segment"
+        }
+      ]
+    },
+    "skippedFromMemory": [],
+    "costByStage": {
+      "explorer": 0.0033949999999999996,
+      "bareLlm": 0.001762,
+      "groundedness": 0.001352
+    }
   },
   "activation": {
     "opportunity": {
@@ -233,7 +497,7 @@
       "segment": "Customers with exactly one order, 30–180 days ago",
       "type": "experiment",
       "reach": 770,
-      "value": 165.56565656565655,
+      "value": 163.58585858585857,
       "rawConversion": 14.077669902912621,
       "upliftPp": 6.182933060807358,
       "ci": [
@@ -243,22 +507,65 @@
       "pValue": 0.041328380821575195,
       "verdict": "real_lift",
       "accepted": true,
-      "score": 7882.346562198375,
+      "score": 7788.091182649178,
       "reason": "Significant +6.2% incremental lift (p=0.041, 95% CI excludes 0).",
+      "naiveClaim": "Campaign \"Second-purchase SMS to one-time buyers\" reached ~770 customers and converted at 14.1%.",
       "evidence": {
         "conv_t": 87,
         "n_t": 618,
         "conv_c": 12,
         "n_c": 152
+      },
+      "provenance": {
+        "queries": [
+          {
+            "sql": "SELECT treatment, COUNT(*) AS n, SUM(converted) AS conv FROM campaign_sends WHERE campaign_id='SECOND_PURCHASE_SMS' GROUP BY treatment ORDER BY treatment",
+            "resultHash": "1422886ea75ae51b",
+            "fingerprint": "88c61ddfbd10fa90"
+          },
+          {
+            "sql": "SELECT AVG(revenue) AS v FROM campaign_sends WHERE campaign_id='SECOND_PURCHASE_SMS' AND converted=1",
+            "resultHash": "edfaa241bd78a3df",
+            "fingerprint": "2a1ef455e0652744"
+          }
+        ],
+        "stats": {
+          "tool": "verify_lift_claim",
+          "args": {
+            "conv_t": 87,
+            "n_t": 618,
+            "conv_c": 12,
+            "n_c": 152
+          },
+          "verdict": "real_lift"
+        }
+      },
+      "hypothesis": {
+        "rationale": "Test send frequency and day-of-week to maximize conversion for one-time buyers.",
+        "source": "llm"
+      },
+      "grounded": {
+        "verdict": "n/a",
+        "reason": "skipped (no API key or disabled)"
       }
     },
     "audience": {
       "label": "One-time buyers",
       "channel": "sms",
-      "filter": "is_one_time_buyer = TRUE",
+      "filter": {
+        "column": "is_one_time_buyer",
+        "op": "=",
+        "value": true
+      },
+      "persuadableFilter": {
+        "column": "sms_responder",
+        "op": "=",
+        "value": true
+      },
+      "filterSql": "is_one_time_buyer = TRUE",
+      "persuadableSql": "sms_responder = TRUE",
       "reach": 1939,
       "persuadableReach": 797,
-      "persuadableFilter": "sms_responder = TRUE",
       "sampleMembers": [
         2110,
         2734,
@@ -270,17 +577,24 @@
         4311
       ]
     },
-    "brief": "**CREATIVE BRIEF: Second Purchase SMS**\n\n**Objective:** Drive repeat purchase from one-time buyers via SMS with +6.2pp lift potential\n\n**Audience:** 797 one-time customers (persuadable, SMS-receptive)\n\n**Tone:** Aspirational, on-brand; position shopping as lifestyle choice, not transaction\n\n**Key Message:** Highlight new arrivals, styling inspiration, or exclusive access—anchor to quality/community, never discounting premium pieces\n\n**CTA:** Time-sensitive but premium-feeling (\"Shop New Arrivals\" / \"Early Access for Our Customers\")",
+    "cap": {
+      "ruleId": "weekly_2",
+      "windowDays": 7,
+      "maxSends": 2,
+      "excluded": 0,
+      "anchor": "2026-04-25"
+    },
+    "brief": "**CREATIVE BRIEF: Second Purchase SMS Campaign**\n\n**Objective:** Drive repeat purchase among one-time buyers via aspirational messaging that reinforces brand value without discounting premium products.\n\n**Tone:** Confident, curated, exclusive—celebrate their first choice and invite them into the next chapter of their style journey.\n\n**Key Message:** Position new arrivals as natural complements to their existing purchase; emphasize craftsmanship, exclusivity, and belonging to a discerning community.\n\n**Creative Direction:** Feature complementary pieces, styling inspiration, or limited-availability items; leverage social proof (\"favorites this season\") to create urgency without price reduction.\n\n**Call-to-Action:** \"Discover what's next\" or \"Complete your collection\"—personal, forward-looking, premium.",
     "variants": [
       {
         "id": "V1",
         "channel": "sms",
-        "text": "New arrivals just landed. Discover what's next in your style story. Early access for our customers only. Shop now → [link]"
+        "text": "Your refined taste is showing. Discover curated pieces that complete the vision you've already started. See what's next → [link]"
       },
       {
         "id": "V2",
         "channel": "sms",
-        "text": "Welcome back. Explore curated pieces crafted for those who know quality. Exclusive new collection available today → [link]"
+        "text": "Welcome to the inner circle. New arrivals this season—handpicked to complement your style. Explore exclusives → [link]"
       }
     ],
     "guardrail": {
@@ -289,12 +603,12 @@
         {
           "allowed": true,
           "violatedRule": null,
-          "reason": "Aspirational tone, no discounts, no urgency language, no premium collection specifics."
+          "reason": "Aspirational tone, no discounts or urgency language, aligns with premium brand positioning."
         },
         {
           "allowed": true,
           "violatedRule": null,
-          "reason": "Aspirational tone, no discounts, no urgency language, aligns with premium brand positioning."
+          "reason": "Aspirational tone, no discounts, exclusivity messaging appropriate for premium brand."
         }
       ]
     },
@@ -319,7 +633,7 @@
       "reason": "Significant +10.0% incremental lift (p=0.002, 95% CI excludes 0)."
     },
     "memoryWritten": true,
-    "costUsd": 0.002565
+    "costUsd": 0.002681
   },
   "bandit": {
     "impressions": 6000,

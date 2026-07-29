@@ -17,6 +17,10 @@ interface Catalog {
   metrics: Record<string, MetricDef>;
   dimensions: Record<string, DimDef>;
   filterable: Record<string, string[]>;
+  /** Alias -> canonical metric name (resolution only — never widens the governed surface). */
+  synonyms?: Record<string, string>;
+  /** Documentary FK graph; runMetric stays single-table by design (see metrics.yaml). */
+  relationships?: unknown;
 }
 
 export interface Filter {
@@ -69,12 +73,18 @@ export async function runMetric(
   groupBy?: string[],
   filters?: Filter[],
 ): Promise<QueryResult & { metric: string; sql: string }> {
-  const m = catalog.metrics[metric];
+  // Resolve aliases first ("revenue" -> total_revenue): synonyms absorb naming drift
+  // without widening the surface — an unknown name still errors out-of-scope.
+  const canonical = catalog.metrics[metric] ? metric : (catalog.synonyms?.[metric] ?? metric);
+  const m = catalog.metrics[canonical];
   if (!m) {
+    const aliases = Object.keys(catalog.synonyms ?? {});
     throw new OutOfScopeError(
-      `metric '${metric}' is not defined in the semantic layer. Available: ${Object.keys(catalog.metrics).join(", ")}`,
+      `metric '${metric}' is not defined in the semantic layer. Available: ${Object.keys(catalog.metrics).join(", ")}` +
+        (aliases.length ? `. Aliases: ${aliases.join(", ")}` : ""),
     );
   }
+  metric = canonical;
   const dims = (groupBy ?? []).map((d) => {
     const dd = catalog.dimensions[d];
     if (!dd) {

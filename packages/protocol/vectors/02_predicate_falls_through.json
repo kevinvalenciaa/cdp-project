@@ -1,0 +1,161 @@
+{
+  "name": "02_predicate_falls_through",
+  "description": "categories_purchased=2 fails c_cross_category's eligibility; arbitration falls through to c_second_purchase.",
+  "bundle": {
+    "protocol_version": 1,
+    "bundle_id": "bnd_vec_1",
+    "run_id": "vec",
+    "generated_at": "2025-06-15T09:06:40.000Z",
+    "caps": [
+      {
+        "id": "weekly_2",
+        "scope": "user",
+        "channel": "any",
+        "max": 2,
+        "window": "P7D"
+      },
+      {
+        "id": "session_1",
+        "scope": "session",
+        "channel": "in_app",
+        "max": 1,
+        "window": "session"
+      }
+    ],
+    "campaigns": [
+      {
+        "campaign_id": "c_cross_category",
+        "opportunity_key": "CROSS_CATEGORY_SMS",
+        "surface": "home_hero",
+        "channel": "in_app",
+        "priority": 10,
+        "eligibility": {
+          "all": [
+            {
+              "column": "is_one_time_buyer",
+              "op": "=",
+              "value": true
+            },
+            {
+              "column": "categories_purchased",
+              "op": "=",
+              "value": 1
+            }
+          ]
+        },
+        "segment_key": "mid",
+        "caps": [],
+        "arms": [
+          {
+            "arm_id": "arm_a",
+            "template": "banner",
+            "title": "Complete the look",
+            "body": "You picked a favorite — here is the piece that pairs with it.",
+            "cta": "Shop the pairing"
+          },
+          {
+            "arm_id": "arm_b",
+            "template": "modal",
+            "title": "Your next find",
+            "body": "One order in — the second is where the story starts.",
+            "cta": "Browse new arrivals"
+          }
+        ],
+        "guardrail_ids": [
+          "premium_no_discount",
+          "premium_brand_tone"
+        ],
+        "provenance": {
+          "run_id": "vec",
+          "opportunity_key": "CROSS_CATEGORY_SMS",
+          "fingerprints": [
+            "fp_cc_1",
+            "fp_cc_2"
+          ]
+        }
+      },
+      {
+        "campaign_id": "c_second_purchase",
+        "opportunity_key": "SECOND_PURCHASE_SMS",
+        "surface": "home_hero",
+        "channel": "in_app",
+        "priority": 5,
+        "eligibility": {
+          "column": "is_one_time_buyer",
+          "op": "=",
+          "value": true
+        },
+        "segment_key": "mid",
+        "caps": [],
+        "arms": [
+          {
+            "arm_id": "arm_a",
+            "template": "banner",
+            "title": "Complete the look",
+            "body": "You picked a favorite — here is the piece that pairs with it.",
+            "cta": "Shop the pairing"
+          },
+          {
+            "arm_id": "arm_b",
+            "template": "modal",
+            "title": "Your next find",
+            "body": "One order in — the second is where the story starts.",
+            "cta": "Browse new arrivals"
+          }
+        ],
+        "guardrail_ids": [
+          "premium_no_discount",
+          "premium_brand_tone"
+        ],
+        "provenance": {
+          "run_id": "vec",
+          "opportunity_key": "SECOND_PURCHASE_SMS",
+          "fingerprints": [
+            "fp_sp_1"
+          ]
+        }
+      }
+    ],
+    "policy": {
+      "segments": {
+        "mid": {
+          "arm_a": {
+            "alpha": 1000,
+            "beta": 1
+          },
+          "arm_b": {
+            "alpha": 1,
+            "beta": 1000
+          }
+        }
+      }
+    },
+    "recent_sends": [],
+    "holdout_fraction": 0
+  },
+  "ctx": {
+    "user_id": "u1",
+    "device_id": "d1",
+    "session_id": "s1",
+    "surface": "home_hero",
+    "attrs": {
+      "is_one_time_buyer": true,
+      "categories_purchased": 2,
+      "sms_responder": true
+    },
+    "seed": 42
+  },
+  "ledger": [],
+  "clock": {
+    "wallMs": 1750000000000,
+    "monotonicMs": 86400000,
+    "bootId": "b1",
+    "skewMs": 0
+  },
+  "expected": {
+    "outcome": "delivered",
+    "campaign_id": "c_second_purchase",
+    "arm_id": "arm_a",
+    "reason_prefix": "ok"
+  }
+}
