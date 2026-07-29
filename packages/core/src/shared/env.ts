@@ -28,7 +28,6 @@ export const config = {
   duckdbPath: fromRoot(envStr("DUCKDB_PATH", "packages/core/data/lift_compass.duckdb")),
   seed: envInt("SEED", 42),
   queryTimeoutMs: envInt("QUERY_TIMEOUT_MS", 15_000),
-  statsMcpUrl: envStr("STATS_MCP_URL", "http://127.0.0.1:8765/mcp"),
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
   // Two tiers only, and both actually run: `reasoning` drives the harness orchestrator +
   // investigators; `fanout` (cheap) drives breadth work — explorer, classification fan-out,
