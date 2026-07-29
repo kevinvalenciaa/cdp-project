@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, PanelRightClose, PanelRightOpen, Sparkles } from "lucide-react";
 import type { EngineEvent, Opportunity, RunDetail } from "@/lib/types";
 import { useEventStream } from "@/lib/use-event-stream";
+import { usePersistedToggle } from "@/lib/use-persisted-toggle";
 import { moneyCompact, monthlyImpact } from "@/lib/format";
 import { PromptInputBox } from "@/components/ui/ai-prompt-box";
 import { ResultsRail } from "@/components/inbox/ResultsRail";
@@ -34,6 +35,7 @@ export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
   const { events, status, error, start } = useEventStream<EngineEvent>();
   const running = status === "streaming";
   const feedRef = useRef<HTMLDivElement>(null);
+  const [railOpen, toggleRail] = usePersistedToggle("ui.results-rail-open", true);
 
   function send(raw: string) {
     // The prompt box's Search/Think/Canvas modes wrap the text ("[Think: x]")
@@ -86,7 +88,16 @@ export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
     // Fixed-height two-pane on xl; normal document flow (chat, then results) below.
     <div className="xl:flex xl:h-[calc(100dvh-3.5rem)]">
       {/* Conversation column */}
-      <div className="flex min-w-0 flex-col xl:flex-1">
+      <div className="relative flex min-w-0 flex-col xl:flex-1">
+        {!railOpen && (
+          <button
+            onClick={toggleRail}
+            aria-label="Show results panel"
+            className="absolute right-4 top-3 z-10 hidden items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground shadow-ht-xs transition-colors hover:text-foreground xl:inline-flex"
+          >
+            <PanelRightOpen className="h-4 w-4" aria-hidden /> Results
+          </button>
+        )}
         <div ref={feedRef} className="xl:flex-1 xl:overflow-y-auto">
           <div className="mx-auto w-full max-w-2xl space-y-6 px-5 py-6">
             {turns.length === 0 && (
@@ -161,10 +172,25 @@ export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
 
       {/* Results rail: right pane on xl, stacked section below the chat otherwise */}
       <aside
-        className="border-t border-border bg-ht-50/50 xl:w-[400px] xl:shrink-0 xl:overflow-y-auto xl:border-l xl:border-t-0"
+        className={`border-t border-border bg-ht-50/50 transition-[width] duration-200 ease-out xl:shrink-0 xl:overflow-y-auto xl:border-t-0 ${
+          railOpen ? "xl:w-[400px] xl:border-l" : "xl:invisible xl:w-0 xl:overflow-hidden xl:border-l-0"
+        }`}
         aria-label="Run results"
       >
-        <ResultsRail run={run} onOpen={openOpp} />
+        {/* Fixed inner width so content slides instead of reflowing mid-animation. */}
+        <div className="xl:w-[400px]">
+          <div className="flex items-center justify-between px-4 pt-3 lg:px-5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Results</span>
+            <button
+              onClick={toggleRail}
+              aria-label="Hide results panel"
+              className="hidden h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground xl:inline-flex"
+            >
+              <PanelRightClose className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
+          <ResultsRail run={run} onOpen={openOpp} />
+        </div>
       </aside>
 
       <OpportunityDetail
