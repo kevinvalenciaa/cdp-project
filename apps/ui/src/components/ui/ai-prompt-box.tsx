@@ -3,12 +3,12 @@
 import React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowUp, Paperclip, Square, X, StopCircle, Mic, Globe, BrainCog, FolderCode } from "lucide-react";
+import { ArrowUp, Paperclip, Square, X, StopCircle, Mic, Globe, BrainCog } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * The reference ai-prompt-box, kept structurally verbatim (textarea autosize,
- * paperclip upload with previews, Search/Think/Canvas animated toggles with
+ * paperclip upload with previews, Search/Think animated toggles with
  * gradient dividers, voice-recorder mode, circular send/mic button) and
  * translated from its hard-coded dark palette to this app's light tokens.
  * Two technical changes only: the injected stylesheet is SSR-guarded, and
@@ -33,6 +33,11 @@ const styles = `
   textarea.ai-prompt-textarea::-webkit-scrollbar-thumb:hover {
     background-color: #c7c2c3;
   }
+  textarea.ai-prompt-textarea:focus,
+  textarea.ai-prompt-textarea:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 `;
 if (typeof document !== "undefined" && !document.getElementById("ai-prompt-box-styles")) {
   const styleSheet = document.createElement("style");
@@ -48,7 +53,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, ...props }, ref) => (
   <textarea
     className={cn(
-      "ai-prompt-textarea flex w-full rounded-md border-none bg-transparent px-3 py-2.5 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] resize-none",
+      "ai-prompt-textarea flex min-h-[44px] w-full resize-none rounded-md border-none bg-transparent px-3 py-2.5 text-base text-foreground outline-none ring-0 placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     ref={ref}
@@ -456,7 +461,6 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
   const [isRecording, setIsRecording] = React.useState(false);
   const [showSearch, setShowSearch] = React.useState(false);
   const [showThink, setShowThink] = React.useState(false);
-  const [showCanvas, setShowCanvas] = React.useState(false);
   const uploadInputRef = React.useRef<HTMLInputElement>(null);
   const promptBoxRef = React.useRef<HTMLDivElement>(null);
 
@@ -469,8 +473,6 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
       setShowSearch(false);
     }
   };
-
-  const handleCanvasToggle = () => setShowCanvas((prev) => !prev);
 
   const isImageFile = (file: File) => file.type.startsWith("image/");
 
@@ -537,7 +539,6 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
       let messagePrefix = "";
       if (showSearch) messagePrefix = "[Search: ";
       else if (showThink) messagePrefix = "[Think: ";
-      else if (showCanvas) messagePrefix = "[Canvas: ";
       const formattedInput = messagePrefix ? `${messagePrefix}${input}]` : input;
       onSend(formattedInput, files);
       setInput("");
@@ -612,9 +613,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                 ? "Search the warehouse..."
                 : showThink
                   ? "Think deeply..."
-                  : showCanvas
-                    ? "Create on canvas..."
-                    : placeholder
+                  : placeholder
             }
             className="text-base"
           />
@@ -729,46 +728,6 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                       className="flex-shrink-0 overflow-hidden whitespace-nowrap text-xs text-[#8B5CF6]"
                     >
                       Think
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </button>
-
-              <CustomDivider />
-
-              <button
-                type="button"
-                onClick={handleCanvasToggle}
-                className={cn(
-                  "flex h-8 items-center gap-1 rounded-full border px-2 py-1 transition-all",
-                  showCanvas
-                    ? "border-[#F97316] bg-[#F97316]/15 text-[#F97316]"
-                    : "border-transparent bg-transparent text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center">
-                  <motion.div
-                    animate={{ rotate: showCanvas ? 360 : 0, scale: showCanvas ? 1.1 : 1 }}
-                    whileHover={{
-                      rotate: showCanvas ? 360 : 15,
-                      scale: 1.1,
-                      transition: { type: "spring", stiffness: 300, damping: 10 },
-                    }}
-                    transition={{ type: "spring", stiffness: 260, damping: 25 }}
-                  >
-                    <FolderCode className={cn("h-4 w-4", showCanvas ? "text-[#F97316]" : "text-inherit")} />
-                  </motion.div>
-                </div>
-                <AnimatePresence>
-                  {showCanvas && (
-                    <motion.span
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: "auto", opacity: 1 }}
-                      exit={{ width: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex-shrink-0 overflow-hidden whitespace-nowrap text-xs text-[#F97316]"
-                    >
-                      Canvas
                     </motion.span>
                   )}
                 </AnimatePresence>

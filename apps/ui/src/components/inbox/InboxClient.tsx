@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowRight, PanelRightClose, PanelRightOpen, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, FileChartColumn, PanelRightClose, Share2, Sparkles } from "lucide-react";
 import type { EngineEvent, Opportunity, RunDetail } from "@/lib/types";
 import { useEventStream } from "@/lib/use-event-stream";
 import { usePersistedToggle } from "@/lib/use-persisted-toggle";
@@ -32,13 +32,14 @@ export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [selected, setSelected] = useState<Opportunity | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const { events, status, error, start } = useEventStream<EngineEvent>();
   const running = status === "streaming";
   const feedRef = useRef<HTMLDivElement>(null);
-  const [railOpen, toggleRail] = usePersistedToggle("ui.results-rail-open", true);
+  const [railOpen, toggleRail] = usePersistedToggle("ui.results-rail-open", false);
 
   function send(raw: string) {
-    // The prompt box's Search/Think/Canvas modes wrap the text ("[Think: x]")
+    // The prompt box's Search/Think modes wrap the text ("[Think: x]")
     // and its voice mode emits "[Voice message - Ns]". Unwrap the former,
     // ignore the latter — the engine wants a goal, not UI chrome.
     const unwrapped = raw.replace(/^\[(?:Search|Think|Canvas): ([\s\S]*)\]$/, "$1").trim();
@@ -82,26 +83,62 @@ export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
     setDetailOpen(true);
   }
 
+  async function sharePage() {
+    const url = window.location.href;
+    const proven = run?.opportunities.ranked.length ?? 0;
+    const text = run
+      ? `Lift Compass found ${proven} proven marketing ${proven === 1 ? "opportunity" : "opportunities"}.`
+      : "Explore proven marketing opportunities with Lift Compass.";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Lift Compass opportunities", text, url });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      /* The browser blocked clipboard access; leave the control unchanged. */
+    }
+  }
+
   const lastTurn = turns[turns.length - 1] ?? null;
 
   return (
     // Fixed-height two-pane on xl; normal document flow (chat, then results) below.
-    <div className="xl:flex xl:h-[calc(100dvh-3.5rem)]">
+    <div className="xl:flex xl:h-screen">
       {/* Conversation column */}
       <div className="relative flex min-w-0 flex-col xl:flex-1">
-        {!railOpen && (
+        <div className="absolute right-4 top-3 z-10 hidden items-center gap-2 xl:flex">
+          {!railOpen && (
+            <button
+              onClick={toggleRail}
+              aria-label="Open results"
+              title="Open results"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted"
+            >
+              <FileChartColumn className="h-5 w-5" aria-hidden />
+            </button>
+          )}
           <button
-            onClick={toggleRail}
-            aria-label="Show results panel"
-            className="absolute right-4 top-3 z-10 hidden items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground shadow-ht-xs transition-colors hover:text-foreground xl:inline-flex"
+            onClick={sharePage}
+            aria-label={shareCopied ? "Link copied" : "Share opportunities"}
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-foreground px-4 text-sm font-medium text-background shadow-ht-xs transition-opacity hover:opacity-85"
           >
-            <PanelRightOpen className="h-4 w-4" aria-hidden /> Results
+            {shareCopied ? <Check className="h-4 w-4" aria-hidden /> : <Share2 className="h-4 w-4" aria-hidden />}
+            {shareCopied ? "Copied" : "Share"}
           </button>
-        )}
+        </div>
         <div ref={feedRef} className="xl:flex-1 xl:overflow-y-auto">
           <div className="mx-auto w-full max-w-2xl space-y-6 px-5 py-6">
             {turns.length === 0 && (
-              <div className="flex min-h-[45vh] flex-col items-center justify-center text-center">
+              <div className="flex min-h-[calc(100dvh-6.5rem)] flex-col items-center justify-center text-center lg:min-h-[calc(100dvh-3rem)]">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ht-teal-tint">
                   <Sparkles className="h-5 w-5 text-ht-teal" aria-hidden />
                 </div>
@@ -112,6 +149,12 @@ export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
                   Describe a goal below. The agent team scans your warehouse, tests every candidate against a
                   holdout, and ranks what survives{run ? " — the last run's results are in the panel." : "."}
                 </p>
+                <div className="mt-7 w-full text-left">
+                  <PromptInputBox onSend={send} isLoading={running} placeholder="Describe a goal for the agents…" />
+                  <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                    Every claim is tested against a holdout before it reaches this screen.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -159,15 +202,17 @@ export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
           </div>
         </div>
 
-        {/* The input, pinned to the bottom of the conversation */}
-        <div className="sticky bottom-0 border-t border-border bg-background/80 px-5 py-4 backdrop-blur xl:static">
-          <div className="mx-auto w-full max-w-2xl">
-            <PromptInputBox onSend={send} isLoading={running} placeholder="Describe a goal for the agents…" />
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Every claim is tested against a holdout before it reaches this screen.
-            </p>
+        {/* After the first message, the composer docks beneath the conversation. */}
+        {turns.length > 0 && (
+          <div className="sticky bottom-0 border-t border-border bg-background/80 px-5 py-4 backdrop-blur xl:static">
+            <div className="mx-auto w-full max-w-2xl">
+              <PromptInputBox onSend={send} isLoading={running} placeholder="Describe a goal for the agents…" />
+              <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                Every claim is tested against a holdout before it reaches this screen.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Results rail: right pane on xl, stacked section below the chat otherwise */}
