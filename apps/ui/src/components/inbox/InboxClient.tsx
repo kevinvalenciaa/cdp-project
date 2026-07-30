@@ -1,136 +1,238 @@
 "use client";
 
-import { useState } from "react";
-import { AlertTriangle, Inbox, Sparkles } from "lucide-react";
-import type { EngineEvent, Goal, Opportunity, RunDetail } from "@/lib/types";
+import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, ArrowRight, PanelRightClose, PanelRightOpen, Sparkles } from "lucide-react";
+import type { EngineEvent, Opportunity, RunDetail } from "@/lib/types";
 import { useEventStream } from "@/lib/use-event-stream";
-import { GoalRunBar } from "@/components/opportunity/GoalRunBar";
-import { OpportunityCard } from "@/components/opportunity/OpportunityCard";
-import { TrapContrastBanner } from "@/components/opportunity/TrapContrastBanner";
-import { RejectedList } from "@/components/opportunity/RejectedList";
+import { usePersistedToggle } from "@/lib/use-persisted-toggle";
+import { moneyCompact, monthlyImpact } from "@/lib/format";
+import { PromptInputBox } from "@/components/ui/ai-prompt-box";
+import { ResultsRail } from "@/components/inbox/ResultsRail";
+import { InvestigationPlan } from "@/components/inbox/InvestigationPlan";
 import { OpportunityDetail } from "@/components/detail/OpportunityDetail";
-import { ActivityFeed } from "@/components/activity/ActivityFeed";
-import { EmptyState } from "@/components/common/EmptyState";
 
-export function InboxClient({ initialRun, goals }: { initialRun: RunDetail | null; goals: Goal[] }) {
+/**
+ * Opportunities as a conversation. The chat column is where a marketer states
+ * intent and watches the agent team work (the run stream IS the reply); the
+ * rail is the artifact — proven opportunities ranked by impact, the verifier's
+ * saves, and everything analysed and ruled out. One page: ask, watch, review.
+ */
+
+interface Turn {
+  id: number;
+  goal: string;
+  /** Snapshotted when the run finishes; the ACTIVE turn streams live instead. */
+  events: EngineEvent[];
+  run: RunDetail | null;
+  failed?: string;
+}
+
+export function InboxClient({ initialRun }: { initialRun: RunDetail | null }) {
   const [run, setRun] = useState<RunDetail | null>(initialRun);
-  const [goal, setGoal] = useState(initialRun?.goal ?? goals[0]?.label ?? "");
+  const [turns, setTurns] = useState<Turn[]>([]);
   const [selected, setSelected] = useState<Opportunity | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const { events, status, error, start } = useEventStream<EngineEvent>();
-
   const running = status === "streaming";
-  const ranked = run?.opportunities.ranked ?? [];
-  const rejected = run?.opportunities.rejected ?? [];
-  const reviewed = ranked.length + rejected.length;
-  const trap = rejected.filter((o) => o.bareLlm).sort((a, b) => (b.rawConversion ?? 0) - (a.rawConversion ?? 0))[0] ?? null;
+  const feedRef = useRef<HTMLDivElement>(null);
+  const [railOpen, toggleRail] = usePersistedToggle("ui.results-rail-open", true);
 
-  function onRun() {
-    if (!goal.trim()) return;
+  function send(raw: string) {
+    // The prompt box's Search/Think/Canvas modes wrap the text ("[Think: x]")
+    // and its voice mode emits "[Voice message - Ns]". Unwrap the former,
+    // ignore the latter — the engine wants a goal, not UI chrome.
+    const unwrapped = raw.replace(/^\[(?:Search|Think|Canvas): ([\s\S]*)\]$/, "$1").trim();
+    if (!unwrapped || /^\[Voice message/.test(unwrapped)) return;
+    const goal = unwrapped;
+    const id = Date.now();
+    setTurns((prev) => [...prev, { id, goal, events: [], run: null }]);
+    let streamedCost: number | undefined;
     start(`/api/run/stream?goal=${encodeURIComponent(goal)}`, (e) => {
-      if (e.kind === "run_finished") setRun(e.result);
+      if (e.kind === "cost") streamedCost = e.usd;
+      if (e.kind === "run_finished") {
+        // The demo fixture's RunDetail has no costUsd; the stream's cost event does.
+        const result = { ...e.result, costUsd: e.result.costUsd ?? streamedCost };
+        setRun(result);
+        setTurns((prev) => prev.map((t) => (t.id === id ? { ...t, run: result } : t)));
+      }
     });
   }
+
+  // Snapshot the stream into the turn when it settles (done or error), so past
+  // turns keep their transcript when the hook's buffer is reused by the next run.
+  useEffect(() => {
+    if (status !== "done" && status !== "error") return;
+    setTurns((prev) => {
+      const last = prev[prev.length - 1];
+      if (!last || last.events.length > 0) return prev;
+      return prev.map((t) =>
+        t.id === last.id ? { ...t, events, failed: status === "error" ? (error ?? "Something went wrong.") : undefined } : t,
+      );
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  // Keep the conversation pinned to the newest message while streaming.
+  useEffect(() => {
+    feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight });
+  }, [events.length, turns.length]);
+
   function openOpp(o: Opportunity) {
     setSelected(o);
     setDetailOpen(true);
   }
 
+  const lastTurn = turns[turns.length - 1] ?? null;
+
   return (
-    <div className="mx-auto max-w-5xl space-y-5 p-5 lg:p-8">
-      {/* Header */}
-      <div>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Opportunities</h1>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-ht-green-bg px-2.5 py-1 text-xs font-medium text-ht-green ring-1 ring-ht-green-border">
-            <span className="h-1.5 w-1.5 rounded-full bg-ht-green" aria-hidden />
-            Agent active
-          </span>
+    // Fixed-height two-pane on xl; normal document flow (chat, then results) below.
+    <div className="xl:flex xl:h-[calc(100dvh-3.5rem)]">
+      {/* Conversation column */}
+      <div className="relative flex min-w-0 flex-col xl:flex-1">
+        {!railOpen && (
+          <button
+            onClick={toggleRail}
+            aria-label="Show results panel"
+            className="absolute right-4 top-3 z-10 hidden items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground shadow-ht-xs transition-colors hover:text-foreground xl:inline-flex"
+          >
+            <PanelRightOpen className="h-4 w-4" aria-hidden /> Results
+          </button>
+        )}
+        <div ref={feedRef} className="xl:flex-1 xl:overflow-y-auto">
+          <div className="mx-auto w-full max-w-2xl space-y-6 px-5 py-6">
+            {turns.length === 0 && (
+              <div className="flex min-h-[45vh] flex-col items-center justify-center text-center">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ht-teal-tint">
+                  <Sparkles className="h-5 w-5 text-ht-teal" aria-hidden />
+                </div>
+                <h1 className="mt-4 text-xl font-semibold tracking-tight text-foreground">
+                  What should the agents optimize?
+                </h1>
+                <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
+                  Describe a goal below. The agent team scans your warehouse, tests every candidate against a
+                  holdout, and ranks what survives{run ? " — the last run's results are in the panel." : "."}
+                </p>
+              </div>
+            )}
+
+            {turns.map((t) => {
+              const isActive = t === lastTurn && running;
+              const turnEvents = t.events.length > 0 ? t.events : t === lastTurn ? events : [];
+              return (
+                <div key={t.id} className="space-y-4">
+                  {/* The marketer's message */}
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm text-primary-foreground shadow-ht-xs">
+                      {t.goal}
+                    </div>
+                  </div>
+
+                  {/* The agent team's reply: live narration, then the receipt */}
+                  <div className="flex gap-3">
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ht-teal-tint">
+                      <Sparkles className="h-3.5 w-3.5 text-ht-teal" aria-hidden />
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="rounded-2xl rounded-tl-md border border-border bg-card px-4 py-3 shadow-ht-xs">
+                        <InvestigationPlan events={turnEvents} streaming={isActive} />
+                      </div>
+                      {t.failed && (
+                        <div
+                          role="alert"
+                          className="flex items-start gap-2.5 rounded-xl border border-ht-danger/25 bg-ht-danger-bg px-4 py-3 text-sm text-ht-danger-text"
+                        >
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                          <span>
+                            <strong className="font-medium">Discovery run failed.</strong> {t.failed}{" "}
+                            <button onClick={() => send(t.goal)} className="underline underline-offset-2 hover:no-underline">
+                              Try again
+                            </button>
+                          </span>
+                        </div>
+                      )}
+                      {t.run && <RunSummary run={t.run} />}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        {/* Quantify the work done, with the counts carrying the weight. The rejected count is
-            load-bearing: it is the evidence that the Verifier is doing something. */}
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          {reviewed > 0 ? (
-            <>
-              Reviewed <strong className="font-medium text-foreground">{reviewed} candidates</strong> since midnight —{" "}
-              <strong className="font-medium text-foreground">{ranked.length} proven</strong>,{" "}
-              <strong className="font-medium text-foreground">{rejected.length} rejected</strong> for lacking incremental
-              lift.
-            </>
-          ) : (
-            "Pick a goal and run discovery to surface proven opportunities."
-          )}
-        </p>
+
+        {/* The input, pinned to the bottom of the conversation */}
+        <div className="sticky bottom-0 border-t border-border bg-background/80 px-5 py-4 backdrop-blur xl:static">
+          <div className="mx-auto w-full max-w-2xl">
+            <PromptInputBox onSend={send} isLoading={running} placeholder="Describe a goal for the agents…" />
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              Every claim is tested against a holdout before it reaches this screen.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <GoalRunBar goals={goals} value={goal} onValueChange={setGoal} onRun={onRun} running={running} />
-
-      {/* A failed run used to revert silently to the previous view with no explanation. */}
-      {status === "error" && (
-        <div
-          role="alert"
-          className="flex items-start gap-2.5 rounded-lg border border-ht-danger/25 bg-ht-danger-bg px-4 py-3 text-sm text-ht-danger-text"
-        >
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-          <span className="min-w-0">
-            <strong className="font-medium">Discovery run failed.</strong> {error ?? "Something went wrong."}{" "}
-            <button onClick={onRun} className="underline underline-offset-2 hover:no-underline">
-              Try again
-            </button>
-          </span>
-        </div>
-      )}
-
-      {running ? (
-        <div className="rounded-lg border border-border bg-card p-5 shadow-ht-xs">
-          <div className="mb-3 text-sm font-medium text-foreground">Agents working…</div>
-          <ActivityFeed events={events} streaming />
-        </div>
-      ) : run ? (
-        <>
-          {/* h2 so the cards' h3 titles sit at the right level under the page h1 */}
-          <h2 className="pt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            {ranked.length} {ranked.length === 1 ? "opportunity" : "opportunities"} ranked by estimated impact
-          </h2>
-          <div className="space-y-4">
-            {ranked.map((o, i) => (
-              <div key={o.key} className="flex items-start gap-3">
-                <span className="w-7 shrink-0 pt-4 text-right font-mono text-lg font-medium text-ht-400">{i + 1}</span>
-                <div className="min-w-0 flex-1">
-                  <OpportunityCard opportunity={o} onOpen={() => openOpp(o)} />
-                </div>
-              </div>
-            ))}
-          </div>
-          {trap && <TrapContrastBanner trap={trap} />}
-          <RejectedList rejected={rejected} onOpen={openOpp} />
-        </>
-      ) : (
-        <EmptyState
-          icon={Inbox}
-          title="No discovery run yet"
-          description="Pick a goal above and the agents will scan your warehouse, test each candidate against a holdout, and rank what survives."
-          action={
+      {/* Results rail: right pane on xl, stacked section below the chat otherwise */}
+      <aside
+        className={`border-t border-border bg-ht-50/50 transition-[width] duration-200 ease-out xl:shrink-0 xl:overflow-y-auto xl:border-t-0 ${
+          railOpen ? "xl:w-[400px] xl:border-l" : "xl:invisible xl:w-0 xl:overflow-hidden xl:border-l-0"
+        }`}
+        aria-label="Run results"
+      >
+        {/* Fixed inner width so content slides instead of reflowing mid-animation. */}
+        <div className="xl:w-[400px]">
+          <div className="flex items-center justify-between px-4 pt-3 lg:px-5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Results</span>
             <button
-              onClick={onRun}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-ht-teal-hover"
+              onClick={toggleRail}
+              aria-label="Hide results panel"
+              className="hidden h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground xl:inline-flex"
             >
-              <Sparkles className="h-4 w-4" aria-hidden /> Run discovery
+              <PanelRightClose className="h-4 w-4" aria-hidden />
             </button>
-          }
-        />
-      )}
+          </div>
+          <ResultsRail run={run} onOpen={openOpp} />
+        </div>
+      </aside>
 
-      {/* Only hand over the activation when it actually belongs to the opportunity being
-          viewed — otherwise the Plan tab describes a different campaign's audience. */}
       <OpportunityDetail
         opportunity={selected}
-        activation={
-          selected && run?.activation?.opportunity.key === selected.key ? run.activation : null
-        }
+        activation={selected && run?.activation?.opportunity.key === selected.key ? run.activation : null}
         open={detailOpen}
         onOpenChange={setDetailOpen}
       />
+    </div>
+  );
+}
+
+/** The closing message of an agent turn: the receipt, pointing at the rail. */
+function RunSummary({ run }: { run: RunDetail }) {
+  const ranked = run.opportunities.ranked;
+  const rejected = run.opportunities.rejected;
+  const impact = ranked.reduce((s, o) => s + monthlyImpact(o), 0);
+  const caught = rejected.filter((o) => o.bareLlm?.accepted).length;
+  return (
+    <div className="rounded-2xl rounded-tl-md border border-border bg-card px-4 py-3 text-sm shadow-ht-xs">
+      <p className="text-foreground">
+        Done — <strong className="font-semibold">{ranked.length} proven</strong> (~
+        <span className="font-mono tabular-nums text-ht-green">{moneyCompact(impact)}/mo</span> est. impact),{" "}
+        <strong className="font-semibold">{rejected.length} ruled out</strong>
+        {caught > 0 && (
+          <>
+            {" "}
+            including <strong className="font-semibold text-ht-danger-text">{caught} caught</strong> before{" "}
+            {caught === 1 ? "it" : "they"} cost you
+          </>
+        )}
+        {run.costUsd != null && (
+          <span className="text-muted-foreground">
+            {" "}
+            · run cost <span className="font-mono tabular-nums">${run.costUsd.toFixed(2)}</span>
+          </span>
+        )}
+        .
+      </p>
+      <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+        Full ranking in the results panel <ArrowRight className="h-3 w-3" aria-hidden />
+      </p>
     </div>
   );
 }
