@@ -41,5 +41,15 @@
     "tsx": "^4.19.2",
     "vitest": "^2.1.8",
     "@types/node": "^22.10.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@hono/node-server": "2.0.10",
+      "brace-expansion": "5.0.8",
+      "fast-uri": "3.1.4",
+      "postcss": "8.5.18",
+      "sharp": "0.35.0",
+      "uuid": "11.1.1"
+    }
   }
 }
