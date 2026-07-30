@@ -26,6 +26,36 @@ async function main(): Promise<void> {
     | Extract<EngineStreamEvent, { kind: "candidate_verified" }>
     | undefined;
   const hypothesisCount = kinds.filter((k) => k === "hypothesis_proposed").length;
+  const hypothesisEvents = events.filter(
+    (event): event is Extract<EngineStreamEvent, { kind: "hypothesis_proposed" }> =>
+      event.kind === "hypothesis_proposed",
+  );
+  const checkpointSentinel = "reused from durable candidate checkpoint";
+  const checkpointed = [...result.ranked, ...result.rejected].map((opportunity, index) =>
+    index === 0 ? { ...opportunity, reason: checkpointSentinel } : opportunity,
+  );
+  const resumed = await runEngineStreaming(
+    "Grow second purchases from one-time buyers",
+    () => {},
+    {
+      withBareLlmContrast: false,
+      withGroundedness: false,
+      explorerMode: "static",
+      priorInsights: [],
+      resume: {
+        explorer: {
+          source: hypothesisEvents[0]?.source ?? "static",
+          matched: hypothesisEvents
+            .filter((event) => event.matchedProbe)
+            .map((event) => event.hypothesis),
+          surplus: hypothesisEvents
+            .filter((event) => !event.matchedProbe)
+            .map((event) => event.hypothesis),
+        },
+        opportunities: checkpointed,
+      },
+    },
+  );
 
   const checks: [string, boolean][] = [
     ["run_started is first", kinds[0] === "run_started"],
@@ -38,6 +68,10 @@ async function main(): Promise<void> {
     ["VIP trap verified as no_significant_lift", vip?.opportunity.verdict === "no_significant_lift"],
     ["ranked has accepted opportunities", result.ranked.length > 0],
     ["every opportunity carries query provenance", [...result.ranked, ...result.rejected].every((o) => o.provenance.queries.length > 0)],
+    [
+      "durable resume reuses completed candidate checkpoints",
+      [...resumed.ranked, ...resumed.rejected].some((opportunity) => opportunity.reason === checkpointSentinel),
+    ],
   ];
   console.log("\n--- P3 stream gate ---");
   let ok = true;
