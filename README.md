@@ -54,7 +54,7 @@ flowchart LR
 | **Durable execution** | `packages/core/src/durable` | step-journaled checkpoints; crash-resume |
 | Activation + AMP-analog | `packages/core/src/activation` | audience compiler, creative brief, variant drafter, simulated connectors |
 | AI-Decisioning bandit | `packages/core/src/decisioning` | contextual Thompson-sampling per segment (policy split: server learns, device selects) |
-| Opportunity board UI | `apps/ui` | Next.js static board + `/how-it-works`; serves `/api/bundle` + `/api/ingest` |
+| Opportunity workspace UI | `apps/ui` | Next.js investigation chats, scoped Results, global current-truth inbox, share snapshots, `/api/bundle`, and `/api/ingest` |
 | **Wire protocol** | `packages/protocol` | zod-only contract: decision bundle, events, forward-compat decoder, golden vectors |
 | **Delivery SDK** | `packages/sdk` | on-device eligibility: predicate matcher, frequency ledger, adversarial-clock windows, durable event queue |
 | Bundle compiler | `packages/core/src/delivery` | verified opportunity → decision bundle; per-tier posteriors; **parity test** (SQL engine vs device matcher) |
@@ -84,7 +84,7 @@ The same problem deliberately looks different on each side, and the contract mat
 - **Batching that owns its losses.** The queue persists before flushing, deletes only on ack, retries a sealed batch under the same id (the server dedupes by file existence), and when the bounded buffer overflows it **reports** `dropped_since_last_batch` instead of hiding it.
 - **The uplink.** Ingest folds decision receipts into per-opportunity aggregates and writes them to Memory as `observed_delivery` under `<KEY>#delivery` — a counted observation, not an inference, and namespaced so it can never clobber the Verifier's insight. The next explorer run reads a fact only the device could have known: *"suppressed N in-app impressions under frequency_cap"*.
 
-Honest scope: in-app only (no APNs/FCM — real push is a service integration, not an architecture change); auth is a demo-grade gap (a real boundary needs a write key + per-device tokens); the `"simulated": true` on activation artifacts stays. The `@lift/sdk` runtime depends on `@lift/protocol` alone — a test walks the import graph of src *and* dist so it can never silently grow an import that crashes Hermes (proven the blunt way: `expo export` compiles the whole app to Hermes bytecode).
+Honest scope: in-app only (no APNs/FCM — real push is a service integration, not an architecture change); the device bundle/ingest boundary still needs per-device credentials even though the investigation product uses Supabase Auth; the `"simulated": true` on activation artifacts stays. The `@lift/sdk` runtime depends on `@lift/protocol` alone — a test walks the import graph of src *and* dist so it can never silently grow an import that crashes Hermes (proven the blunt way: `expo export` compiles the whole app to Hermes bytecode).
 
 ```bash
 pnpm ui:dev                                        # dashboard (demo mode, no key) → :3000
@@ -105,8 +105,8 @@ Watch the DebugPanel: first Home visit renders an arm; the second is suppressed 
 Honest list, in the order it would hurt:
 1. **`runAndReadAll` materializes full results server-side** before the 1,000-row cap — a streaming reader with a pushed-down `LIMIT` is the fix.
 2. **Single-file DuckDB behind one MCP server process** — becomes a real warehouse (Snowflake/BigQuery) with a connection pool; the MCP contract is the part that survives.
-3. **The JSON-file app store and in-process run lock** (`apps/ui/src/server/store.ts`) — becomes Postgres + a queue.
-4. **The LLM harness isn't step-journaled** — the deterministic engine pipeline is (`durable/journal.ts`), the open-ended harness loop is not; at scale you'd externalize plan + scratchpad pointers + transcript per checkpoint into Inngest/DBOS (documented gap, see `docs/ARCHITECTURE.md`).
+3. **The device delivery API has no workspace connector registry** — production needs authenticated per-workspace bundle and ingest routing.
+4. **The open-ended LLM harness is less resumable than the investigation engine** — investigation runs checkpoint explorer, candidate, and ranking stages, but arbitrary harness scratchpad/tool state would need its own versioned checkpoint contract.
 5. **Streaming narration is sequential** for legibility; the batch path already verifies in parallel, but a parallel *stream* needs per-key event correlation in every consumer.
 6. **Memory is a table scan** — fine at hundreds of insights, needs indexing + retrieval ranking at millions.
 
@@ -152,6 +152,13 @@ All of these are asserted by exit-code gates (`pnpm ground-truth`, `pnpm opportu
 
 `apps/ui` is a Next.js app — the marketer's "Opportunity Inbox": pick a goal → run discovery → watch the agents work → review proven opportunities → approve & launch → see measured results. Screens: Opportunities, Activity, Launched & Measuring, Memory, Settings.
 
+Opportunities now supports persistent investigation chats, a per-chat Results
+drawer, a workspace-wide latest-truth inbox, background runs, and immutable
+revocable share snapshots. See [`docs/MULTIPLE_INVESTIGATIONS.md`](docs/MULTIPLE_INVESTIGATIONS.md)
+for the product model, Supabase schema, worker process, and migration workflow.
+The cookie-based Supabase adapter is isolated behind two modules and
+`@supabase/ssr` is exact-version pinned while that API remains beta.
+
 One env flag (`LIFT_MODE`) swaps the data source behind an identical UI:
 - **`demo`** (default) — deterministic, instant, $0, no API/Python. Reads the `board.json` fixture and scripts the streamed activity. Deployable to Vercel; the shareable artifact.
 - **`live`** — the real `@lift/core` engine, streamed over SSE (Server-Sent Events). Runs a real ~45s discovery, persists it, and renders the same UI.
@@ -164,4 +171,6 @@ LIFT_MODE=live pnpm ui:dev           # live mode (needs ANTHROPIC_API_KEY + the 
 ## Deploy
 
 - **Demo → Vercel** (the shareable URL): `vercel` (uses `vercel.json`; `LIFT_MODE=demo`, no key, no Python). The live engine never loads, so no native deps are needed at runtime.
-- **Live → one container**: `docker build -t lift-compass . && docker run -e ANTHROPIC_API_KEY=... -p 3000:3000 lift-compass` (the `Dockerfile` installs Node 20 + Python 3.11 + uv, seeds the warehouse, and runs `LIFT_MODE=live next start`). Put it behind basic auth before exposing publicly.
+- **Live → web + durable worker**: configure Supabase, build the image, then run
+  `docker compose -f docker-compose.worker.yml up`. The web process serves
+  Next.js; the long-lived worker owns leased assistant and engine jobs.
