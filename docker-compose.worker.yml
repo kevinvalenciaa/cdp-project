@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    command: ["pnpm", "--filter", "@lift/ui", "start"]
+    env_file: .env
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  investigation-worker:
+    build: .
+    command: ["pnpm", "--filter", "@lift/ui", "worker"]
+    env_file: .env
+    restart: unless-stopped
+    stop_grace_period: 30s

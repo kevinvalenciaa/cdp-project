@@ -8,6 +8,7 @@ import type { ActivationResult as CoreActivationResult, InsightRecord as CoreIns
 export type {
   Verdict,
   Opportunity,
+  Hypothesis,
   AudienceDef,
   Variant,
   ActivationResult,
@@ -71,7 +72,13 @@ export interface ActivationSummary {
 export type EngineEvent =
   | { kind: "run_started"; goal: string; candidateCount: number }
   | { kind: "explorer_started"; probeCount: number }
-  | { kind: "hypothesis_proposed"; text: string; matchedProbe: boolean }
+  | {
+      kind: "hypothesis_proposed";
+      text: string;
+      matchedProbe: boolean;
+      hypothesis?: import("@lift/core").Hypothesis;
+      source?: "llm" | "static";
+    }
   | { kind: "planning"; text: string }
   | { kind: "memory_hit"; subject: string; claim: string }
   | { kind: "candidate_started"; key: string; title: string }
@@ -83,6 +90,8 @@ export type EngineEvent =
       detail: string;
       /** Verifier check #2 (groundedness) — present for accepted candidates in live runs. */
       grounded?: boolean;
+      /** Full immutable checkpoint payload; UI renderers may ignore it. */
+      opportunity?: import("@lift/core").Opportunity;
     }
   | { kind: "prioritizing"; acceptedCount: number; formula: string }
   | { kind: "cost"; usd: number }

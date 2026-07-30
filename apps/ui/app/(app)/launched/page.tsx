@@ -4,15 +4,19 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { LaunchedView } from "@/components/launched/LaunchedView";
 import { getProvider } from "@/server/data-provider";
+import { getRequestContext } from "@/server/auth";
+import { getInvestigationRepository } from "@/server/investigations";
 
 export default async function LaunchedPage() {
+  const ctx = await getRequestContext({ redirectToLogin: true });
+  const repository = await getInvestigationRepository();
   const provider = await getProvider();
-  const [activations, bandit, run] = await Promise.all([
-    provider.listActivations(),
+  const [activations, bandit, latestActivation] = await Promise.all([
+    repository.listActivations(ctx),
     provider.getBandit(),
-    provider.getLatestRun(),
+    repository.getLatestActivation(ctx),
   ]);
-  const measurement = run?.activation?.measurement ?? null;
+  const measurement = latestActivation?.measurement ?? null;
 
   return (
     <>

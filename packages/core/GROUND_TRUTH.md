@@ -35,11 +35,11 @@ A strong yearly curve (amplitude 0.8, peak ~day 330 / late Nov) plus a weekend b
 
 ## 5. Channel-preference signal
 Treated conversions land preferentially on channel responders (planted weight 3×), so "which customers respond to SMS" is discoverable **in-data**, and activation's persuadable filter is load-bearing, not cosmetic. Control arms are uniform (organic conversion is channel-independent). Realized treated conversion, responder vs non-responder:
-- `SPRING_EVERGREEN_CREATIVE` (email): 10.1% vs 5.3% (1.9×)
-- `SPRING_DROP_CREATIVE` (email): 17.5% vs 7.0% (2.5×)
 - `SECOND_PURCHASE_SMS` (sms): 24.6% vs 7.2% (3.4×)
 - `VIP_LOYALTY_BLAST` (email): 55.8% vs 24.0% (2.3×)
 - `CROSS_CATEGORY_SMS` (sms): 15.7% vs 7.8% (2.0×)
+- `SPRING_DROP_CREATIVE` (email): 17.5% vs 7.0% (2.5×)
+- `SPRING_EVERGREEN_CREATIVE` (email): 10.1% vs 5.3% (1.9×)
 
 ## Schema naming vs the spec's suggested tables
 The spec sketch suggests `users/events/campaigns/sends/conversions/segments`. This warehouse models the same six concepts with warehouse-native naming — a deliberate deviation, documented here:

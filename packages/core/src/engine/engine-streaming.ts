@@ -30,7 +30,12 @@ import type { EngineResult, Hypothesis, Opportunity } from "./types.js";
 export type EngineStreamEvent =
   | { kind: "run_started"; goal: string; candidateCount: number }
   | { kind: "explorer_started"; probeCount: number }
-  | { kind: "hypothesis_proposed"; hypothesis: Hypothesis; matchedProbe: boolean }
+  | {
+      kind: "hypothesis_proposed";
+      hypothesis: Hypothesis;
+      matchedProbe: boolean;
+      source: "llm" | "static";
+    }
   | { kind: "planning"; text: string }
   | { kind: "memory_hit"; subject: string; claim: string }
   | { kind: "candidate_started"; key: string; title: string }
@@ -69,19 +74,26 @@ export async function runEngineStreaming(
 
     // STAGE 1 · Explorer (annotate/overflow only — never adds or removes probes).
     onEvent({ kind: "explorer_started", probeCount: candidates.length });
-    const prior = memory ? await memory.getValid() : [];
-    const explorer = await exploreHypotheses({
-      client,
-      ledger: explorerLedger,
-      goal,
-      campaigns,
-      memory: prior.map((p) => ({ subject: p.subject, claim: p.claim })),
-      probes: candidates.map((c) => c.probe),
-      mode: opts.explorerMode,
-    });
+    const prior = opts.priorInsights ?? (memory ? await memory.getValid() : []);
+    const explorer =
+      opts.resume?.explorer ??
+      (await exploreHypotheses({
+        client,
+        ledger: explorerLedger,
+        goal,
+        campaigns,
+        memory: prior.map((p) => ({ subject: p.subject, claim: p.claim })),
+        probes: candidates.map((c) => c.probe),
+        mode: opts.explorerMode,
+      }));
     const probeKeys = new Set(candidates.map((c) => c.probe.key));
     for (const h of [...explorer.matched, ...explorer.surplus]) {
-      onEvent({ kind: "hypothesis_proposed", hypothesis: h, matchedProbe: probeKeys.has(h.key) });
+      onEvent({
+        kind: "hypothesis_proposed",
+        hypothesis: h,
+        matchedProbe: probeKeys.has(h.key),
+        source: explorer.source,
+      });
     }
     const hypothesisByKey = new Map(explorer.matched.map((h) => [h.key, h]));
     onEvent({ kind: "planning", text: "Planning the investigation — scanning campaigns, segments, and the order time-series." });
@@ -113,7 +125,18 @@ export async function runEngineStreaming(
       onEvent({ kind: "cost", usd: Number(totalUsd().toFixed(4)) });
     };
 
+    const resumedOpportunities = new Map(
+      (opts.resume?.opportunities ?? []).map((opportunity) => [opportunity.key, opportunity]),
+    );
     for (const cand of candidates) {
+      const resumed = resumedOpportunities.get(cand.probe.key);
+      if (resumed) {
+        onEvent({ kind: "candidate_started", key: cand.probe.key, title: cand.probe.title });
+        opps.push(resumed);
+        onEvent({ kind: "candidate_verified", opportunity: resumed });
+        onEvent({ kind: "cost", usd: Number(totalUsd().toFixed(4)) });
+        continue;
+      }
       const known = prior.find((p) => p.subject === cand.probe.key && DEAD_END_VERDICTS.has(p.verdict));
       if (known) {
         skippedFromMemory.push({ subject: cand.probe.key, claim: known.claim });

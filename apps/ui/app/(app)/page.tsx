@@ -2,8 +2,9 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, Circle, type LucideIcon, Rocket, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusPill } from "@/components/common/StatusPill";
-import { getProvider } from "@/server/data-provider";
-import { confidenceLabel, isSignificant, moneyCompact, monthlyImpact, pctFromPercent, pp, verdictMeta } from "@/lib/format";
+import { getRequestContext } from "@/server/auth";
+import { getInvestigationRepository } from "@/server/investigations";
+import { confidenceLabel, isSignificant, moneyCompact, pctFromPercent, pp, verdictMeta } from "@/lib/format";
 
 function StatTile({
   label,
@@ -29,11 +30,14 @@ function StatTile({
 }
 
 export default async function HomePage() {
-  const provider = await getProvider();
-  const [run, activations] = await Promise.all([provider.getLatestRun(), provider.listActivations()]);
-  const ranked = run?.opportunities.ranked ?? [];
-  const rejected = run?.opportunities.rejected ?? [];
-  const totalImpact = ranked.reduce((s, o) => s + monthlyImpact(o), 0);
+  const ctx = await getRequestContext({ redirectToLogin: true });
+  const repository = await getInvestigationRepository();
+  const [ranked, rejected, activations] = await Promise.all([
+    repository.listOpportunities(ctx, { status: "proven" }),
+    repository.listOpportunities(ctx, { status: "superseded" }),
+    repository.listActivations(ctx),
+  ]);
+  const totalImpact = ranked.reduce((sum, item) => sum + item.current.impactMonthly, 0);
   const measured = activations.filter((a) => a.upliftPp != null);
 
   return (
@@ -89,15 +93,17 @@ export default async function HomePage() {
               </p>
             </div>
             <ul className="divide-y divide-border">
-              {ranked.slice(0, 4).map((o, i) => (
-                <li key={o.key} className="px-5 py-3">
+              {ranked.slice(0, 4).map((item, i) => {
+                const o = item.current.opportunity;
+                return (
+                <li key={item.key} className="px-5 py-3">
                   <div className="flex items-center justify-between gap-3">
                     <span className="flex min-w-0 items-center gap-3">
                       <span className="font-mono text-sm tabular-nums text-muted-foreground">#{i + 1}</span>
                       <span className="truncate text-sm text-foreground">{o.title}</span>
                     </span>
                     <span className="shrink-0 font-mono text-sm tabular-nums text-ht-green">
-                      ~{moneyCompact(monthlyImpact(o))}/mo
+                      ~{moneyCompact(item.current.impactMonthly)}/mo
                     </span>
                   </div>
                   <div className="mt-1 flex items-center gap-2 pl-9 text-xs text-muted-foreground">
@@ -114,7 +120,8 @@ export default async function HomePage() {
                     )}
                   </div>
                 </li>
-              ))}
+                );
+              })}
               {ranked.length === 0 && (
                 <li className="px-5 py-6 text-sm text-muted-foreground">No run yet — open Opportunities to run discovery.</li>
               )}
@@ -130,10 +137,11 @@ export default async function HomePage() {
               </p>
             </div>
             <ul className="divide-y divide-border">
-              {rejected.slice(0, 4).map((o) => {
+              {rejected.slice(0, 4).map((item) => {
+                const o = item.current.opportunity;
                 const m = verdictMeta(o.verdict);
                 return (
-                  <li key={o.key} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <li key={item.key} className="flex items-center justify-between gap-3 px-5 py-3">
                     <span className="min-w-0">
                       <span className="block truncate text-sm text-foreground">{o.title}</span>
                       {o.rawConversion != null && (

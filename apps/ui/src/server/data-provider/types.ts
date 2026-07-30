@@ -23,7 +23,14 @@ export interface DataProvider {
   /** The most recent finished run (demo: always the fixture; live: from the store). */
   getLatestRun(): Promise<RunDetail | null>;
   /** Stream a discovery run for a goal (SSE source). */
-  streamRun(goal: string, signal?: AbortSignal): AsyncGenerator<EngineEvent>;
+  streamRun(
+    goal: string,
+    signal?: AbortSignal,
+    execution?: {
+      checkpointEvents: EngineEvent[];
+      workspaceInsights: Array<{ subject: string; claim: string; verdict: string }>;
+    },
+  ): AsyncGenerator<EngineEvent>;
   /** The latest run's activity log (for the Activity screen). */
   getActivity(): Promise<EngineEvent[]>;
   /** Stream the approve → launch flow for one opportunity. */

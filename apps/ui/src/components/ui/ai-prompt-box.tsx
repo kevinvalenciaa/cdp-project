@@ -448,12 +448,13 @@ const CustomDivider: React.FC = () => (
 // Main PromptInputBox Component
 interface PromptInputBoxProps {
   onSend?: (message: string, files?: File[]) => void;
+  onStop?: () => void;
   isLoading?: boolean;
   placeholder?: string;
   className?: string;
 }
 export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref: React.Ref<HTMLDivElement>) => {
-  const { onSend = () => {}, isLoading = false, placeholder = "Type your message here...", className } = props;
+  const { onSend = () => {}, onStop = () => {}, isLoading = false, placeholder = "Type your message here...", className } = props;
   const [input, setInput] = React.useState("");
   const [files, setFiles] = React.useState<File[]>([]);
   const [filePreviews, setFilePreviews] = React.useState<{ [key: string]: string }>({});
@@ -639,8 +640,9 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                 onClick={() => uploadInputRef.current?.click()}
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 disabled={isRecording}
+                aria-label="Upload image"
               >
-                <Paperclip className="h-5 w-5 transition-colors" />
+                <Paperclip className="h-5 w-5 transition-colors" aria-hidden />
                 <input
                   ref={uploadInputRef}
                   type="file"
@@ -658,6 +660,8 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
               <button
                 type="button"
                 onClick={() => handleToggleChange("search")}
+                aria-label="Toggle warehouse search"
+                aria-pressed={showSearch}
                 className={cn(
                   "flex h-8 items-center gap-1 rounded-full border px-2 py-1 transition-all",
                   showSearch
@@ -698,6 +702,8 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
               <button
                 type="button"
                 onClick={() => handleToggleChange("think")}
+                aria-label="Toggle deeper reasoning"
+                aria-pressed={showThink}
                 className={cn(
                   "flex h-8 items-center gap-1 rounded-full border px-2 py-1 transition-all",
                   showThink
@@ -758,11 +764,20 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                     : "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
               onClick={() => {
-                if (isRecording) setIsRecording(false);
+                if (isLoading) onStop();
+                else if (isRecording) setIsRecording(false);
                 else if (hasContent) handleSubmit();
                 else setIsRecording(true);
               }}
-              disabled={isLoading && !hasContent}
+              aria-label={
+                isLoading
+                  ? "Stop generation"
+                  : isRecording
+                    ? "Stop recording"
+                    : hasContent
+                      ? "Send message"
+                      : "Start voice message"
+              }
             >
               {isLoading ? (
                 <Square className="h-4 w-4 animate-pulse fill-primary-foreground" />

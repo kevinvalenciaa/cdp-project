@@ -14,8 +14,10 @@ out/
 # data + run artifacts (generated; reproducible from seed)
 packages/core/data/*.duckdb
 packages/core/data/*.duckdb.wal
-runs/
+/runs/
 **/audit.log
+supabase/.branches/
+supabase/.temp/
 
 # env / secrets
 .env

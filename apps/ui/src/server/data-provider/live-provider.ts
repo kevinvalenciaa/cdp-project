@@ -65,6 +65,44 @@ function toRunDetail(
   };
 }
 
+function resumeState(events: EngineEvent[]) {
+  const candidateEvents = events.filter(
+    (
+      event,
+    ): event is Extract<EngineEvent, { kind: "candidate_verified" }> & {
+      opportunity: Opportunity;
+    } => event.kind === "candidate_verified" && event.opportunity != null,
+  );
+  const hypothesisEvents = events.filter(
+    (
+      event,
+    ): event is Extract<EngineEvent, { kind: "hypothesis_proposed" }> & {
+      hypothesis: NonNullable<Extract<EngineEvent, { kind: "hypothesis_proposed" }>["hypothesis"]>;
+    } => event.kind === "hypothesis_proposed" && event.hypothesis != null,
+  );
+  const explorerComplete = events.some(
+    (event) =>
+      event.kind === "planning" &&
+      event.text.startsWith("Planning the investigation"),
+  );
+  return {
+    opportunities: candidateEvents.map((event) => event.opportunity),
+    ...(explorerComplete && hypothesisEvents.length > 0
+      ? {
+          explorer: {
+            source: hypothesisEvents[0]?.source ?? "static",
+            matched: hypothesisEvents
+              .filter((event) => event.matchedProbe)
+              .map((event) => event.hypothesis),
+            surplus: hypothesisEvents
+              .filter((event) => !event.matchedProbe)
+              .map((event) => event.hypothesis),
+          },
+        }
+      : {}),
+  };
+}
+
 /** Bridge a callback-driven runner into an async generator for SSE. */
 async function* bridge<E>(runner: (push: (e: E) => void) => Promise<void>, signal?: AbortSignal): AsyncGenerator<E> {
   const queue: E[] = [];
@@ -114,15 +152,13 @@ export const liveProvider: DataProvider = {
     return store.getActivity();
   },
 
-  streamRun(goal, signal) {
+  streamRun(goal, signal, execution) {
     return bridge<EngineEvent>(async (push) => {
       if (!tryAcquire("run")) {
         push({ kind: "error", message: "A discovery run is already in progress." });
         return;
       }
-      const activity: EngineEvent[] = [];
       const emit = (e: EngineEvent) => {
-        if (e.kind !== "run_finished") activity.push(e);
         push(e);
       };
       try {
@@ -136,7 +172,13 @@ export const liveProvider: DataProvider = {
             if (ce.kind === "run_started") emit({ kind: "run_started", goal: ce.goal, candidateCount: ce.candidateCount });
             else if (ce.kind === "explorer_started") emit({ kind: "explorer_started", probeCount: ce.probeCount });
             else if (ce.kind === "hypothesis_proposed")
-              emit({ kind: "hypothesis_proposed", text: `[${ce.hypothesis.key}] ${ce.hypothesis.rationale}`, matchedProbe: ce.matchedProbe });
+              emit({
+                kind: "hypothesis_proposed",
+                text: `[${ce.hypothesis.key}] ${ce.hypothesis.rationale}`,
+                matchedProbe: ce.matchedProbe,
+                hypothesis: ce.hypothesis,
+                source: ce.source,
+              });
             else if (ce.kind === "planning") emit({ kind: "planning", text: ce.text });
             else if (ce.kind === "memory_hit") emit({ kind: "memory_hit", subject: ce.subject, claim: ce.claim });
             else if (ce.kind === "candidate_started") emit({ kind: "candidate_started", key: ce.key, title: ce.title });
@@ -148,12 +190,18 @@ export const liveProvider: DataProvider = {
                 category: categoryOf(ce.opportunity),
                 detail: ce.opportunity.reason,
                 grounded: ce.opportunity.grounded && ce.opportunity.grounded.verdict !== "n/a" ? ce.opportunity.grounded.verdict === "pass" : undefined,
+                opportunity: ce.opportunity,
               });
             else if (ce.kind === "prioritizing") emit({ kind: "prioritizing", acceptedCount: ce.acceptedCount, formula: ce.formula });
             else if (ce.kind === "cost") emit({ kind: "cost", usd: ce.usd });
             else if (ce.kind === "run_finished") finished = { result: ce.result, bandit: ce.bandit };
           },
-          { withBareLlmContrast: true, memory: true },
+          {
+            withBareLlmContrast: true,
+            memory: false,
+            priorInsights: execution?.workspaceInsights,
+            resume: resumeState(execution?.checkpointEvents ?? []),
+          },
         );
         if (finished) {
           const { result, bandit } = finished as { result: Parameters<typeof toRunDetail>[0]; bandit: unknown };
@@ -168,7 +216,6 @@ export const liveProvider: DataProvider = {
             }
           }
           const detail = toRunDetail(result, bandit, goal, activation);
-          store.saveRun(detail, activity);
           push({ kind: "run_finished", result: detail });
         }
       } catch (e) {
@@ -194,17 +241,6 @@ export const liveProvider: DataProvider = {
       }
       try {
         const result = await activateOpportunity(`live-${Date.now()}`, key);
-        store.addActivation({
-          opportunityKey: result.opportunity.key,
-          title: result.opportunity.title,
-          destination: result.sync?.destination ?? "—",
-          audienceSize: result.audience.persuadableReach,
-          upliftPp: result.measurement.upliftPp,
-          pValue: result.measurement.pValue,
-          verdict: result.measurement.verdict,
-          status: "live",
-          launchedAt: new Date().toISOString().slice(0, 10),
-        });
         push({ kind: "act_finished", result });
       } catch (e) {
         push({ kind: "error", message: String(e) });

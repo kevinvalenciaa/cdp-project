@@ -72,6 +72,13 @@ function buildActivity(run: RunDetail): EngineEvent[] {
       kind: "hypothesis_proposed",
       text: o.hypothesis?.rationale ? `[${o.key}] ${o.hypothesis.rationale}` : `[${o.key}] ${o.segment} looks worth testing against the goal.`,
       matchedProbe: true,
+      hypothesis: {
+        key: o.key,
+        title: o.title,
+        rationale: o.hypothesis?.rationale ?? `${o.segment} looks worth testing against the goal.`,
+        kind: o.type,
+      },
+      source: o.hypothesis?.source ?? "static",
     });
   }
   events.push({ kind: "planning", text: "Planning the investigation — scanning campaigns, segments, and the order time-series." });
@@ -85,6 +92,7 @@ function buildActivity(run: RunDetail): EngineEvent[] {
       category: category(o),
       detail: o.reason,
       grounded: o.accepted ? (o.grounded ? o.grounded.verdict === "pass" : true) : undefined,
+      opportunity: o,
     });
     cost += 0.015;
     events.push({ kind: "cost", usd: Number(cost.toFixed(3)) });

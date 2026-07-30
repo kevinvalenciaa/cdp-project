@@ -11,7 +11,7 @@ import { emptyProvenance, queryFingerprint, type Provenance, type QueryProvenanc
 import { prioritize, scoreOpportunity } from "./prioritize.js";
 import { exploreHypotheses, type Probe } from "./explorer.js";
 import { checkGroundedness } from "./groundedness.js";
-import type { EngineResult, Opportunity, Verdict } from "./types.js";
+import type { EngineResult, Hypothesis, Opportunity, Verdict } from "./types.js";
 
 interface SqlResult {
   rows: Record<string, unknown>[];
@@ -267,6 +267,21 @@ export interface EngineOpts {
   memory?: boolean;
   goal?: string;
   runId?: string;
+  /** Durable worker resume input. Completed stages are treated as immutable. */
+  resume?: {
+    explorer?: {
+      source: "llm" | "static";
+      matched: Hypothesis[];
+      surplus: Hypothesis[];
+    };
+    opportunities?: Opportunity[];
+  };
+  /** Verified tenant-scoped memory supplied by the durable product worker. */
+  priorInsights?: Array<{
+    subject: string;
+    claim: string;
+    verdict: string;
+  }>;
 }
 
 /** Concurrency for per-candidate verification: one warehouse MCP + one stats server — 4 keeps them comfortable. */

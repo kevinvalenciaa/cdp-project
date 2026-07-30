@@ -173,7 +173,12 @@ ${campaignTable}
 
 ## 5. Channel-preference signal
 Treated conversions land preferentially on channel responders (planted weight 3×), so "which customers respond to SMS" is discoverable **in-data**, and activation's persuadable filter is load-bearing, not cosmetic. Control arms are uniform (organic conversion is channel-independent). Realized treated conversion, responder vs non-responder:
-${[...channel.values()].map((c) => `- \`${c.campaign_id}\` (${c.channel}): ${pct(c.responderRate)} vs ${pct(c.nonResponderRate)} (${c.ratio.toFixed(1)}×)`).join("\n")}
+${CAMPAIGNS.flatMap((campaign) => {
+  const c = channel.get(campaign.id);
+  return c
+    ? [`- \`${c.campaign_id}\` (${c.channel}): ${pct(c.responderRate)} vs ${pct(c.nonResponderRate)} (${c.ratio.toFixed(1)}×)`]
+    : [];
+}).join("\n")}
 
 ## Schema naming vs the spec's suggested tables
 The spec sketch suggests \`users/events/campaigns/sends/conversions/segments\`. This warehouse models the same six concepts with warehouse-native naming — a deliberate deviation, documented here:

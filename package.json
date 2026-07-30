@@ -9,7 +9,7 @@
   },
   "scripts": {
     "setup": "pnpm install && pnpm stats:sync",
-    "stats:sync": "cd services/stats && uv sync",
+    "stats:sync": "cd services/stats && uv sync --extra dev",
     "seed": "pnpm --filter @lift/core seed",
     "ground-truth": "pnpm --filter @lift/core ground-truth",
     "mcp:warehouse": "pnpm --filter @lift/core mcp:warehouse",
@@ -24,13 +24,16 @@
     "board:data": "pnpm --filter @lift/core board:data",
     "ui:build": "pnpm --filter @lift/ui build",
     "ui:dev": "pnpm --filter @lift/ui dev",
+    "ui:worker": "pnpm --filter @lift/ui worker",
+    "ui:import-investigations": "pnpm --filter @lift/ui investigations:import",
+    "ui:test:e2e": "pnpm --filter @lift/ui test:e2e",
     "board": "pnpm board:data && pnpm ui:build",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "lint": "pnpm -r --if-present lint",
-    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm stats:test && pnpm --filter @lift/core stream:test",
-    "stats:test": "cd services/stats && uv run pytest -q",
+    "verify": "pnpm build && pnpm typecheck && pnpm test && pnpm stats:test && pnpm seed && pnpm --filter @lift/core stream:test",
+    "stats:test": "cd services/stats && uv run --extra dev pytest -q",
     "device:dev": "pnpm --filter @lift/protocol build && pnpm --filter @lift/sdk build && pnpm --filter @lift/device dev"
   },
   "devDependencies": {

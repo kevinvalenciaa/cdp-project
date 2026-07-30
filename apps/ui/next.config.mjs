@@ -12,6 +12,18 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   outputFileTracingRoot: repoRoot,
   serverExternalPackages: SERVER_EXTERNALS,
+  async headers() {
+    return [
+      {
+        source: "/share/investigations/:path*",
+        headers: [
+          { key: "Cache-Control", value: "private, no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     // Keep the engine + its native deps out of the bundle — required at runtime (Node 24
     // supports require(esm)). Prevents webpack from tracing into DuckDB's platform bindings.

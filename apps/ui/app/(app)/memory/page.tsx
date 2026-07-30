@@ -5,11 +5,13 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { StatusPill } from "@/components/common/StatusPill";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { verdictMeta } from "@/lib/format";
-import { getProvider } from "@/server/data-provider";
+import { getRequestContext } from "@/server/auth";
+import { getInvestigationRepository } from "@/server/investigations";
 
 export default async function MemoryPage() {
-  const provider = await getProvider();
-  const insights = await provider.listMemory();
+  const ctx = await getRequestContext({ redirectToLogin: true });
+  const repository = await getInvestigationRepository();
+  const insights = await repository.listInsights(ctx);
 
   return (
     <>

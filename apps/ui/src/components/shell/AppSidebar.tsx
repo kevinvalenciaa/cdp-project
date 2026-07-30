@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { BookOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { BookOpen, Loader2, MessageSquareText, PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { InvestigationSummary } from "@/lib/investigations";
 import { BOTTOM_ITEMS, NAV_GROUPS, type NavItem } from "./nav-items";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
@@ -54,6 +56,22 @@ export function AppSidebar({
   onToggleSidebar?: () => void;
   collapsed?: boolean;
 }) {
+  const [investigations, setInvestigations] = useState<InvestigationSummary[]>([]);
+
+  useEffect(() => {
+    if (collapsed) return;
+    let active = true;
+    fetch("/api/investigations?status=active&limit=10", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : { investigations: [] }))
+      .then((payload: { investigations?: InvestigationSummary[] }) => {
+        if (active) setInvestigations(payload.investigations ?? []);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [collapsed]);
+
   return (
     <div className="flex h-full flex-col bg-sidebar">
       <div className={cn("flex items-center pb-3 pt-4", collapsed ? "justify-center px-2" : "justify-between px-4")}>
@@ -79,6 +97,22 @@ export function AppSidebar({
 
       <WorkspaceSwitcher collapsed={collapsed} />
 
+      <div className={cn(collapsed ? "px-2 pb-2" : "px-3 pb-2")}>
+        <Link
+          href="/opportunities/new"
+          onClick={onNavigate}
+          aria-label={collapsed ? "New investigation" : undefined}
+          title={collapsed ? "New investigation" : undefined}
+          className={cn(
+            "flex items-center rounded-md bg-sidebar-primary text-[13px] font-medium text-sidebar-primary-foreground transition-opacity hover:opacity-90",
+            collapsed ? "h-9 justify-center px-0" : "gap-2 px-2.5 py-2",
+          )}
+        >
+          <Plus className="h-4 w-4 shrink-0" aria-hidden />
+          {!collapsed && "New investigation"}
+        </Link>
+      </div>
+
       <nav className={cn("flex-1 space-y-4 overflow-y-auto py-2", collapsed ? "px-2" : "px-3")} aria-label="Primary">
         {NAV_GROUPS.map((group, i) => (
           <div key={group.label ?? `g${i}`} className="space-y-0.5">
@@ -92,6 +126,39 @@ export function AppSidebar({
             ))}
           </div>
         ))}
+        {!collapsed && investigations.length > 0 && (
+          <div className="space-y-0.5">
+            <div className="flex items-center justify-between px-2.5 pb-1 pt-1">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40">
+                Recent investigations
+              </span>
+              {investigations.some((item) => item.activeRunStatus) && (
+                <Loader2 className="h-3 w-3 animate-spin text-sidebar-foreground/40" aria-hidden />
+              )}
+            </div>
+            {investigations.map((investigation) => (
+              <Link
+                key={investigation.id}
+                href={`/opportunities/${investigation.id}`}
+                onClick={onNavigate}
+                className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              >
+                <MessageSquareText className="h-3.5 w-3.5 shrink-0 text-sidebar-foreground/45" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">{investigation.title}</span>
+                {investigation.activeRunStatus && (
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ht-green-accent" aria-label={investigation.activeRunStatus} />
+                )}
+              </Link>
+            ))}
+            <Link
+              href="/opportunities/investigations"
+              onClick={onNavigate}
+              className="block px-2.5 pt-1 text-[11px] text-sidebar-foreground/45 hover:text-sidebar-foreground"
+            >
+              View all investigations
+            </Link>
+          </div>
+        )}
       </nav>
 
       <div className={cn("space-y-0.5 border-t border-sidebar-border", collapsed ? "p-2" : "p-3")}>

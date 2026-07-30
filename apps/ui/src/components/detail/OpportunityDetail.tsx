@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { toast } from "sonner";
 import { CheckCircle2, Circle, FlaskConical, Loader2, Rocket, Send, Users } from "lucide-react";
 import type { ActivationEvent, ActivationResult, Opportunity } from "@/lib/types";
+import type { OpportunityOccurrence } from "@/lib/investigations";
 import {
   confidenceLabel,
   controlRate,
@@ -44,11 +46,19 @@ function renderBold(text: string) {
 export function OpportunityDetail({
   opportunity,
   activation,
+  occurrenceId,
+  canActivate = true,
+  activationStatus = null,
+  history = [],
   open,
   onOpenChange,
 }: {
   opportunity: Opportunity | null;
   activation: ActivationResult | null;
+  occurrenceId?: string;
+  canActivate?: boolean;
+  activationStatus?: "live" | null;
+  history?: OpportunityOccurrence[];
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
@@ -65,8 +75,9 @@ export function OpportunityDetail({
     onOpenChange(next);
   }
   function approve() {
-    if (!o) return;
-    start(`/api/activations/stream?key=${encodeURIComponent(o.key)}`, (e) => {
+    if (!o || !canActivate || !occurrenceId) return;
+    const params = new URLSearchParams({ key: o.key, occurrenceId });
+    start(`/api/activations/stream?${params.toString()}`, (e) => {
       if (e.kind === "act_finished") toast.success(`Launched — measured ${e.result.measurement.upliftPp >= 0 ? "+" : ""}${e.result.measurement.upliftPp.toFixed(1)}pp lift`);
       if (e.kind === "error") toast.error("Activation failed");
     });
@@ -102,6 +113,14 @@ export function OpportunityDetail({
                 className="rounded-none border-b-2 border-transparent bg-transparent px-0 pb-2.5 pt-2 text-sm text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
               >
                 Plan
+              </TabsTrigger>
+            )}
+            {history.length > 0 && (
+              <TabsTrigger
+                value="history"
+                className="rounded-none border-b-2 border-transparent bg-transparent px-0 pb-2.5 pt-2 text-sm text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              >
+                History ({history.length})
               </TabsTrigger>
             )}
           </TabsList>
@@ -174,6 +193,10 @@ export function OpportunityDetail({
                 ))}
               </div>
             )}
+            <div className="text-xs text-muted-foreground">
+              Activation status:{" "}
+              <span className="font-medium text-foreground">{activationStatus ?? "not activated"}</span>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {sourceChips(o).map((s) => (
                 <span key={s} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
@@ -291,6 +314,45 @@ export function OpportunityDetail({
                   </div>
                 </div>
               )}
+              {!canActivate && (
+                <div className="rounded-lg border border-ht-warning/25 bg-ht-warning-bg p-3 text-sm text-ht-warning">
+                  This evidence is stale or superseded. Open the latest workspace result or run fresh analysis before
+                  launching.
+                </div>
+              )}
+            </TabsContent>
+          )}
+
+          {history.length > 0 && (
+            <TabsContent value="history" className="space-y-3 px-6 py-5">
+              <p className="text-sm text-muted-foreground">
+                Every immutable occurrence of this opportunity, newest first. Older evidence stays traceable even after
+                it can no longer be activated.
+              </p>
+              {history.map((occurrence, index) => (
+                <article key={occurrence.id} className="rounded-lg border border-border bg-ht-50 p-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-medium text-foreground">
+                        {index === 0 ? "Current workspace result" : "Historical result"}
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {new Date(occurrence.verifiedAt).toLocaleString()} · {occurrence.verdict}
+                      </div>
+                    </div>
+                    <StatusPill tone={occurrence.accepted ? "emerald" : "rose"}>
+                      {occurrence.accepted ? "accepted" : "rejected"}
+                    </StatusPill>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">{occurrence.opportunity.reason}</p>
+                  <Link
+                    href={`/opportunities/${occurrence.investigationId}`}
+                    className="mt-2 inline-flex text-xs font-medium text-foreground underline"
+                  >
+                    {occurrence.sourceInvestigationTitle}
+                  </Link>
+                </article>
+              ))}
             </TabsContent>
           )}
         </Tabs>
@@ -301,7 +363,11 @@ export function OpportunityDetail({
               <Button variant="ghost" onClick={() => handleOpenChange(false)}>
                 Dismiss
               </Button>
-              <Button onClick={approve} disabled={launching} className="bg-primary text-primary-foreground hover:bg-ht-teal-hover">
+              <Button
+                onClick={approve}
+                disabled={launching || !canActivate || !occurrenceId}
+                className="bg-primary text-primary-foreground hover:bg-ht-teal-hover"
+              >
                 {launching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 {launching ? "Launching…" : "Approve & launch"}
               </Button>
