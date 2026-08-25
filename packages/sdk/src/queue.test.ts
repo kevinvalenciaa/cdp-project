@@ -34,7 +34,7 @@ describe("EventQueue durability", () => {
     await q.add(ev(2));
     const b2 = await q.seal("d1", null, "0.1.0", "2025-06-15T00:01:00Z");
     expect(b2!.batch_id).toBe(b1!.batch_id);
-    expect(q.pendingCount()).toBe(2); // sealed 1 + queued 1 — nothing lost
+    expect(q.pendingCount()).toBe(2); // sealed 1 + queued 1 - nothing lost
     // Even across a restart, the in-flight batch survives.
     const q2 = await EventQueue.load(storage);
     expect(q2.pendingCount()).toBe(2);

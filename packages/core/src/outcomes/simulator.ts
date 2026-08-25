@@ -12,7 +12,7 @@ export interface SimulatedOutcome {
 /**
  * Simulate a fresh holdout test on an activated audience, drawing conversions from known
  * "true" rates (from the original experiment) with light noise. This closes the loop:
- * after we draft + activate, we MEASURE the incremental lift against a control — the same
+ * after we draft + activate, we MEASURE the incremental lift against a control - the same
  * holdout discipline AI Decisioning uses. Deterministic given the seed.
  */
 export function simulateActivationOutcome(

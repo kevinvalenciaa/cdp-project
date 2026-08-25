@@ -1,10 +1,10 @@
 /**
- * The demo catalog — 8 products matching the synthetic warehouse's world
+ * The demo catalog - 8 products matching the synthetic warehouse's world
  * (categories + price bands from packages/core/src/warehouse/seed.ts).
  * The first three ids predate the redesign and are kept for event continuity.
  *
  * Photography: Unsplash License (free commercial use, no attribution required),
- * downloaded once and bundled — the offline demo depends on zero runtime
+ * downloaded once and bundled - the offline demo depends on zero runtime
  * fetches. Sources:
  *   wax-canvas-jacket  https://unsplash.com/photos/1544022613-e87ca75a784a
  *   chore-coat         https://unsplash.com/photos/1516257984-b1b4d707412e
@@ -24,7 +24,7 @@ export interface Product {
   name: string;
   category: Category;
   price: number;
-  image: number; // static require — Metro bundles it
+  image: number; // static require - Metro bundles it
   detail: string;
 }
 

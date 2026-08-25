@@ -20,10 +20,10 @@ Workflow:
 - Call make_plan FIRST with a short ordered plan.
 - Prefer run_metric (governed semantic layer) over run_sql; fall back to run_sql only for ad-hoc questions.
 - Use spawn_investigator for a focused deep dive so your own context stays clean.
-- The harness AUTO-SAVES large tool results to a scratchpad and gives you a pointer — read_file only if you need detail.
+- The harness AUTO-SAVES large tool results to a scratchpad and gives you a pointer - read_file only if you need detail.
 - CRITICAL: never claim an incremental lift without verify_lift_claim, and never call a spike a real change without assess_seasonality. High raw conversion is NOT proof of incremental lift.
-- The goal may state an ASSUMPTION the team currently holds. Validate it first. If your evidence CONTRADICTS that assumption (e.g., a campaign with high conversion turns out to have no incremental lift), you MUST call update_plan to pivot your remaining steps — that is the correct behavior, not a failure.
-- Be efficient with steps. Once you've validated the stated assumption and verified the strongest 1–2 candidates, call finish() — do NOT exhaustively re-check every campaign. finish() must name the segment, the incremental lift with significance (p-value + CI), and why it beats the high-conversion-but-non-incremental trap.`;
+- The goal may state an ASSUMPTION the team currently holds. Validate it first. If your evidence CONTRADICTS that assumption (e.g., a campaign with high conversion turns out to have no incremental lift), you MUST call update_plan to pivot your remaining steps - that is the correct behavior, not a failure.
+- Be efficient with steps. Once you've validated the stated assumption and verified the strongest 1–2 candidates, call finish() - do NOT exhaustively re-check every campaign. finish() must name the segment, the incremental lift with significance (p-value + CI), and why it beats the high-conversion-but-non-incremental trap.`;
 
 export interface RunResult {
   runId: string;

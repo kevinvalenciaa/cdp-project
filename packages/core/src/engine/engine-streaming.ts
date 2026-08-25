@@ -1,10 +1,10 @@
 /**
  * Streaming wrapper around the opportunity engine. Reuses the exported per-candidate
  * verification functions and emits an event before/after each one, so a UI can show the
- * agents working in real time. No rewrite of runEngine — this re-composes its pieces.
+ * agents working in real time. No rewrite of runEngine - this re-composes its pieces.
  *
  * Deliberately SEQUENTIAL where runEngine parallelizes: the stream exists for narrative
- * legibility — interleaved candidate_started/candidate_verified pairs would force per-key
+ * legibility - interleaved candidate_started/candidate_verified pairs would force per-key
  * correlation onto every consumer for zero user-visible win in a demo-scale run.
  */
 import { config } from "../shared/env.js";
@@ -72,7 +72,7 @@ export async function runEngineStreaming(
     ];
     onEvent({ kind: "run_started", goal, candidateCount: candidates.length });
 
-    // STAGE 1 · Explorer (annotate/overflow only — never adds or removes probes).
+    // STAGE 1 · Explorer (annotate/overflow only - never adds or removes probes).
     onEvent({ kind: "explorer_started", probeCount: candidates.length });
     const prior = opts.priorInsights ?? (memory ? await memory.getValid() : []);
     const explorer =
@@ -96,7 +96,7 @@ export async function runEngineStreaming(
       });
     }
     const hypothesisByKey = new Map(explorer.matched.map((h) => [h.key, h]));
-    onEvent({ kind: "planning", text: "Planning the investigation — scanning campaigns, segments, and the order time-series." });
+    onEvent({ kind: "planning", text: "Planning the investigation - scanning campaigns, segments, and the order time-series." });
 
     const opps: Opportunity[] = [];
     const skippedFromMemory: { subject: string; claim: string }[] = [];
@@ -141,7 +141,7 @@ export async function runEngineStreaming(
       if (known) {
         skippedFromMemory.push({ subject: cand.probe.key, claim: known.claim });
         onEvent({ kind: "memory_hit", subject: cand.probe.key, claim: known.claim });
-        continue; // proven dead end — memory says don't re-litigate it
+        continue; // proven dead end - memory says don't re-litigate it
       }
       await verifyAndEmit(cand.probe.key, cand.probe.title, cand.make);
     }
@@ -156,7 +156,7 @@ export async function runEngineStreaming(
         try {
           await memory.write(toInsight(o, runId));
         } catch {
-          /* gate rejection — ignore */
+          /* gate rejection - ignore */
         }
       }
     }

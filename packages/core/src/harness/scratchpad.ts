@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 /**
  * File-buffer scratchpad. Large tool results are written here and only a pointer +
- * short summary is kept in the model's context — the core context-rot mitigation.
+ * short summary is kept in the model's context - the core context-rot mitigation.
  */
 export class Scratchpad {
   constructor(private readonly dir: string) {

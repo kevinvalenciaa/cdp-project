@@ -144,7 +144,7 @@ function baseOpp(
   };
 }
 
-/** A tempting time-series claim ("Q4 surge — double down") that the Verifier must reject. */
+/** A tempting time-series claim ("Q4 surge - double down") that the Verifier must reject. */
 export async function seasonalityOpportunity(wh: Client, stats: Client): Promise<Opportunity> {
   const weeklyRes = await runSql(
     wh,
@@ -165,7 +165,7 @@ export async function seasonalityOpportunity(wh: Client, stats: Client): Promise
   const value = n(valueRes.rows[0]?.v);
   const verdict = res.verdict === "explained_by_seasonality" ? "explained_by_seasonality" : "real_lift";
   const rawChangePct = n(res.raw_change) * 100;
-  // The dashboard-facing stat: month-over-month growth into the surge window — the way
+  // The dashboard-facing stat: month-over-month growth into the surge window - the way
   // naive reporting actually presents revenue, and exactly the framing that hides
   // seasonality (each MoM delta looks like momentum; only history reveals the cycle).
   const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
@@ -175,9 +175,9 @@ export async function seasonalityOpportunity(wh: Client, stats: Client): Promise
   return baseOpp("Q4_SURGE", "Double down on the Q4 order surge", "All customers, Q4", "seasonality", series.length, value, {
     verdict,
     reason: String(res.explanation),
-    // The naive claim is what a MoM dashboard shows — deliberately NOT the STL verdict,
+    // The naive claim is what a MoM dashboard shows - deliberately NOT the STL verdict,
     // and deliberately without calendar labels: naive reporting says "revenue is up 60%
-    // over the prior two months", not "it's Q4" — spotting the cycle is the Verifier's job.
+    // over the prior two months", not "it's Q4" - spotting the cycle is the Verifier's job.
     naiveClaim: `Order revenue over the past two months is up +${momPct.toFixed(0)}% versus the two months prior, and it is still climbing week over week. The current campaign mix is clearly working.`,
     evidence: {
       weeks: series.length,
@@ -190,7 +190,7 @@ export async function seasonalityOpportunity(wh: Client, stats: Client): Promise
   });
 }
 
-/** Archetype 3: an under-targeted high-value cohort — surfaced as "needs a holdout to test". */
+/** Archetype 3: an under-targeted high-value cohort - surfaced as "needs a holdout to test". */
 export async function underservedOpportunity(wh: Client): Promise<Opportunity> {
   const res = await runSql(
     wh,
@@ -205,18 +205,18 @@ export async function underservedOpportunity(wh: Client): Promise<Opportunity> {
   return baseOpp("UNDERSERVED_WORKWEAR", "Underserved: new workwear buyers", "First purchase Workwear, signed up 2026", "segment", size, value, {
     verdict: "needs_test",
     reason: `${size} high-value customers (avg LTV $${value.toFixed(0)}) barely targeted (${coveragePct.toFixed(0)}% send coverage). Design a holdout to measure incremental lift before scaling.`,
-    naiveClaim: null, // no performance claim exists yet — nothing for a naive judge to buy
+    naiveClaim: null, // no performance claim exists yet - nothing for a naive judge to buy
     evidence: { size, avgLtv: value, coveragePct },
     provenance: { queries: toProvenance([res]), stats: null },
   });
 }
 
 /**
- * The bare LLM (no statistical verifier): judges the naive claim only — reach and raw
+ * The bare LLM (no statistical verifier): judges the naive claim only - reach and raw
  * numbers, never the verdict, p-values, or STL output. This is the contrast foil the demo
  * measures the Verifier against. Empirically (2026 models): it ACCEPTS the incrementality
  * trap (high raw conversion looks great) but on time-series spikes it hedges "can't tell
- * without the baseline" — which is the point: it knows seasonality exists yet cannot check
+ * without the baseline" - which is the point: it knows seasonality exists yet cannot check
  * it, while the Verifier decomposes the actual series. Returns null when there is no claim.
  */
 export async function bareLlmJudge(
@@ -227,11 +227,11 @@ export async function bareLlmJudge(
   if (opp.naiveClaim == null) return null;
   // The bare judge's naivety is INFORMATIONAL, by construction: it sees exactly what a
   // dashboard reports and has no access to the historical series (the Verifier's STL has
-  // the full history — that asymmetry IS the demo). For time-series claims we state that
+  // the full history - that asymmetry IS the demo). For time-series claims we state that
   // situation plainly; "check for seasonality" is impossible without the data to check.
   const prompt =
     opp.type === "seasonality"
-      ? `You are a marketer reviewing this month's dashboard. The numbers below are ALL the data you have — ` +
+      ? `You are a marketer reviewing this month's dashboard. The numbers below are ALL the data you have - ` +
         `there is no historical series to consult, so judge them at face value. ` +
         `${opp.naiveClaim} ` +
         `On these numbers, is this a genuine performance improvement worth leaning into? ` +
@@ -284,7 +284,7 @@ export interface EngineOpts {
   }>;
 }
 
-/** Concurrency for per-candidate verification: one warehouse MCP + one stats server — 4 keeps them comfortable. */
+/** Concurrency for per-candidate verification: one warehouse MCP + one stats server - 4 keeps them comfortable. */
 const VERIFY_CONCURRENCY = Number(process.env.VERIFY_CONCURRENCY ?? 4);
 
 export async function runEngine(opts: EngineOpts = {}): Promise<EngineResult> {
@@ -310,7 +310,7 @@ export async function runEngine(opts: EngineOpts = {}): Promise<EngineResult> {
       { probe: { key: "UNDERSERVED_WORKWEAR", title: "Underserved: new workwear buyers", kind: "segment" as const }, make: () => underservedOpportunity(wh) },
     ];
 
-    // STAGE 1 · Explorer — annotate/overflow only; the probe list is never altered by the LLM.
+    // STAGE 1 · Explorer - annotate/overflow only; the probe list is never altered by the LLM.
     const prior = memory ? await memory.getValid() : [];
     const explorer = await exploreHypotheses({
       client,
@@ -331,7 +331,7 @@ export async function runEngine(opts: EngineOpts = {}): Promise<EngineResult> {
       return !known;
     });
 
-    // STAGE 2 · Investigate/Verify — parallel, order-preserving (output order = candidate order).
+    // STAGE 2 · Investigate/Verify - parallel, order-preserving (output order = candidate order).
     const opps = await mapLimit(toVerify, VERIFY_CONCURRENCY, (c) => c.make());
     for (const o of opps) {
       const h = hypothesisByKey.get(o.key);
@@ -345,7 +345,7 @@ export async function runEngine(opts: EngineOpts = {}): Promise<EngineResult> {
       });
     }
 
-    // Verifier check #2 — groundedness (demote-only; see groundedness.ts).
+    // Verifier check #2 - groundedness (demote-only; see groundedness.ts).
     const withGroundedness = opts.withGroundedness ?? (Boolean(opts.withBareLlmContrast) && client != null);
     if (withGroundedness && client) {
       await mapLimit(
@@ -372,7 +372,7 @@ export async function runEngine(opts: EngineOpts = {}): Promise<EngineResult> {
         try {
           await memory.write(toInsight(o, runId));
         } catch {
-          /* gate rejection — ignore */
+          /* gate rejection - ignore */
         }
       }
     }

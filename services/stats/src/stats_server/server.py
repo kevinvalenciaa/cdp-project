@@ -59,7 +59,7 @@ def power_analysis(n_t: int, n_c: int, baseline_rate: float, mde: float) -> dict
 
 @mcp.tool()
 def verify_lift_claim(conv_t: float, n_t: int, conv_c: float, n_c: int, mde: float = 0.03) -> dict[str, Any]:
-    """Combined gate for a holdout lift claim — the Verifier's main statistical check.
+    """Combined gate for a holdout lift claim - the Verifier's main statistical check.
 
     Verdict:
       - 'real_lift'           : significant positive incremental lift (CI excludes 0)

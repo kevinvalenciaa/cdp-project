@@ -51,14 +51,14 @@ export async function activateOpportunity(runId: string, preferKey = "SECOND_PUR
   const audience = await compileAudience(wh, opp.key);
 
   // 1b. Deterministic frequency cap: exclude members already at max sends in
-  // the window. Arithmetic over campaign_sends — code counts; LLMs never do.
+  // the window. Arithmetic over campaign_sends - code counts; LLMs never do.
   const cap = await applyFrequencyCap(wh, audience.filterSql, audience.persuadableSql);
 
   // 2. Agentic-CDP draft work + AMP-analog assets.
   const brief = await draftCreativeBrief(client, ledger, opp, audience);
   const variants = await draftVariants(client, ledger, brief, audience.channel, 2);
 
-  // 3. Guardrail the drafts before any activation — the three JUDGMENT rules
+  // 3. Guardrail the drafts before any activation - the three JUDGMENT rules
   // (brand, tone, seasonality) stay with the LLM; the cap above does not.
   const details = await Promise.all(variants.map((v) => checkAction(client, `${audience.channel} message: ${v.text}`, ledger)));
   const guardrail = { allowed: details.every((g) => g.allowed), details };
@@ -67,7 +67,7 @@ export async function activateOpportunity(runId: string, preferKey = "SECOND_PUR
   const sync = guardrail.allowed ? syncToDestination(runId, audience, brief, variants, cap) : null;
 
   // 5. Simulated outcome + holdout measurement. We targeted the PERSUADABLE sub-segment
-  // (e.g., SMS-responders), who by definition respond better than the broad average — so
+  // (e.g., SMS-responders), who by definition respond better than the broad average - so
   // their treatment rate is modestly higher than the original experiment's.
   const ev = opp.evidence as { conv_t: number; n_t: number; conv_c: number; n_c: number };
   const baseT = ev.n_t ? ev.conv_t / ev.n_t : 0.12;

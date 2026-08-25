@@ -145,7 +145,7 @@ function seedState(): LocalState {
         id: DEMO_ASSISTANT_MESSAGE,
         investigationId: DEMO_INVESTIGATION,
         role: "assistant",
-        content: `Done — ${run.opportunities.ranked.length} proven opportunities and ${run.opportunities.rejected.length} ruled out.`,
+        content: `Done - ${run.opportunities.ranked.length} proven opportunities and ${run.opportunities.rejected.length} ruled out.`,
         status: "complete",
         intent: "investigate",
         clientMessageId: null,
@@ -440,7 +440,7 @@ export class LocalInvestigationRepository implements InvestigationRepository {
       .map(({ result, createdAt }) => ({
         opportunityKey: result.opportunity.key,
         title: result.opportunity.title,
-        destination: result.sync?.destination ?? "—",
+        destination: result.sync?.destination ?? "-",
         audienceSize: result.audience.persuadableReach,
         upliftPp: result.measurement.upliftPp,
         pValue: result.measurement.pValue,
@@ -858,7 +858,7 @@ export class LocalInvestigationRepository implements InvestigationRepository {
       const assistant = state.messages.find((message) => message.id === run.assistantMessageId);
       if (assistant) {
         assistant.status = "complete";
-        assistant.content = `Done — ${result.opportunities.ranked.length} proven opportunities and ${result.opportunities.rejected.length} ruled out.`;
+        assistant.content = `Done - ${result.opportunities.ranked.length} proven opportunities and ${result.opportunities.rejected.length} ruled out.`;
         assistant.citations = occurrenceIds.filter((id) =>
           result.opportunities.ranked.some((opportunity) => id.endsWith(`:${opportunity.key}`)),
         );

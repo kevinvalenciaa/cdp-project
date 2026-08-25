@@ -11,7 +11,7 @@ import { useLift } from "../lift";
 
 /**
  * Editorial home: masthead → the SDK's message surface → product grid.
- * The hero region is the ONLY place delivery shows up in the storefront —
+ * The hero region is the ONLY place delivery shows up in the storefront -
  * everything else is an ordinary retail page, which is the point.
  */
 export function HomeScreen({

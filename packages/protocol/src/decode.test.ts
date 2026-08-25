@@ -36,7 +36,7 @@ describe("decodeBundle forward compatibility", () => {
     expect(bundle.campaigns.map((c) => c.campaign_id)).toEqual(b.campaigns.map((c) => c.campaign_id));
   });
 
-  it("skips a campaign with an unknown operator and records the reason — never throws, never evaluates it", () => {
+  it("skips a campaign with an unknown operator and records the reason - never throws, never evaluates it", () => {
     const b = goodBundle() as unknown as { campaigns: Record<string, unknown>[] };
     b.campaigns = [
       ...b.campaigns,

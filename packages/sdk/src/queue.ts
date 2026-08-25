@@ -3,9 +3,9 @@ import type { StorageAdapter } from "./storage.js";
 
 /**
  * Durable event queue. The rules, in order of importance:
- *   1. persist BEFORE flush — an event accepted by add() survives process death
- *   2. ack-then-delete — events leave the queue only after the server confirms
- *   3. bounded — past maxEvents the OLDEST drop, and the loss is REPORTED via
+ *   1. persist BEFORE flush - an event accepted by add() survives process death
+ *   2. ack-then-delete - events leave the queue only after the server confirms
+ *   3. bounded - past maxEvents the OLDEST drop, and the loss is REPORTED via
  *      dropped_since_last_batch instead of hidden
  * A sealed batch keeps its batch_id until acked, so a retry after a network
  * failure re-sends the SAME id and the server's dedupe absorbs it.
@@ -13,7 +13,7 @@ import type { StorageAdapter } from "./storage.js";
 
 interface QueueState {
   events: ClientEvent[];
-  /** Monotonically increasing batch counter — batch ids survive restarts. */
+  /** Monotonically increasing batch counter - batch ids survive restarts. */
   batchSeq: number;
   /** Events dropped to the bound since the last successful flush. */
   dropped: number;
@@ -70,7 +70,7 @@ export class EventQueue {
 
   /**
    * Seal the current events into a batch for sending. If an unacked batch is
-   * already in flight, THAT batch is returned again (same id — idempotent
+   * already in flight, THAT batch is returned again (same id - idempotent
    * retry) rather than sealing a second one.
    */
   async seal(deviceId: string, userId: string | null, sdkVersion: string, wallIso: string): Promise<EventBatch | null> {

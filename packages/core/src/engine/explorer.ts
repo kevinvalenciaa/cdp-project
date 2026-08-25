@@ -5,14 +5,14 @@ import type { CampaignRow } from "./engine.js";
 import type { Hypothesis } from "./types.js";
 
 /**
- * The Explorer stage — breadth over depth, on the cheap tier (Haiku): given the goal, the
+ * The Explorer stage - breadth over depth, on the cheap tier (Haiku): given the goal, the
  * campaign catalog, and prior verified insights, propose typed hypotheses about what the
  * marketing team should start, stop, or change.
  *
  * THE DETERMINISM SEAM (the one invariant everything downstream relies on): the Explorer
  * can ANNOTATE or OVERFLOW, never add or remove probes. Every verifiable probe is always
  * investigated regardless of what the LLM says; a hypothesis that matches a probe key only
- * attaches its rationale, and one that matches nothing lands in `surplus` — listed honestly
+ * attaches its rationale, and one that matches nothing lands in `surplus` - listed honestly
  * as unexplored, never silently verified or dropped. So accepted/score/ranking stay
  * reproducible while the breadth stage stays genuinely generative.
  */
@@ -45,7 +45,7 @@ function staticOutput(probes: Probe[]): ExplorerOutput {
     matched: probes.map((p) => ({
       key: p.key,
       title: p.title,
-      rationale: "Enumerated from the campaign catalog and known signals (deterministic fallback — no LLM).",
+      rationale: "Enumerated from the campaign catalog and known signals (deterministic fallback - no LLM).",
       kind: p.kind,
     })),
     surplus: [],
@@ -66,13 +66,13 @@ export async function exploreHypotheses(opts: ExplorerOpts): Promise<ExplorerOut
     memoryBlock +
     `Known investigation probes (echo the exact key when your idea maps to one): ${opts.probes.map((p) => p.key).join(", ")}.\n` +
     `Propose 5-10 hypotheses about what the marketing team should start, stop, or change. ` +
-    `Breadth over depth — include at least one idea beyond the probe list if you see one. ` +
+    `Breadth over depth - include at least one idea beyond the probe list if you see one. ` +
     `Reply with ONLY compact JSON: [{"key": "<probe key or a new SNAKE_CASE key>", "title": "<short>", ` +
     `"rationale": "<=20 words", "kind": "experiment"|"seasonality"|"segment"}]`;
 
   try {
     const resp = await opts.client.messages.create({
-      model: config.models.fanout, // breadth is the cheap tier's job — Haiku, one call
+      model: config.models.fanout, // breadth is the cheap tier's job - Haiku, one call
       max_tokens: 900,
       temperature: 0, // stable hypothesis set run-to-run (rationale text may still vary slightly)
       messages: [{ role: "user", content: prompt }],
@@ -99,7 +99,7 @@ export async function exploreHypotheses(opts: ExplorerOpts): Promise<ExplorerOut
       };
       (probeKeys.has(key) ? matched : surplus).push(hyp);
     }
-    // Fail-safe: a probe the LLM ignored still gets a static hypothesis — never fewer probes.
+    // Fail-safe: a probe the LLM ignored still gets a static hypothesis - never fewer probes.
     for (const p of opts.probes) {
       if (!seen.has(p.key)) {
         matched.push({ key: p.key, title: p.title, rationale: "Enumerated from the campaign catalog.", kind: p.kind });

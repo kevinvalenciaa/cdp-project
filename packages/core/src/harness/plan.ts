@@ -1,7 +1,7 @@
 import type { Plan } from "../shared/types.js";
 
 /**
- * Plan/execute separation with dynamic re-planning (the distinctive Hightouch harness
+ * Plan/execute separation with dynamic re-planning (the core harness
  * mechanic). The plan is mutable, regurgitated at the end of context, and NOT a DAG.
  */
 export class PlanManager {
@@ -42,6 +42,6 @@ export class PlanManager {
 
   /** Regurgitated at the END of context each turn to exploit recency bias. */
   reminder(): string {
-    return `[plan reminder — keep this goal salient]\n${this.render()}`;
+    return `[plan reminder - keep this goal salient]\n${this.render()}`;
   }
 }

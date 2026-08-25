@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { ActivationSummary, EngineEvent, RunDetail } from "@/lib/types";
 
-/** Minimal single-user persistence for live mode — a JSON file under repo/runs/. */
+/** Minimal single-user persistence for live mode - a JSON file under repo/runs/. */
 const STATE_PATH = resolve(process.cwd(), "../../runs/app-state.json");
 
 interface AppState {

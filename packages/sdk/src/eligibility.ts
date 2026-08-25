@@ -32,7 +32,7 @@ export interface Decision {
   /** The full arm for the host to render; the SDK never renders anything. */
   arm: Arm | null;
   reason: string;
-  /** Why each candidate was passed over — the DebugPanel's raw material. */
+  /** Why each candidate was passed over - the DebugPanel's raw material. */
   trail: string[];
 }
 
@@ -51,7 +51,7 @@ const none = (bundle: DecisionBundle, surface: string, outcome: Decision["outcom
 export function evaluateBundle(bundle: DecisionBundle, ctx: EvalCtx, ledger: readonly LedgerEntry[], clock: Clock): Decision {
   const trail: string[] = [];
 
-  // 1. Measurement holdout — before anything renders, deterministically by user.
+  // 1. Measurement holdout - before anything renders, deterministically by user.
   if (bundle.holdout_fraction > 0) {
     const basis = ctx.userId ?? ctx.deviceId;
     const bucket = fnv1a(`${basis}|${bundle.run_id}`) % 10_000;
@@ -70,25 +70,25 @@ export function evaluateBundle(bundle: DecisionBundle, ctx: EvalCtx, ledger: rea
 
   // 3. Walk candidates: predicate, then caps. First fully-clear campaign wins.
   // The highest-priority campaign blocked ONLY by a cap becomes the suppression
-  // receipt if nothing below it clears — "which message, or why not".
+  // receipt if nothing below it clears - "which message, or why not".
   let suppressed: { campaignId: string; opportunityKey: string; reason: string } | null = null;
 
   for (const c of candidates) {
     const m = matchPredicate(c.eligibility, ctx.attrs);
     if (!m.matched) {
-      trail.push(`${c.campaign_id}: ineligible — ${m.trail.join("; ")}`);
+      trail.push(`${c.campaign_id}: ineligible - ${m.trail.join("; ")}`);
       continue;
     }
 
     const capFailure = [...bundle.caps.map((cap) => checkCap(cap, ledger, clock, ctx.sessionId)), ...c.caps.map((cap) => checkCap(cap, ledger, clock, ctx.sessionId, c.campaign_id))].find((r) => !r.ok);
     if (capFailure) {
-      trail.push(`${c.campaign_id}: capped — ${capFailure.reason}`);
+      trail.push(`${c.campaign_id}: capped - ${capFailure.reason}`);
       if (!suppressed) suppressed = { campaignId: c.campaign_id, opportunityKey: c.opportunity_key, reason: capFailure.reason };
       continue;
     }
 
     // 4. Arm selection over the shipped posteriors (server learns; device selects).
-    // "attr:<name>" resolves the segment per user — e.g. "attr:value_tier"
+    // "attr:<name>" resolves the segment per user - e.g. "attr:value_tier"
     // keys the posteriors by THIS user's tier, which is what makes the
     // selection personalisation rather than a global best.
     const segmentKey = c.segment_key.startsWith("attr:")

@@ -32,7 +32,7 @@ function loadBundleFixture(): { bundle: DecisionBundle; etag: string } | null {
     const bundle = DecisionBundleSchema.parse(raw);
     bundleCache = { bundle, etag: bundle.bundle_id };
   } catch {
-    bundleCache = null; // fixture not generated yet — /api/bundle 404s honestly
+    bundleCache = null; // fixture not generated yet - /api/bundle 404s honestly
   }
   return bundleCache;
 }
@@ -47,10 +47,10 @@ const GOALS: Goal[] = [
 const GUARDRAILS: GuardrailRule[] = [
   { id: "premium_no_discount", rule: "Never propose discounts or promo codes on premium / never-on-sale collections (e.g., Fall Flagship)." },
   { id: "seasonality_not_opportunity", rule: "Do not present an expected seasonal increase as a new opportunity or a behavior change." },
-  { id: "premium_brand_tone", rule: "Premium messaging stays aspirational — no aggressive discount/urgency language." },
+  { id: "premium_brand_tone", rule: "Premium messaging stays aspirational - no aggressive discount/urgency language." },
   {
     id: "frequency_cap",
-    rule: "Max 2 messages per customer per 7 days — machine-enforced (server: activation/caps.ts, device: @lift/sdk frequency ledger), not an LLM judgment.",
+    rule: "Max 2 messages per customer per 7 days - machine-enforced (server: activation/caps.ts, device: @lift/sdk frequency ledger), not an LLM judgment.",
   },
 ];
 
@@ -81,7 +81,7 @@ function buildActivity(run: RunDetail): EngineEvent[] {
       source: o.hypothesis?.source ?? "static",
     });
   }
-  events.push({ kind: "planning", text: "Planning the investigation — scanning campaigns, segments, and the order time-series." });
+  events.push({ kind: "planning", text: "Planning the investigation - scanning campaigns, segments, and the order time-series." });
   let cost = 0;
   for (const o of candidates) {
     events.push({ kind: "candidate_started", key: o.key, title: o.title });
@@ -109,7 +109,7 @@ function memoryFrom(run: RunDetail): InsightRecord[] {
     if (o.accepted) claim = `${o.title}: verified ${o.upliftPp! >= 0 ? "+" : ""}${o.upliftPp?.toFixed(1)}pp incremental lift.`;
     else if (o.verdict === "explained_by_seasonality") claim = `${o.title}: seasonal pattern, not a real behavior change.`;
     else if (o.verdict === "needs_test") claim = `${o.title}: untargeted high-value cohort; needs a designed holdout.`;
-    else claim = `${o.title}: high raw conversion but no incremental lift — not persuadable.`;
+    else claim = `${o.title}: high raw conversion but no incremental lift - not persuadable.`;
     out.push({
       subject: o.key,
       subjectType: o.type === "experiment" ? "campaign" : o.type === "seasonality" ? "initiative" : "audience",
@@ -173,7 +173,7 @@ export const demoProvider: DataProvider = {
       {
         opportunityKey: a.opportunity.key,
         title: a.opportunity.title,
-        destination: a.sync?.destination ?? "—",
+        destination: a.sync?.destination ?? "-",
         audienceSize: a.audience.persuadableReach,
         upliftPp: a.measurement.upliftPp,
         pValue: a.measurement.pValue,
@@ -190,7 +190,7 @@ export const demoProvider: DataProvider = {
 
   async listMemory() {
     // The fixture's synthesized insights, plus any device-observed delivery
-    // facts from real ingests against this dev server — the "next-run context"
+    // facts from real ingests against this dev server - the "next-run context"
     // beat, with zero spend: a fact only the device could have known shows up
     // beside the verifier's insights.
     const base = memoryFrom(RUN);
@@ -212,7 +212,7 @@ export const demoProvider: DataProvider = {
   },
 
   async ingest(batch) {
-    // Demo ingest is file writes only — no core import, no duckdb, no LLM.
+    // Demo ingest is file writes only - no core import, no duckdb, no LLM.
     // The memory uplink happens in listMemory: suppression aggregates read
     // back as observed_delivery insights, so the "next-run context" beat works
     // with zero spend.

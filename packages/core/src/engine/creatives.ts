@@ -11,10 +11,10 @@ export interface Creative {
 
 const TEMPLATES: Record<CreativeStyle, (c: string, extra: string) => string> = {
   product_drop: (c, coll) =>
-    `Just dropped: the ${coll} ${c} collection. Limited first run — shop the new arrivals before they're gone.`,
+    `Just dropped: the ${coll} ${c} collection. Limited first run - shop the new arrivals before they're gone.`,
   evergreen: (c) => `Discover timeless ${c} essentials, crafted to last. Free shipping on every order, always.`,
   promotional: (c, pct) => `${pct}% OFF all ${c} this weekend only! Use code SAVE${pct}. Don't miss these deals.`,
-  ugc: (c) => `"I basically live in these ${c} now" — real reviews from real customers. See why they're obsessed.`,
+  ugc: (c) => `"I basically live in these ${c} now" - real reviews from real customers. See why they're obsessed.`,
 };
 
 const COLLECTIONS = ["Fall Flagship", "Workwear Edit", "Core", "Summer Capsule"];

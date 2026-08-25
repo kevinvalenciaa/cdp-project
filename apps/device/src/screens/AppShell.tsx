@@ -12,7 +12,7 @@ import { BagScreen } from "./BagScreen";
 
 /**
  * Typed state navigation: two tabs + a product slide-over. All lift.screen()
- * dispatch lives in the ONE effect below — the entire "what does integration
+ * dispatch lives in the ONE effect below - the entire "what does integration
  * cost a host app" answer is this file plus src/lift.tsx.
  */
 type Route = { tab: Tab; detail: Product | null };

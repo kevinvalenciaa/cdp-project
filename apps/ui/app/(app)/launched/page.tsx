@@ -24,7 +24,7 @@ export default async function LaunchedPage() {
       {activations.length > 0 ? (
         <LaunchedView activations={activations} measurement={measurement} bandit={bandit} />
       ) : (
-        <div className="p-5 lg:p-8">
+        <div className="app-page">
           <EmptyState
             icon={Rocket}
             title="Nothing launched yet"
@@ -32,7 +32,7 @@ export default async function LaunchedPage() {
             action={
               <Link
                 href="/opportunities"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-ht-teal-hover"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-ht-xs transition-all hover:-translate-y-px hover:bg-ht-teal-hover"
               >
                 Review opportunities <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>

@@ -161,11 +161,11 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
 
   return (
     <>
-      <div className="xl:flex xl:h-screen">
-        <div className="relative flex min-w-0 flex-1 flex-col">
-          <div className="flex min-h-14 items-center gap-3 border-b border-border px-4 pr-36">
-            <Link href="/opportunities" className="text-xs text-muted-foreground hover:text-foreground">
-              Opportunities
+      <div className="bg-background xl:flex xl:h-full xl:gap-4 xl:p-4">
+        <div className="relative flex min-w-0 flex-1 flex-col bg-card xl:overflow-hidden xl:rounded-[20px] xl:border xl:border-border xl:shadow-ht-xs">
+          <div className="flex min-h-16 items-center gap-3 border-b border-border px-5 pr-36">
+            <Link href="/investigations" className="text-xs text-muted-foreground hover:text-foreground">
+              Investigations
             </Link>
             <span className="text-muted-foreground">/</span>
             <input
@@ -186,20 +186,20 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
             )}
           </div>
 
-          <div className="absolute right-4 top-2 z-10 flex items-center gap-1.5">
+          <div className="absolute right-4 top-3 z-10 flex items-center gap-1.5">
             {!railOpen && (
               <button
                 onClick={toggleRail}
                 aria-label="Open results"
                 title="Open results"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-foreground transition-colors hover:border-border hover:bg-muted"
               >
                 <FileChartColumn className="h-5 w-5" aria-hidden />
               </button>
             )}
             <button
               onClick={() => setShareOpen(true)}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-foreground px-3 text-sm font-medium text-background shadow-ht-xs hover:opacity-85"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-ht-xs transition-all hover:-translate-y-px hover:bg-ht-teal-hover"
             >
               <Share2 className="h-4 w-4" aria-hidden />
               <span className="hidden sm:inline">Share</span>
@@ -207,8 +207,8 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
           </div>
 
           <div ref={feedRef} className="min-h-0 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-2xl space-y-6 px-5 py-7">
-              <div className="rounded-xl border border-border bg-ht-50 px-4 py-3">
+            <div className="mx-auto w-full max-w-3xl space-y-7 px-5 py-7 sm:px-7 lg:py-9">
+              <div className="rounded-2xl border border-border bg-background px-4 py-3.5">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Investigation objective
                 </div>
@@ -224,18 +224,18 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
                   <div key={message.id}>
                     {message.role === "user" ? (
                       <div className="flex justify-end">
-                        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm text-primary-foreground shadow-ht-xs">
+                        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-relaxed text-primary-foreground shadow-ht-xs">
                           {message.content}
                         </div>
                       </div>
                     ) : (
                       <div className="flex gap-3">
-                        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ht-teal-tint">
+                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-ht-teal-tint">
                           <Sparkles className="h-3.5 w-3.5 text-ht-teal" aria-hidden />
                         </div>
                         <div className="min-w-0 flex-1">
                           {run && (run.status === "queued" || run.status === "running") ? (
-                            <div className="rounded-2xl rounded-tl-md border border-border bg-card px-4 py-3 shadow-ht-xs">
+                            <div className="rounded-2xl rounded-tl-md border border-border bg-background px-4 py-3.5 shadow-ht-xs">
                               <InvestigationPlan events={events} streaming />
                             </div>
                           ) : (
@@ -243,7 +243,7 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
                               className={`whitespace-pre-wrap rounded-2xl rounded-tl-md border px-4 py-3 text-sm leading-relaxed shadow-ht-xs ${
                                 message.status === "error"
                                   ? "border-ht-danger/25 bg-ht-danger-bg text-ht-danger-text"
-                                  : "border-border bg-card text-foreground"
+                                  : "border-border bg-background text-foreground"
                               }`}
                             >
                               {message.status === "queued" || message.status === "running" ? (
@@ -263,7 +263,7 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
                                   <button
                                     key={citation}
                                     onClick={() => setSelected(result)}
-                                    className="rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
+                                    className="rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-ht-400 hover:text-foreground"
                                   >
                                     {result.opportunity.title}
                                   </button>
@@ -282,7 +282,7 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
                                     "investigate",
                                   )
                                 }
-                                className="mt-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+                                className="mt-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
                               >
                                 Run fresh analysis
                               </button>
@@ -302,10 +302,10 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
             </div>
           </div>
 
-          <div className="border-t border-border bg-background/85 px-5 py-4 backdrop-blur">
-            <div className="mx-auto w-full max-w-2xl">
+          <div className="border-t border-border bg-card/90 px-5 py-4 backdrop-blur sm:px-7">
+            <div className="mx-auto w-full max-w-3xl">
               {investigation.status === "archived" ? (
-                <div className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                <div className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
                   <Archive className="h-4 w-4" aria-hidden /> This investigation is archived and read-only.
                 </div>
               ) : (
@@ -336,16 +336,16 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
           />
         )}
         <aside
-          className={`bg-ht-50/95 backdrop-blur transition-[width] duration-200 ease-out ${
+          className={`bg-card/95 backdrop-blur transition-[width] duration-200 ease-out ${
             railOpen
-              ? "fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-y-auto rounded-t-2xl border-t border-border shadow-2xl xl:static xl:z-auto xl:max-h-none xl:w-[400px] xl:shrink-0 xl:rounded-none xl:border-l xl:border-t-0 xl:shadow-none"
+              ? "fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-y-auto rounded-t-[24px] border-t border-border shadow-ht-md xl:static xl:z-auto xl:max-h-none xl:w-[420px] xl:shrink-0 xl:rounded-[20px] xl:border xl:border-t xl:shadow-ht-xs"
               : "hidden xl:invisible xl:block xl:w-0 xl:shrink-0 xl:overflow-hidden"
           }`}
           aria-label="Investigation results"
           aria-hidden={!railOpen}
         >
-          <div className="xl:w-[400px]">
-            <div className="flex items-center justify-between px-4 pt-3 lg:px-5">
+          <div className="xl:w-[420px]">
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 lg:px-5">
               <div>
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Investigation results
@@ -355,13 +355,13 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
               <button
                 onClick={toggleRail}
                 aria-label="Hide results panel"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <PanelRightClose className="h-4 w-4" aria-hidden />
               </button>
             </div>
             {supersededResults.length > 0 && (
-              <div className="mx-4 mt-3 rounded-lg border border-ht-warning/25 bg-ht-warning-bg px-3 py-2 text-xs text-ht-warning lg:mx-5">
+              <div className="mx-4 mt-4 rounded-xl border border-ht-warning/25 bg-ht-warning-bg px-3 py-2.5 text-xs text-ht-warning lg:mx-5">
                 {supersededResults.length} historical{" "}
                 {supersededResults.length === 1 ? "result has" : "results have"} been superseded by newer workspace
                 evidence.{" "}

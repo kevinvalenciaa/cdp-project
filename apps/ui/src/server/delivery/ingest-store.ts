@@ -3,8 +3,8 @@ import { dirname, resolve } from "node:path";
 import { EventBatchSchema, type EventBatch, type IngestAck } from "@lift/protocol";
 
 /**
- * Durable ingest without a database. One JSON file per accepted batch —
- * written .tmp-then-rename (atomic on this filesystem) — and FILE EXISTENCE is
+ * Durable ingest without a database. One JSON file per accepted batch -
+ * written .tmp-then-rename (atomic on this filesystem) - and FILE EXISTENCE is
  * the dedupe index: a batch_id that already has a file is a retry, absorbed
  * with a fresh ack and no reprocessing. runs/ is generated-artifact territory,
  * consistent with how the rest of the repo persists run output.
@@ -76,7 +76,7 @@ export interface IngestOutcome {
 /**
  * One sentence a marketer (and the next explorer run) can read. This exact
  * string lands in Memory under "<key>#delivery" and is rendered into the
- * explorer prompt — a fact only the device could have known.
+ * explorer prompt - a fact only the device could have known.
  */
 export function renderDeliveryClaim(key: string, row: SuppressionAggregate[string]): string {
   const suppressed = Object.entries(row.suppressed)

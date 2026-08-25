@@ -1,11 +1,11 @@
 /**
  * Phase 5: compounding memory + durable execution.
  *  - RUN 1 writes verified insights to memory.
- *  - RUN 2 skips the killed trap (and other dead-ends) using memory — no re-litigation.
+ *  - RUN 2 skips the killed trap (and other dead-ends) using memory - no re-litigation.
  *  - CRASH + RESUME proves the journal survives a crash and steps are not re-run.
  *  - The verified-only write gate blocks an unverified claim (anti memory-poisoning).
  *
- * Run: `pnpm --filter @lift/core durable` (no API key needed — pure verification)
+ * Run: `pnpm --filter @lift/core durable` (no API key needed - pure verification)
  */
 import { rmSync } from "node:fs";
 import { resolve } from "node:path";
@@ -27,19 +27,19 @@ async function main(): Promise<void> {
 
   console.log("\n=== Phase 5: compounding memory + durable execution ===");
 
-  // RUN 1 — fresh, writes verified insights.
+  // RUN 1 - fresh, writes verified insights.
   const r1 = await durableRun("p5-run1");
   console.log(`\nRUN 1 (fresh): verified ${r1.executedThisRun} candidates, wrote ${r1.insightsWritten} verified insights to memory.`);
   console.log(`  accepted: ${r1.opportunities.filter((o) => o.accepted).map((o) => o.title).join(", ") || "(none)"}`);
 
-  // RUN 2 — consults memory, skips known dead-ends (incl. the trap).
+  // RUN 2 - consults memory, skips known dead-ends (incl. the trap).
   const r2 = await durableRun("p5-run2");
   console.log(`\nRUN 2 (memory has ${r2.priorInsightCount} insights):`);
-  for (const s of r2.skippedFromMemory) console.log(`  ⏭️  skipped ${s.subject} — ${s.claim}`);
-  for (const s of r2.revalidated) console.log(`  ♻️  revalidated ${s.subject} (stale dead-end re-verified, still holds) — ${s.claim}`);
+  for (const s of r2.skippedFromMemory) console.log(`  ⏭️  skipped ${s.subject} - ${s.claim}`);
+  for (const s of r2.revalidated) console.log(`  ♻️  revalidated ${s.subject} (stale dead-end re-verified, still holds) - ${s.claim}`);
   console.log(`  re-verified ${r2.executedThisRun}; skipped ${r2.skippedFromMemory.length} known dead-ends without re-litigating.`);
 
-  // CRASH + RESUME — durability isolated from memory (noMemory) for a clean journal demo.
+  // CRASH + RESUME - durability isolated from memory (noMemory) for a clean journal demo.
   clearJournal("p5-crash");
   let crashed = false;
   try {
@@ -47,7 +47,7 @@ async function main(): Promise<void> {
   } catch (e) {
     if (e instanceof CrashError) {
       crashed = true;
-      console.log(`\n💥 CRASH: ${e.message} — journal persisted to disk.`);
+      console.log(`\n💥 CRASH: ${e.message} - journal persisted to disk.`);
     } else throw e;
   }
   const resume = await durableRun("p5-crash", { noMemory: true });
@@ -55,7 +55,7 @@ async function main(): Promise<void> {
     `🔄 RESUME: replayed ${resume.resumedSteps.length} journaled steps (not re-run), executed ${resume.executedThisRun} more → finished with ${resume.opportunities.length} opportunities.`,
   );
 
-  // VERIFIED-ONLY WRITE GATE — block an unverified claim.
+  // VERIFIED-ONLY WRITE GATE - block an unverified claim.
   const mem3 = await Memory.open();
   let blocked = false;
   try {

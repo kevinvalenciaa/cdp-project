@@ -74,10 +74,10 @@ export function ShareInvestigationDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 p-4 backdrop-blur-[2px]" role="dialog" aria-modal="true">
       <button className="absolute inset-0" aria-label="Close share dialog" onClick={() => onOpenChange(false)} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-card shadow-xl">
-        <div className="flex items-start justify-between border-b border-border px-5 py-4">
+      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-[22px] border border-border bg-card shadow-ht-md">
+        <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
             <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
               <Share2 className="h-4 w-4" aria-hidden /> Share investigation
@@ -86,20 +86,20 @@ export function ShareInvestigationDialog({
           </div>
           <button
             onClick={() => onOpenChange(false)}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="space-y-4 px-5 py-5">
+        <div className="space-y-5 px-6 py-6">
           <label className="block">
             <span className="text-xs font-medium text-foreground">Snapshot contents</span>
             <select
               value={scope}
               onChange={(event) => setScope(event.target.value as ShareScope)}
-              className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none"
+              className="mt-1.5 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring/20"
             >
               <option value="proven">Proven results only</option>
               <option value="transcript">Proven results and transcript</option>
@@ -111,7 +111,7 @@ export function ShareInvestigationDialog({
             <select
               value={expiry}
               onChange={(event) => setExpiry(event.target.value as typeof expiry)}
-              className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none"
+              className="mt-1.5 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring/20"
             >
               <option value="7">In 7 days</option>
               <option value="30">In 30 days</option>
@@ -120,7 +120,7 @@ export function ShareInvestigationDialog({
           </label>
 
           {url && (
-            <div className="flex items-center gap-2 rounded-lg border border-ht-green-border bg-ht-green-bg p-3">
+            <div className="flex items-center gap-2 rounded-2xl border border-ht-green-border bg-ht-green-bg p-3.5">
               <Link2 className="h-4 w-4 shrink-0 text-ht-green" aria-hidden />
               <input readOnly value={url} className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none" />
               <button
@@ -145,7 +145,7 @@ export function ShareInvestigationDialog({
                 {shares
                   .filter((share) => !share.revokedAt)
                   .map((share) => (
-                    <li key={share.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-xs">
+                    <li key={share.id} className="flex items-center justify-between rounded-xl border border-border bg-background px-3 py-2.5 text-xs">
                       <span className="text-muted-foreground">
                         Created {new Date(share.createdAt).toLocaleDateString()} ·{" "}
                         {share.expiresAt ? `expires ${new Date(share.expiresAt).toLocaleDateString()}` : "never expires"}
@@ -164,7 +164,7 @@ export function ShareInvestigationDialog({
           )}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
+        <div className="flex justify-end gap-2 border-t border-border bg-muted/25 px-6 py-4">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Close</Button>
           <Button onClick={create} disabled={creating}>
             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}

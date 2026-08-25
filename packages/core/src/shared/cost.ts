@@ -1,4 +1,4 @@
-/** Per-model pricing (USD per 1M tokens) for the cost ledger — proves cost-tiering. */
+/** Per-model pricing (USD per 1M tokens) for the cost ledger - proves cost-tiering. */
 const PRICES: { match: RegExp; input: number; output: number }[] = [
   { match: /haiku/i, input: 1, output: 5 },
   { match: /sonnet/i, input: 3, output: 15 },

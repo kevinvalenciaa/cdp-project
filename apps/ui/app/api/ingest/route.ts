@@ -17,7 +17,7 @@ export function OPTIONS(): Response {
 }
 
 /**
- * POST /api/ingest — device event batches shipped UP.
+ * POST /api/ingest - device event batches shipped UP.
  *
  * Durable and idempotent: one file per batch, existence is the dedupe index,
  * so an SDK retrying a sealed batch after a network failure is absorbed with
@@ -40,7 +40,7 @@ export async function POST(req: Request): Promise<Response> {
     if (err instanceof ZodError) {
       const i = err.issues[0];
       return Response.json(
-        { error: `invalid EventBatch — ${i ? `${i.path.join(".")}: ${i.message}` : "schema mismatch"}` },
+        { error: `invalid EventBatch - ${i ? `${i.path.join(".")}: ${i.message}` : "schema mismatch"}` },
         { status: 422, headers: { ...CORS, "X-Server-Time": serverTime } },
       );
     }

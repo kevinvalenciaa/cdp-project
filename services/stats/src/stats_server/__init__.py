@@ -1,1 +1,1 @@
-"""Stats Verifier MCP — statistical gates for the Lift Compass agent harness."""
+"""Stats Verifier MCP - statistical gates for the Proofloop agent harness."""

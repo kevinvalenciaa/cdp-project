@@ -523,7 +523,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
       return {
         opportunityKey: result.opportunity.key,
         title: result.opportunity.title,
-        destination: result.sync?.destination ?? "—",
+        destination: result.sync?.destination ?? "-",
         audienceSize: result.audience.persuadableReach,
         upliftPp: result.measurement.upliftPp,
         pValue: result.measurement.pValue,
@@ -1068,7 +1068,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
       await tx`
         update public.investigation_messages
         set status = 'complete',
-            content = ${`Done — ${result.opportunities.ranked.length} proven opportunities and ${result.opportunities.rejected.length} ruled out.`},
+            content = ${`Done - ${result.opportunities.ranked.length} proven opportunities and ${result.opportunities.rejected.length} ruled out.`},
             citations = ${tx.json(pgJson(citations))}
         where id = ${assistantId}::uuid
       `;

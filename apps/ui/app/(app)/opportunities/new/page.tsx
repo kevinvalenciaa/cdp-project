@@ -1,9 +1,7 @@
-import { NewInvestigationClient } from "@/components/inbox/NewInvestigationClient";
-import { getRequestContext } from "@/server/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewInvestigationPage() {
-  await getRequestContext({ redirectToLogin: true });
-  return <NewInvestigationClient />;
+export default function LegacyNewInvestigationPage() {
+  redirect("/investigations");
 }

@@ -1,6 +1,6 @@
 /**
  * Phase 2 demo: run a single investigation and print the harness trace, proving the
- * Hightouch mechanics (initial plan, mid-run update_plan on a surprise, a buffered
+ * Harness mechanics (initial plan, mid-run update_plan on a surprise, a buffered
  * payload, a subagent summary, plan regurgitation, and total_cost_usd).
  *
  * Run: `pnpm demo` (needs ANTHROPIC_API_KEY in .env)
@@ -35,7 +35,7 @@ function icon(kind: string): string {
 
 async function main(): Promise<void> {
   const harness = await Harness.create();
-  console.log(`\n=== Lift Compass — harness run ${harness.runId} ===\nGoal: ${GOAL}\n`);
+  console.log(`\n=== Proofloop - harness run ${harness.runId} ===\nGoal: ${GOAL}\n`);
 
   const result = await harness.run(GOAL);
   await harness.close();

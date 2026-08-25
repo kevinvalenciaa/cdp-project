@@ -6,9 +6,9 @@ import { useLift, useLiftDebug } from "../lift";
 import { Sheet } from "./Sheet";
 
 /**
- * The SDK x-ray. Collapsed: a floating pill with a live status dot — the way a
+ * The SDK x-ray. Collapsed: a floating pill with a live status dot - the way a
  * production app would ship a hidden debug surface. Expanded: the full panel a
- * host engineer actually wants — which bundle is loaded, how wrong the clock
+ * host engineer actually wants - which bundle is loaded, how wrong the clock
  * is, what is queued, what was suppressed and WHY, and a per-campaign
  * explain() readout. Deliberately dark: the storefront is paper; the x-ray is
  * ink.
@@ -56,7 +56,7 @@ export function DebugPanel(): React.JSX.Element | null {
           <Text style={styles.title}>LIFT SDK</Text>
 
           <Row k="bundle" v={s.bundleId ?? "none"} />
-          <Row k="net" v={s.online ? "online" : `offline${s.lastError ? ` — ${s.lastError}` : ""}`} warn={!s.online} />
+          <Row k="net" v={s.online ? "online" : `offline${s.lastError ? ` - ${s.lastError}` : ""}`} warn={!s.online} />
           <Row k="clock skew" v={`${s.skewMs >= 0 ? "+" : ""}${Math.round(s.skewMs)} ms`} />
           <Row
             k="queue"
@@ -88,7 +88,7 @@ export function DebugPanel(): React.JSX.Element | null {
 
           {campaignIds.length > 0 ? (
             <View style={styles.block}>
-              <Text style={styles.blockHead}>EXPLAIN — WOULD THIS USER QUALIFY NOW?</Text>
+              <Text style={styles.blockHead}>EXPLAIN - WOULD THIS USER QUALIFY NOW?</Text>
               {campaignIds.map((id) => {
                 const verdict = lift?.explain(id) ?? "sdk not ready";
                 return <Row key={id} k={id} v={verdict} ok={verdict === "eligible"} />;

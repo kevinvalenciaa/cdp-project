@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Lift Compass delivery SDK. Evaluates eligibility locally against rules pushed down from the backend. Depends on @lift/protocol only \u2014 no node builtins, no core, loads in Hermes.",
+  "description": "Proofloop delivery SDK. Evaluates eligibility locally against rules pushed down from the backend. Depends only on @lift/protocol, with no Node builtins or core dependency, and loads in Hermes.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

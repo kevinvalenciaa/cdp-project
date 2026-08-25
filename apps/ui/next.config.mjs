@@ -25,7 +25,7 @@ const nextConfig = {
     ];
   },
   webpack: (config, { isServer }) => {
-    // Keep the engine + its native deps out of the bundle — required at runtime (Node 24
+    // Keep the engine + its native deps out of the bundle - required at runtime (Node 24
     // supports require(esm)). Prevents webpack from tracing into DuckDB's platform bindings.
     if (isServer) {
       config.externals = [...(config.externals ?? []), ...SERVER_EXTERNALS];

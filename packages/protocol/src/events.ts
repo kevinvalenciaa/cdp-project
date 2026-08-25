@@ -10,7 +10,7 @@ import { z } from "zod";
 
 const EventBase = {
   event_id: z.string().min(1),
-  /** Device wall-clock ISO timestamp — display only, never used for windows. */
+  /** Device wall-clock ISO timestamp - display only, never used for windows. */
   ts_wall: z.string(),
   /** Milliseconds since device boot at capture time. */
   ts_monotonic_ms: z.number(),
@@ -23,7 +23,7 @@ export const ScreenEventSchema = z.object({ ...EventBase, type: z.literal("scree
 export const TrackEventSchema = z.object({ ...EventBase, type: z.literal("track"), name: z.string().min(1) });
 export const IdentifyEventSchema = z.object({ ...EventBase, type: z.literal("identify"), user_id: z.string().min(1) });
 
-/** The delivery receipt — what the device DECIDED, including every suppression and why. */
+/** The delivery receipt - what the device DECIDED, including every suppression and why. */
 export const DecisionEventSchema = z.object({
   ...EventBase,
   type: z.literal("decision"),
@@ -67,9 +67,9 @@ export const IngestAckSchema = z.object({
   ok: z.literal(true),
   batch_id: z.string(),
   received: z.number().int().min(0),
-  /** True when this batch_id was already ingested — the retry was safely absorbed. */
+  /** True when this batch_id was already ingested - the retry was safely absorbed. */
   duplicate: z.boolean(),
-  /** Server wall clock — the SDK's skew anchor, present on every response. */
+  /** Server wall clock - the SDK's skew anchor, present on every response. */
   server_time: z.string(),
 });
 export type IngestAck = z.infer<typeof IngestAckSchema>;

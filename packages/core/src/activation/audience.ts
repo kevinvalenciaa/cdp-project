@@ -10,7 +10,7 @@ async function rows(wh: Client, sql: string): Promise<Record<string, unknown>[]>
 
 /**
  * Map each verified opportunity to a concrete, activatable audience definition.
- * Predicates are canonical; SQL is generated from them (predicateToSql), never hand-written —
+ * Predicates are canonical; SQL is generated from them (predicateToSql), never hand-written -
  * the same predicate ships to the device via the delivery bundle.
  */
 export const AUDIENCE: Record<string, { label: string; filter: Predicate; persuadableFilter: Predicate; channel: "sms" | "email" | "push" }> = {
@@ -55,10 +55,10 @@ const FALLBACK: (typeof AUDIENCE)[string] = {
 export interface AudienceDef {
   label: string;
   channel: "sms" | "email" | "push";
-  /** Canonical eligibility — ships to the device via the delivery bundle. */
+  /** Canonical eligibility - ships to the device via the delivery bundle. */
   filter: Predicate;
   persuadableFilter: Predicate;
-  /** Generated SQL (predicateToSql) — for warehouse queries and activation artifacts. */
+  /** Generated SQL (predicateToSql) - for warehouse queries and activation artifacts. */
   filterSql: string;
   persuadableSql: string;
   reach: number;

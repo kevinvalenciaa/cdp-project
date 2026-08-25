@@ -53,7 +53,7 @@ describe("exploreHypotheses", () => {
       probes: PROBES,
     });
     expect(out.source).toBe("llm");
-    // CAMP_A annotated by the LLM (first wins), Q4_SURGE backfilled statically — never fewer probes.
+    // CAMP_A annotated by the LLM (first wins), Q4_SURGE backfilled statically - never fewer probes.
     expect(out.matched.map((h) => h.key).sort()).toEqual(["CAMP_A", "Q4_SURGE"]);
     expect(out.matched.find((h) => h.key === "CAMP_A")?.rationale).toBe("reason a");
     expect(out.surplus.map((h) => h.key)).toEqual(["NEW_IDEA"]);

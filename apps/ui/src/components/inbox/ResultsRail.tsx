@@ -44,32 +44,32 @@ export function ResultsRail({
   }
 
   return (
-    <div className="space-y-5 p-4 lg:p-5">
+    <div className="space-y-6 p-4 lg:p-5">
       {/* The triad the page ranks by: impact · cost · caught-before-it-cost-you. */}
-      <div className="grid grid-cols-3 divide-x divide-border rounded-lg border border-border bg-card shadow-ht-xs">
+      <div className="grid grid-cols-3 divide-x divide-border overflow-hidden rounded-2xl border border-border bg-background">
         <RailStat label="Est. impact" value={`~${moneyCompact(totalImpact)}/mo`} tone="text-ht-green" />
-        <RailStat label="Run cost" value={runCost != null ? `$${runCost.toFixed(2)}` : "—"} tone="text-foreground" />
-        <RailStat label="Saved" value={totalSaved > 0 ? `~${moneyCompact(totalSaved)}/mo` : "—"} tone="text-ht-danger-text" />
+        <RailStat label="Run cost" value={runCost != null ? `$${runCost.toFixed(2)}` : "-"} tone="text-foreground" />
+        <RailStat label="Saved" value={totalSaved > 0 ? `~${moneyCompact(totalSaved)}/mo` : "-"} tone="text-ht-danger-text" />
       </div>
 
       {/* Proven, ranked by impact */}
       <section aria-label="Proven opportunities">
         <SectionHead icon={<Sparkles className="h-3.5 w-3.5 text-ht-teal" aria-hidden />}>
-          Proven — ranked by impact
+          Proven - ranked by impact
         </SectionHead>
         <ol className="mt-2 space-y-2">
           {ranked.map((o, i) => (
             <li key={o.key}>
               <button
                 onClick={() => onOpen(o)}
-                className="w-full rounded-lg border border-border bg-card px-3.5 py-3 text-left shadow-ht-xs transition-colors hover:border-ht-400"
+                className="w-full rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-ht-xs transition-all hover:-translate-y-px hover:border-ht-400 hover:shadow-ht-sm"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex min-w-0 items-center gap-2">
                     <span className="font-mono text-xs tabular-nums text-muted-foreground">#{i + 1}</span>
                     <span className="truncate text-sm font-medium text-foreground">{o.title}</span>
                   </span>
-                  <span className="shrink-0 font-mono text-sm tabular-nums text-ht-green">
+                    <span className="shrink-0 text-sm font-semibold tabular-nums text-ht-green">
                     ~{moneyCompact(monthlyImpact(o))}/mo
                   </span>
                 </div>
@@ -100,7 +100,7 @@ export function ResultsRail({
             <li key={o.key}>
               <button
                 onClick={() => onOpen(o)}
-                className="w-full rounded-lg border border-ht-danger/20 bg-ht-danger-bg/40 px-3.5 py-3 text-left transition-colors hover:border-ht-danger/40"
+                className="w-full rounded-2xl border border-ht-danger/20 bg-ht-danger-bg/40 px-4 py-3.5 text-left transition-colors hover:border-ht-danger/40"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-sm font-medium text-foreground">{o.title}</span>
@@ -111,7 +111,7 @@ export function ResultsRail({
                   )}
                 </div>
                 <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                  {o.rawConversion != null && <>{pctFromPercent(o.rawConversion)} raw conversion — </>}
+                  {o.rawConversion != null && <>{pctFromPercent(o.rawConversion)} raw conversion - </>}
                   {o.reason}
                 </p>
               </button>
@@ -133,7 +133,7 @@ export function ResultsRail({
               <li key={o.key}>
                 <button
                   onClick={() => onOpen(o)}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-card px-3.5 py-2.5 text-left shadow-ht-xs transition-colors hover:border-ht-400"
+                  className="flex w-full items-center justify-between gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-left shadow-ht-xs transition-colors hover:border-ht-400"
                 >
                   <span className="truncate text-sm text-foreground">{o.title}</span>
                   <StatusPill tone={m.tone}>{m.label}</StatusPill>
@@ -150,9 +150,9 @@ export function ResultsRail({
 
 function RailStat({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
-    <div className="px-3 py-2.5">
+    <div className="px-3 py-3">
       <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`mt-0.5 truncate font-mono text-sm font-semibold tabular-nums ${tone}`}>{value}</div>
+      <div className={`mt-1 truncate text-sm font-semibold tabular-nums ${tone}`}>{value}</div>
     </div>
   );
 }
@@ -167,5 +167,5 @@ function SectionHead({ icon, children }: { icon: React.ReactNode; children: Reac
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <li className="rounded-lg border border-dashed border-border px-3.5 py-3 text-xs text-muted-foreground">{children}</li>;
+  return <li className="rounded-2xl border border-dashed border-border px-4 py-3.5 text-xs text-muted-foreground">{children}</li>;
 }

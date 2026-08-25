@@ -2,8 +2,8 @@
  * Deterministic PRNG + Beta sampling, COPIED from @lift/core (shared/rng.ts and
  * decisioning/policy.ts) rather than imported: the SDK's only dependency is
  * @lift/protocol, and core drags @duckdb/node-api which cannot load in Hermes.
- * The math must stay byte-for-byte identical to core's — same mulberry32, same
- * Box–Muller, same Marsaglia–Tsang — so a device and the server sampling the
+ * The math must stay byte-for-byte identical to core's - same mulberry32, same
+ * Box–Muller, same Marsaglia–Tsang - so a device and the server sampling the
  * same posteriors with the same seed pick the same arm.
  */
 export class Rng {
@@ -52,7 +52,7 @@ export function betaSample(rng: Rng, a: number, b: number): number {
   return ga / (ga + gb);
 }
 
-/** FNV-1a — stable string hash for holdout assignment and deterministic seeds. */
+/** FNV-1a - stable string hash for holdout assignment and deterministic seeds. */
 export function fnv1a(s: string): number {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) {

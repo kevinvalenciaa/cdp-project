@@ -1,4 +1,4 @@
-/** Single-flight guard — one engine run at a time (a second concurrent run would
+/** Single-flight guard - one engine run at a time (a second concurrent run would
  *  double-spawn subprocesses and double-spend). Module-level, single-user. */
 let active: { id: string } | null = null;
 

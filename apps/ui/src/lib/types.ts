@@ -1,4 +1,4 @@
-// UI types. Wire/domain shapes come STRAIGHT from their sources of truth —
+// UI types. Wire/domain shapes come STRAIGHT from their sources of truth -
 // type-only re-exports (erased by verbatimModuleSyntax, so the demo runtime
 // never loads core) instead of the 165 hand-copied mirror lines that used to
 // live here and drift. Only genuinely UI-local view types are declared below.
@@ -26,7 +26,7 @@ export type InsightRecord = Pick<
 >;
 
 // ---------------------------------------------------------------------------
-// UI-local view types (not mirrors — these exist only for the product UI).
+// UI-local view types (not mirrors - these exist only for the product UI).
 // ---------------------------------------------------------------------------
 
 export interface Goal {
@@ -88,7 +88,7 @@ export type EngineEvent =
       title: string;
       category: "found" | "rejected-trap" | "rejected-seasonal" | "needs-test";
       detail: string;
-      /** Verifier check #2 (groundedness) — present for accepted candidates in live runs. */
+      /** Verifier check #2 (groundedness) - present for accepted candidates in live runs. */
       grounded?: boolean;
       /** Full immutable checkpoint payload; UI renderers may ignore it. */
       opportunity?: import("@lift/core").Opportunity;

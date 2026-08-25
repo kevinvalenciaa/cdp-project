@@ -23,6 +23,17 @@ export interface QueryResult {
   durationMs: number;
 }
 
+/**
+ * DuckDB table functions that read from the local filesystem or the network.
+ * READ_ONLY only forbids writing the attached DB - it does NOT stop a SELECT
+ * from calling read_text('/etc/passwd') or read_csv('https://…'). The hard
+ * boundary is enable_external_access=false at the engine (see Warehouse.open);
+ * this denylist is defense-in-depth. Matched only when followed by "(" so it
+ * can never false-positive on a column named read_count / thread_id / etc.
+ */
+const FILE_ACCESS_FUNCS =
+  /\b(read_text|read_blob|read_csv|read_csv_auto|read_parquet|read_json|read_json_auto|read_ndjson|read_ndjson_auto|parquet_scan|json_scan|glob|sniff_csv|read_csv_sniff)\s*\(/i;
+
 /** Reject anything that is not a single read-only SELECT/WITH statement. */
 export function assertReadOnly(sql: string): string {
   const trimmed = sql.trim().replace(/;\s*$/, "");
@@ -33,6 +44,9 @@ export function assertReadOnly(sql: string): string {
   const forbidden = /\b(insert|update|delete|drop|alter|attach|copy|pragma|install|load|export|create|truncate|replace)\b/i;
   if (forbidden.test(trimmed)) {
     throw new Error("Read-only warehouse: write/DDL keywords are not permitted.");
+  }
+  if (FILE_ACCESS_FUNCS.test(trimmed)) {
+    throw new Error("Read-only warehouse: filesystem/network table functions are not permitted.");
   }
   return trimmed;
 }
@@ -59,15 +73,28 @@ export class Warehouse {
 
   /**
    * STRICTLY read-only: least privilege enforced at the engine level, not the prompt level.
-   * No fallback — if the READ_ONLY open fails we fail loudly rather than silently reopening
+   * No fallback - if the READ_ONLY open fails we fail loudly rather than silently reopening
    * with write access (a silent fallback would defeat the whole guarantee, and READ_ONLY
    * cannot create a missing file, which is exactly right: seeding has its own write path).
+   *
+   * READ_ONLY alone only forbids WRITING the attached DB; it leaves DuckDB free to READ
+   * arbitrary local files / URLs via read_text/read_csv/glob/httpfs (secret exfiltration
+   * through an LLM-authored SELECT). The hard boundary is enable_external_access=false,
+   * locked so it cannot be re-enabled mid-session, plus disabling extension autoload so
+   * httpfs can't sneak in. Opening the main DB file is not "external access", so this does
+   * not affect legitimate queries against the attached tables.
    */
   static async open(opts: { path?: string; timeoutMs?: number } = {}): Promise<Warehouse> {
     const path = opts.path ?? config.duckdbPath;
     let instance: DuckDBInstance;
     try {
-      instance = await DuckDBInstance.create(path, { access_mode: "READ_ONLY" });
+      instance = await DuckDBInstance.create(path, {
+        access_mode: "READ_ONLY",
+        enable_external_access: "false",
+        autoinstall_known_extensions: "false",
+        autoload_known_extensions: "false",
+        lock_configuration: "true",
+      });
     } catch (e) {
       throw new Error(`Warehouse could not be opened READ_ONLY at ${path} (did you run \`pnpm seed\`?): ${String(e)}`);
     }
@@ -115,7 +142,7 @@ export class Warehouse {
     const exec = this.conn.runAndReadAll(safe);
     // The timeout KILLS the query, not just the await: interrupt() aborts execution inside
     // DuckDB, so a runaway query can't keep burning CPU and serializing later calls on this
-    // connection. The interrupted exec promise rejects too — swallow it so it can't surface
+    // connection. The interrupted exec promise rejects too - swallow it so it can't surface
     // as an unhandled rejection after we've already rejected with the timeout error.
     let timer: NodeJS.Timeout | undefined;
     const timeout = new Promise<never>((_, reject) => {

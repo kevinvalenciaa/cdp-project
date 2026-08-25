@@ -28,7 +28,7 @@ export function ActivityFeed({ events, streaming }: { events: EngineEvent[]; str
   const visible = events.filter((e) => e.kind !== "cost" && e.kind !== "run_finished");
 
   return (
-    <ol className="space-y-1" aria-live="polite">
+    <ol className="space-y-1.5" aria-live="polite">
       {visible.map((e, i) => {
         if (e.kind === "run_started")
           return (
@@ -65,7 +65,7 @@ export function ActivityFeed({ events, streaming }: { events: EngineEvent[]; str
           return (
             <Row key={i} icon={<Brain className="h-4 w-4 text-muted-foreground" />}>
               <span className="text-muted-foreground">
-                Skipping {e.subject} — memory: {e.claim}
+                Skipping {e.subject} - memory: {e.claim}
               </span>
             </Row>
           );
@@ -123,8 +123,8 @@ export function ActivityFeed({ events, streaming }: { events: EngineEvent[]; str
 
 function Row({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <li className="flex animate-slide-up items-center gap-2.5 rounded-md px-2 py-1.5 text-sm">
-      <span className="shrink-0">{icon}</span>
+    <li className="flex animate-slide-up items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-muted/45">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-background">{icon}</span>
       <span className="min-w-0 truncate">{children}</span>
     </li>
   );

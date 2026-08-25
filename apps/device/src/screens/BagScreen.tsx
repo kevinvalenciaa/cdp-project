@@ -67,7 +67,7 @@ export function BagScreen({ onShop }: { onShop: () => void }): React.JSX.Element
       <Sheet visible={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <Text style={styles.confirmHead}>Order placed</Text>
         <Text style={styles.confirmBody}>
-          This is where the demo ends — everything above the fold was real, though.
+          This is where the demo ends - everything above the fold was real, though.
         </Text>
         <PrimaryButton
           label="CONTINUE BROWSING"

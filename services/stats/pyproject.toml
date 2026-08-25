@@ -1,7 +1,7 @@
 [project]
 name = "lift-stats"
 version = "0.1.0"
-description = "Stats Verifier MCP — STL seasonal decomposition, two-proportion tests, CUPED holdout uplift, power analysis."
+description = "Stats Verifier MCP - STL seasonal decomposition, two-proportion tests, CUPED holdout uplift, power analysis."
 requires-python = ">=3.11"
 dependencies = [
   "mcp>=1.2.0",

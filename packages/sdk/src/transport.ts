@@ -2,7 +2,7 @@ import { IngestAckSchema, decodeBundle, type DecodedBundle, type EventBatch, typ
 
 /**
  * The network edge. Every response carries the server's clock (X-Server-Time
- * header and/or server_time in the body) — that is the SDK's skew anchor, and
+ * header and/or server_time in the body) - that is the SDK's skew anchor, and
  * it costs zero extra round trips.
  */
 

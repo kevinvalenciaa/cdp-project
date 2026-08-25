@@ -10,7 +10,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         mono: ["var(--font-dm-mono)", "ui-monospace", "monospace"],
-        display: ["var(--font-caveat)", "cursive"],
+        display: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -35,7 +35,7 @@ const config: Config = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Hightouch exact brand hexes (for components that need precise colors)
+        // Proofloop brand hexes for components that need precise colors.
         ht: {
           teal: "#007A92",
           "teal-hover": "#00677A",
@@ -64,12 +64,12 @@ const config: Config = {
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 6px)",
       },
       boxShadow: {
-        "ht-xs": "0 0 0 0.5px rgba(0,0,0,.08) inset, rgba(0,0,0,.02) 0 3px 6px -2px, rgba(0,0,0,.04) 0 2px 1px -1px",
-        "ht-sm": "0 4px 8px rgba(0,0,0,.04), 0 0 2px rgba(0,0,0,.06), 0 0 1px rgba(0,0,0,.12)",
-        "ht-md": "0 0 1px rgba(0,0,0,.2), 0 1px 6px rgba(0,0,0,.04), 0 12px 20px -2px rgba(0,0,0,.06)",
+        "ht-xs": "0 1px 2px rgba(31, 45, 61, .025), 0 8px 24px -18px rgba(31, 45, 61, .18)",
+        "ht-sm": "0 8px 24px -16px rgba(31, 45, 61, .2), 0 2px 6px rgba(31, 45, 61, .035)",
+        "ht-md": "0 20px 45px -24px rgba(31, 45, 61, .28), 0 4px 12px rgba(31, 45, 61, .05)",
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },

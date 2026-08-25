@@ -25,9 +25,8 @@ const POINT: Record<IntervalTone, string> = {
 /**
  * The 95% confidence interval for incremental lift, drawn against a vertical zero line.
  *
- * Whether the band crosses zero IS the readout — a marketer never has to be told what
- * p < 0.05 means. Mirrors the "lift interval bar" in Hightouch Campaign Intelligence and
- * Eppo/Datadog Experiments, where an inconclusive result is a first-class grey state
+ * Whether the band crosses zero IS the readout - a marketer never has to be told what
+ * p < 0.05 means. The interval view makes statistical uncertainty visible, with an inconclusive result as a first-class grey state
  * rather than a missing number.
  *
  * All values are in percentage POINTS.
@@ -44,7 +43,7 @@ export function LiftIntervalBar({
   const tone = intervalTone(ci);
   const [lo, hi] = ci ?? [estimate, estimate];
 
-  // Symmetric domain around zero so the zero line always sits dead centre —
+  // Symmetric domain around zero so the zero line always sits dead centre -
   // an asymmetric axis would visually exaggerate whichever side is longer.
   const reach = Math.max(Math.abs(lo), Math.abs(hi), Math.abs(estimate)) * 1.25 || 1;
   const toPct = (v: number) => ((v + reach) / (2 * reach)) * 100;
@@ -54,8 +53,8 @@ export function LiftIntervalBar({
 
   const label =
     tone === "inconclusive"
-      ? `Lift ${estimate >= 0 ? "+" : ""}${estimate.toFixed(1)} percentage points, 95% confidence interval ${lo.toFixed(1)} to ${hi.toFixed(1)}, which overlaps zero — not statistically significant.`
-      : `Lift ${estimate >= 0 ? "+" : ""}${estimate.toFixed(1)} percentage points, 95% confidence interval ${lo.toFixed(1)} to ${hi.toFixed(1)}, which excludes zero — statistically significant.`;
+      ? `Lift ${estimate >= 0 ? "+" : ""}${estimate.toFixed(1)} percentage points, 95% confidence interval ${lo.toFixed(1)} to ${hi.toFixed(1)}, which overlaps zero - not statistically significant.`
+      : `Lift ${estimate >= 0 ? "+" : ""}${estimate.toFixed(1)} percentage points, 95% confidence interval ${lo.toFixed(1)} to ${hi.toFixed(1)}, which excludes zero - statistically significant.`;
 
   return (
     <div className={cn("w-full", className)}>
@@ -63,7 +62,7 @@ export function LiftIntervalBar({
         {/* baseline */}
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" aria-hidden />
 
-        {/* the zero line — the only reference that matters */}
+        {/* the zero line - the only reference that matters */}
         <div className="absolute inset-y-1 left-1/2 w-px -translate-x-1/2 bg-ht-600/50" aria-hidden />
 
         {/* the interval */}
@@ -81,7 +80,7 @@ export function LiftIntervalBar({
         />
       </div>
 
-      {/* Labels sit under the values they describe — a justify-between row would park
+      {/* Labels sit under the values they describe - a justify-between row would park
           "2.8pp" at the far left, where the axis actually reads about -11pp. */}
       <div className="relative h-4 text-[11px] tabular-nums text-muted-foreground" aria-hidden>
         <span className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${left}%` }}>

@@ -1,13 +1,13 @@
 import type { Opportunity } from "./types";
 
 /**
- * UNIT CONVENTIONS — the codebase carries two, and mixing them is a real bug we shipped once.
+ * UNIT CONVENTIONS - the codebase carries two, and mixing them is a real bug we shipped once.
  *
  *   FRACTION  0…1        `bandit.*Rate`, and anything from `decisioning`.        → use `pct()`
  *   PERCENT   0…100      `Opportunity.rawConversion`, derived conversion rates.  → use `pctFromPercent()`
  *   POINTS    difference `Opportunity.upliftPp`, `ci`, `measurement.upliftPp`.   → use `pp()`
  *
- * A percentage-POINT difference may only be subtracted from a PERCENT rate — never from a fraction.
+ * A percentage-POINT difference may only be subtracted from a PERCENT rate - never from a fraction.
  */
 
 /** Format a FRACTION (0…1) as a percentage. `pct(0.1675)` → `"16.8%"`. */
@@ -31,7 +31,7 @@ export function moneyCompact(x: number): string {
 }
 
 export function liftLabel(o: Opportunity): string {
-  if (o.upliftPp == null) return "—";
+  if (o.upliftPp == null) return "-";
   const ci = o.ci ? ` · CI [${o.ci[0].toFixed(1)}, ${o.ci[1].toFixed(1)}]` : "";
   const p = o.pValue == null ? "" : ` · p=${o.pValue.toFixed(3)}`;
   return `${pp(o.upliftPp)}${ci}${p}`;
@@ -57,15 +57,15 @@ export function isSignificant(o: Opportunity): boolean {
 }
 
 /**
- * Confidence as a percentage, the way marketers read it — not a p-value.
- * Mirrors Hightouch AI Decisioning's "98% confidence" treatment.
+ * Confidence as a percentage, the way marketers read it - not a p-value.
+ * Formats statistical confidence as a concise percentage label.
  */
 export function confidenceLabel(o: Opportunity): string | null {
   if (o.pValue == null) return null;
   return `${Math.min(99, Math.floor((1 - o.pValue) * 100))}% confidence`;
 }
 
-/** How many times the treatment rate beats the holdout — the headline the chart should state. */
+/** How many times the treatment rate beats the holdout - the headline the chart should state. */
 export function liftMultiple(o: Opportunity): number | null {
   const control = controlRate(o);
   if (control == null || control <= 0 || o.rawConversion == null) return null;

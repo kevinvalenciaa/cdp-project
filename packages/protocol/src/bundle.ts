@@ -6,7 +6,7 @@ import { z } from "zod";
  * evaluateBundle() consumes it with no network and no LLM.
  *
  * Versioning stance (deliberate): one protocol version, additive evolution.
- * Forward compatibility lives in decode.ts — an old client receiving a campaign
+ * Forward compatibility lives in decode.ts - an old client receiving a campaign
  * it cannot understand skips THAT campaign with a recorded reason and keeps the
  * rest working. No semver ceremony until there is a second consumer.
  */
@@ -36,7 +36,7 @@ export const PredicateSchema: z.ZodType<Predicate> = z.lazy(() =>
 
 /**
  * Frequency cap. `window` is "session" or an ISO-8601 duration (P7D, PT24H, PT4H).
- * `channel: "any"` counts sends across every channel — the cross-channel cap.
+ * `channel: "any"` counts sends across every channel - the cross-channel cap.
  */
 export const CapSchema = z.object({
   id: z.string().min(1),
@@ -47,7 +47,7 @@ export const CapSchema = z.object({
 });
 export type Cap = z.infer<typeof CapSchema>;
 
-/** One renderable message variant. The HOST renders it — the SDK only decides. */
+/** One renderable message variant. The HOST renders it - the SDK only decides. */
 export const ArmSchema = z.object({
   arm_id: z.string().min(1),
   template: z.enum(["banner", "modal"]),
@@ -87,7 +87,7 @@ export const CampaignSchema = z.object({
   /**
    * Key into PolicySnapshot.segments for arm selection. Two forms:
    *   - a literal segment name ("mid")
-   *   - "attr:<attribute>" — resolved per user from ctx.attrs at decision time
+   *   - "attr:<attribute>" - resolved per user from ctx.attrs at decision time
    *     (e.g. "attr:value_tier" keys the posteriors by the user's tier).
    */
   segment_key: z.string().min(1),
@@ -114,7 +114,7 @@ export type RecentSend = z.infer<typeof RecentSendSchema>;
 
 export const DecisionBundleSchema = z.object({
   protocol_version: z.number().int(),
-  /** Content hash of the bundle body — doubles as the ETag. */
+  /** Content hash of the bundle body - doubles as the ETag. */
   bundle_id: z.string().min(1),
   run_id: z.string(),
   generated_at: z.string(),

@@ -17,22 +17,22 @@ export default async function InvestigationsPage() {
         description="Persistent conversations, their run state, and the proven opportunities they produced."
         actions={
           <Link
-            href="/opportunities/new"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+            href="/investigations"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-ht-xs"
           >
             <Plus className="h-4 w-4" /> New investigation
           </Link>
         }
       />
-      <div className="p-5 lg:p-8">
-        <div className="space-y-2">
+      <div className="app-page">
+        <div className="grid gap-3 xl:grid-cols-2">
           {investigations.map((investigation) => (
             <Link
               key={investigation.id}
-              href={`/opportunities/${investigation.id}`}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-ht-xs transition-colors hover:border-ht-400"
+              href={`/investigations/${investigation.id}`}
+              className="flex items-center gap-4 rounded-[18px] border border-border bg-card p-5 shadow-ht-xs transition-all hover:-translate-y-0.5 hover:border-ht-400 hover:shadow-ht-sm"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ht-teal-tint">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ht-teal-tint">
                 {investigation.status === "archived" ? (
                   <Archive className="h-4 w-4 text-muted-foreground" />
                 ) : (
@@ -54,7 +54,7 @@ export default async function InvestigationsPage() {
             </Link>
           ))}
           {investigations.length === 0 && (
-            <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+            <div className="surface-panel col-span-full border-dashed p-12 text-center text-sm text-muted-foreground">
               No investigations yet.
             </div>
           )}

@@ -22,7 +22,7 @@ describe("parseWindowMs", () => {
   });
 });
 
-describe("elapsedMs — the adversarial-clock rules", () => {
+describe("elapsedMs - the adversarial-clock rules", () => {
   it("same boot: monotonic elapsed is authoritative, wall clock is ignored", () => {
     // Wall clock says 8 days passed; monotonic says one hour. Same boot -> 1h.
     const now = clock({ wallMs: BASE + 8 * D });
@@ -34,7 +34,7 @@ describe("elapsedMs — the adversarial-clock rules", () => {
     expect(elapsedMs(now, { wall_ms: BASE - 2 * H, monotonic_ms: null, boot_id: null })).toBe(2 * H + 2_000);
   });
 
-  it("ambiguity (entry claims a future wall time) resolves to elapsed 0 — cap stays engaged", () => {
+  it("ambiguity (entry claims a future wall time) resolves to elapsed 0 - cap stays engaged", () => {
     // Device clock was rolled BACK past the entry: elapsed must not go negative
     // (which would eject the entry from every window and un-cap the user).
     const now = clock();

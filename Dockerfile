@@ -1,5 +1,5 @@
 # Live-mode container: Node 20 + Python 3.11 + uv (the live engine spawns both).
-# Demo mode does not need this — deploy demo to Vercel (see vercel.json).
+# Demo mode does not need this - deploy demo to Vercel (see vercel.json).
 FROM node:20-bookworm
 
 # Python + uv for the stats verifier MCP

@@ -33,21 +33,21 @@ function Arrow({ down, label }: { down?: boolean; label?: string }) {
   );
 }
 
-/** "Inside the Agentic CDP" — the engine pipeline with a feedback loop. */
+/** "Inside the Agentic CDP" - the engine pipeline with a feedback loop. */
 export function PipelineDiagram() {
   return (
-    <figure className="rounded-2xl border border-dashed border-ht-300 bg-ht-50/50 p-5">
-      <figcaption className="mb-4 font-display text-xl text-foreground">Inside the engine</figcaption>
+    <figure className="rounded-[20px] border border-border bg-card p-5 shadow-ht-xs sm:p-6">
+      <figcaption className="mb-4 font-display text-xl font-semibold tracking-[-0.02em] text-foreground">Inside the engine</figcaption>
       <div className="flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
         <Node tone="context" className="lg:w-44">
           Your context
           <div className="mt-1 text-[11px] font-normal text-muted-foreground">warehouse · campaigns · goals · brand rules</div>
         </Node>
         <Arrow />
-        <div className="rounded-xl border-2 border-ht-green-border bg-ht-green-bg/40 p-3">
+        <div className="rounded-2xl border border-ht-green-border bg-ht-green-bg/40 p-4">
           <div className="mb-2 text-center font-display text-sm text-ht-green">agents, always on</div>
           <div className="flex flex-col items-center gap-1.5">
-            {["explore — hypotheses worth trying", "investigate — test the evidence", "prioritize — by reach × value × uplift", "verify — reject what doesn't hold"].map(
+            {["explore - hypotheses worth trying", "investigate - test the evidence", "prioritize - by reach × value × uplift", "verify - reject what doesn't hold"].map(
               (s, i) => (
                 <div key={s} className="flex flex-col items-center gap-1.5">
                   {i > 0 && <ArrowRight className="h-3.5 w-3.5 rotate-90 text-ht-green/60" aria-hidden />}
@@ -81,8 +81,8 @@ export function FlywheelDiagram() {
     { tone: "feedback", label: "results become new evidence" },
   ];
   return (
-    <figure className="rounded-2xl border border-dashed border-ht-300 bg-ht-50/50 p-5">
-      <figcaption className="mb-4 font-display text-xl text-foreground">The flywheel</figcaption>
+    <figure className="rounded-[20px] border border-border bg-card p-5 shadow-ht-xs sm:p-6">
+      <figcaption className="mb-4 font-display text-xl font-semibold tracking-[-0.02em] text-foreground">The flywheel</figcaption>
       <div className="flex flex-col items-stretch gap-2 md:flex-row md:items-center">
         {steps.map((s, i) => (
           <div key={s.label} className="flex flex-1 flex-col items-center gap-2 md:flex-row">

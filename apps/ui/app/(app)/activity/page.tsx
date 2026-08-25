@@ -18,10 +18,10 @@ export default async function ActivityPage() {
   return (
     <>
       <PageHeader title="Activity" description="Workspace-wide agent work across every investigation." />
-      <div className="p-5 lg:p-8">
+      <div className="app-page">
         {events.length > 0 ? (
-          <div className="rounded-xl border border-border bg-card p-5 shadow-ht-xs">
-            <div className="mb-3 text-sm font-medium text-foreground">Recent investigation activity</div>
+          <div className="surface-panel p-5 sm:p-6">
+            <div className="mb-5 text-lg font-semibold tracking-[-0.02em] text-foreground">Recent investigation activity</div>
             <ActivityFeed events={events} />
           </div>
         ) : (
@@ -31,8 +31,8 @@ export default async function ActivityPage() {
             description="Every plan, query, rejection and confirmation the agents make shows up here."
             action={
               <Link
-                href="/opportunities/new"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+                href="/investigations"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-ht-xs"
               >
                 Run an investigation <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>

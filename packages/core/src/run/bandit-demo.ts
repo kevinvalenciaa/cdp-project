@@ -3,7 +3,7 @@
  * best message variant PER SEGMENT and beats both a random holdout and a naive
  * best-on-average ("human marketing") baseline. Kept separate from the harness.
  *
- * Run: `pnpm --filter @lift/core bandit` (no API key — pure simulation)
+ * Run: `pnpm --filter @lift/core bandit` (no API key - pure simulation)
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -12,7 +12,7 @@ import { SCENARIO, runBandit } from "../decisioning/bandit.js";
 
 async function main(): Promise<void> {
   console.log(`\n=== Phase 7: AI-Decisioning bandit (Thompson sampling, ${SCENARIO.segments.length} segments × ${SCENARIO.variants.length} variants) ===`);
-  console.log("  (separate module from the harness — RL/optimization over delivery)\n");
+  console.log("  (separate module from the harness - RL/optimization over delivery)\n");
 
   const r = runBandit(config.seed);
 

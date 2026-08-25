@@ -9,10 +9,10 @@ interface InvestigationPayload {
 }
 
 async function createInvestigation(page: Page, objective: string): Promise<string> {
-  await page.goto("/opportunities/new");
+  await page.goto("/investigations");
   await page.getByPlaceholder("What should the agents investigate?").fill(objective);
   await page.getByRole("button", { name: "Send message" }).click();
-  await expect(page).toHaveURL(/\/opportunities\/[0-9a-f-]+$/);
+  await expect(page).toHaveURL(/\/investigations\/[0-9a-f-]+$/);
   return page.url().split("/").at(-1)!;
 }
 
@@ -43,8 +43,8 @@ test("multiple chats keep running, answer from evidence, share snapshots, and ag
     localStorage.removeItem("ui.results-rail-open");
   });
 
-  await page.goto("/opportunities");
-  await expect(page.getByRole("heading", { name: "Opportunities" })).toBeVisible();
+  await page.goto("/investigations");
+  await expect(page.getByRole("heading", { name: "Start an investigation" })).toBeVisible();
   await expect(page.getByText("Demo mode")).toHaveCount(0);
 
   const investigationA = await createInvestigation(
@@ -72,12 +72,12 @@ test("multiple chats keep running, answer from evidence, share snapshots, and ag
   expect((await investigation(page, investigationB)).runs).toHaveLength(runsBeforeAnswer);
 
   await waitForCompletedRun(page, investigationA);
-  await page.goto(`/opportunities/${investigationA}`);
+  await page.goto(`/investigations/${investigationA}`);
   const results = page.locator('aside[aria-label="Investigation results"]');
   await expect(results).toBeHidden();
   await page.getByRole("button", { name: "Open results" }).click();
   await expect(results).toBeVisible();
-  await expect(results.getByText("Proven — ranked by impact")).toBeVisible();
+  await expect(results.getByText("Proven - ranked by impact")).toBeVisible();
 
   await page.getByRole("button", { name: "Share" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();

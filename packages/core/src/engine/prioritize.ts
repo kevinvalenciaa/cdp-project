@@ -1,14 +1,14 @@
 import type { Opportunity } from "./types.js";
 
 /**
- * The Prioritizer stage — deliberately plain arithmetic, not an LLM. The ranking must be
+ * The Prioritizer stage - deliberately plain arithmetic, not an LLM. The ranking must be
  * inspectable and defensible number-by-number, so the formula lives here in one place:
  *
  *   score = reach × value × max(0, verified absolute lift)
  *
  * "Verified" is the load-bearing word: absLift comes from the holdout test, so the third
  * factor is causal (would NOT have happened anyway), a sharpening of reach × value ×
- * likelihood. Opportunities the Verifier did not accept score 0 — nothing unproven ranks.
+ * likelihood. Opportunities the Verifier did not accept score 0 - nothing unproven ranks.
  */
 export const SCORE_FORMULA = "reach × value × verified uplift";
 
@@ -18,7 +18,7 @@ export function scoreOpportunity(o: { reach: number; value: number; accepted: bo
 
 /**
  * Rank accepted opportunities by score; tier the rejected by reach × value (what was at
- * stake had the claim been real — the most tempting traps surface first, which is exactly
+ * stake had the claim been real - the most tempting traps surface first, which is exactly
  * what the contrast demo wants on top). Key-ascending tiebreak keeps ordering stable no
  * matter which parallel verification finished first.
  */

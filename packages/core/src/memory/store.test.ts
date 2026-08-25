@@ -88,7 +88,7 @@ describe("Memory", () => {
   it("the #delivery namespace cannot clobber the verifier's insight for the bare key", async () => {
     const m = await Memory.open(path);
     // CAMP_X (verifier) was written in the first test; CAMP_X#delivery in the
-    // previous one. Both must coexist — supersede is per exact subject.
+    // previous one. Both must coexist - supersede is per exact subject.
     const subjects = (await m.getValid()).map((r) => r.subject);
     expect(subjects).toContain("CAMP_X");
     expect(subjects).toContain("CAMP_X#delivery");
