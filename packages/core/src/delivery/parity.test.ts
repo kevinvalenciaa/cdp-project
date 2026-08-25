@@ -12,7 +12,7 @@ import { config } from "../shared/env.js";
  * One predicate, two independent evaluators: predicateToSql() run by DuckDB's
  * engine on the server, and the SDK's hand-written matchPredicate() on the
  * device. This test runs BOTH over the real customer_360 rows and asserts
- * identical membership — not a function equalling itself, but two
+ * identical membership - not a function equalling itself, but two
  * implementations forced to agree on real data. If they ever diverge, the
  * device would show messages to people the server never targeted (or vice
  * versa), which is the exact class of bug a delivery SDK must not have.

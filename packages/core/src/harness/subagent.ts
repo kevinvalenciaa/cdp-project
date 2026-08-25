@@ -9,7 +9,7 @@ import { bridgeTools, callMcpTool } from "./mcp-client.js";
 /**
  * Dynamic investigator subagent. Runs in an ISOLATED thread with one objective and
  * minimal context, does the messy work against the warehouse + stats tools, and returns
- * ONLY a tight summary — chosen over compaction to keep the parent's context dense.
+ * ONLY a tight summary - chosen over compaction to keep the parent's context dense.
  */
 export async function runInvestigator(opts: {
   client: Anthropic;
@@ -46,7 +46,7 @@ export async function runInvestigator(opts: {
     "You are a focused marketing-analytics investigator with ONE objective. Use run_metric " +
     "(preferred) or run_sql for data, and the stats tools for evidence. NEVER assert an incremental " +
     "lift without verify_lift_claim, or a real trend change without assess_seasonality. When done, " +
-    "call report_findings with a tight summary + the key numbers. Be brief — return only what the parent needs.";
+    "call report_findings with a tight summary + the key numbers. Be brief - return only what the parent needs.";
   const initialUser = `Objective: ${opts.objective}${opts.context ? `\nContext: ${opts.context}` : ""}`;
 
   const { finalText } = await agentLoop({

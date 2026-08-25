@@ -7,7 +7,7 @@ import { CampaignSchema, DecisionBundleSchema, type Campaign, type DecisionBundl
  * The one rule: a client you cannot force-update must NEVER crash on a bundle
  * from a newer server, and must NEVER silently evaluate a campaign it does not
  * understand. An unrecognised operator, template, or campaign shape skips THAT
- * campaign — with the reason recorded — and every other campaign keeps working.
+ * campaign - with the reason recorded - and every other campaign keeps working.
  *
  * decode() throws DecodeError only when the envelope itself is unreadable, in
  * which case the transport keeps the last good bundle.
@@ -22,7 +22,7 @@ export interface SkippedCampaign {
 
 export interface DecodedBundle {
   bundle: DecisionBundle;
-  /** Campaigns this client version could not understand — surfaced, not swallowed. */
+  /** Campaigns this client version could not understand - surfaced, not swallowed. */
   skipped: SkippedCampaign[];
 }
 
@@ -40,7 +40,7 @@ function firstIssue(err: z.ZodError): string {
 
 export function decodeBundle(json: unknown): DecodedBundle {
   const env = EnvelopeSchema.safeParse(json);
-  if (!env.success) throw new DecodeError(`unreadable bundle envelope — ${firstIssue(env.error)}`);
+  if (!env.success) throw new DecodeError(`unreadable bundle envelope - ${firstIssue(env.error)}`);
 
   const kept: Campaign[] = [];
   const skipped: SkippedCampaign[] = [];

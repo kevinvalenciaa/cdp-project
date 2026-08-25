@@ -2,7 +2,7 @@
   "name": "lift-compass",
   "version": "0.1.0",
   "private": true,
-  "description": "Lift Compass \u2014 a closed-loop Agentic CDP prototype (warehouse-native, causally-credible marketing opportunity engine).",
+  "description": "Proofloop, a closed-loop Agentic CDP prototype and warehouse-native marketing opportunity engine.",
   "packageManager": "pnpm@9.15.2",
   "engines": {
     "node": ">=20"

@@ -8,7 +8,7 @@ import { useReducedMotion } from "../hooks/useReducedMotion";
 /**
  * A host-owned message surface, editorial-styled. The contract with the SDK is
  * exactly this: ask decide("home_hero"), render the arm that comes back (or
- * nothing). No campaign rules, no caps, no eligibility — the host never knows
+ * nothing). No campaign rules, no caps, no eligibility - the host never knows
  * them. Suppression is visible in the DebugPanel, never as blank UI jank.
  */
 export function HeroSurface({ visit }: { visit: number }): React.JSX.Element | null {
@@ -40,7 +40,7 @@ export function HeroSurface({ visit }: { visit: number }): React.JSX.Element | n
   if (dismissed === key) return null;
 
   const report = (event: "hero_cta_tap" | "hero_dismissed"): void => {
-    // Host-side conversion reporting of a rendered decision — not campaign logic.
+    // Host-side conversion reporting of a rendered decision - not campaign logic.
     void lift
       ?.track(event, { campaign_id: decision.campaign_id, arm_id: decision.arm_id, surface: decision.surface })
       .catch(() => {});

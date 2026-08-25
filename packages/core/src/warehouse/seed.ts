@@ -4,7 +4,7 @@
  * Plants (and then documents in GROUND_TRUTH.md):
  *  - a strong seasonal curve (the time-series false positive),
  *  - real experiments with known incremental lifts + a zero-lift TRAP + a near-miss,
- *  - the three Hightouch archetypes (new-product-launch, churn cross-sell, underserved),
+ *  - three opportunity archetypes (new-product launch, churn cross-sell, underserved),
  *  - premium "never on sale" SKUs (guardrail bait).
  *
  * Run: `pnpm seed`
@@ -213,7 +213,7 @@ function generateOrders(rng: Rng, customers: CustomerStats[], products: ProductR
     }
     c.orders.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    // Force engaged customers to have a recent last order (low churn) — keeps the
+    // Force engaged customers to have a recent last order (low churn) - keeps the
     // churn signal from fighting the seasonal placement of the other orders.
     if (engaged && c.orders.length > 0) {
       const last = c.orders[c.orders.length - 1]!;
@@ -284,7 +284,7 @@ function generateCampaignSends(rng: Rng, customers: CustomerStats[]) {
 
     // Split into arms, then assign conversions by QUOTA per arm so the empirical
     // rate matches the planted rate (±rounding). This makes the answer key exact
-    // and reproducible — the demo's claims are provable, not subject to draw luck.
+    // and reproducible - the demo's claims are provable, not subject to draw luck.
     const treated: CustomerStats[] = [];
     const control: CustomerStats[] = [];
     for (const c of chosen) {
@@ -298,9 +298,9 @@ function generateCampaignSends(rng: Rng, customers: CustomerStats[]) {
       // Channel-preference signal (planted, discoverable): TREATED conversions land
       // preferentially on channel responders (weight 3× for sms_responder on SMS sends,
       // email analog). Arm-level totals stay EXACT via the quota, so planted rates and
-      // every verdict are untouched — only who-converts within the arm shifts. Control
+      // every verdict are untouched - only who-converts within the arm shifts. Control
       // arms stay uniform: organic conversion is channel-independent (the honest causal
-      // story — the channel only matters when you actually message someone through it).
+      // story - the channel only matters when you actually message someone through it).
       const weightOf = (c: CustomerStats): number =>
         treatment !== 1 ? 1
         : camp.channel === "sms" ? (c.sms_responder ? 3 : 1)

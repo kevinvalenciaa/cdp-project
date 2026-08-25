@@ -7,7 +7,7 @@ import { Db, num } from "../shared/db.js";
  * Verdicts that may be written (the gate). The first four come from the
  * Verifier. "observed_delivery" is deliberately different: it is a COUNTED
  * OBSERVATION off a device delivery ledger (suppressions/renders that
- * happened), not an inference — the gate exists to stop unverified LLM claims,
+ * happened), not an inference - the gate exists to stop unverified LLM claims,
  * and a tallied receipt is the most-verified datum in the system. Delivery
  * subjects are namespaced ("<KEY>#delivery") so the per-subject supersede
  * below can never clobber the Verifier's insight for the bare key.
@@ -23,7 +23,7 @@ export interface InsightRecord {
   subjectType: SubjectType;
   claim: string;
   verdict: string;
-  /** JSON: stat inputs + { runIds, fingerprints } — every claim traceable to its queries. */
+  /** JSON: stat inputs + { runIds, fingerprints } - every claim traceable to its queries. */
   evidence: string;
   confidence: number;
   createdAt: string;
@@ -68,7 +68,7 @@ export class Memory {
     const validUntil = new Date(Date.now() + VALIDITY_DAYS * 86_400_000).toISOString();
     const lastValidated = createdAt; // a fresh write IS a validation
     const id = `${rec.subject}:${createdAt}`;
-    // One current record per subject — supersede older ones.
+    // One current record per subject - supersede older ones.
     await this.db.run(`DELETE FROM insights WHERE subject = '${rec.subject.replace(/'/g, "''")}'`);
     await this.db.insertRows(
       "insights",
@@ -81,7 +81,7 @@ export class Memory {
   /**
    * Record a successful re-verification: the insight was checked against the data again
    * and still holds. Advances last_validated and lets confidence grow on each confirmation
-   * — the "confidence updated on re-validation" half of the compounding-memory contract.
+   * - the "confidence updated on re-validation" half of the compounding-memory contract.
    */
   async revalidate(id: string, confidence: number): Promise<void> {
     const now = new Date().toISOString();

@@ -8,7 +8,7 @@ import type { EngineEvent } from "@/lib/types";
 /**
  * The reference agent-plan component, kept to its exact visual and motion
  * language (status icon morphs, staggered subtask reveal, dashed connectors,
- * tool chips, springy badges) — but driven by the REAL run stream instead of
+ * tool chips, springy badges) - but driven by the REAL run stream instead of
  * demo fixtures: tasks are the explorer scan, one investigation per candidate,
  * and the final ranking pass; the tool chips are the actual MCP tools each
  * step calls. Expansion is interactive; statuses are data, not toggles.
@@ -142,7 +142,7 @@ function planFrom(events: EngineEvent[], streaming: boolean): Task[] {
           {
             id: "rank-formula",
             title: e.formula,
-            description: "Deterministic arithmetic — every rank is defensible number by number.",
+            description: "Deterministic arithmetic - every rank is defensible number by number.",
             status: "in-progress",
           },
         ],
@@ -171,19 +171,19 @@ function planFrom(events: EngineEvent[], streaming: boolean): Task[] {
 }
 
 const STATUS_BADGE: Record<Status, string> = {
-  completed: "bg-green-100 text-green-700",
-  "in-progress": "bg-blue-100 text-blue-700",
-  "need-help": "bg-yellow-100 text-yellow-700",
-  failed: "bg-red-100 text-red-700",
+  completed: "bg-ht-green-bg text-ht-green",
+  "in-progress": "bg-ht-teal-tint text-ht-teal",
+  "need-help": "bg-ht-warning-bg text-ht-warning",
+  failed: "bg-ht-danger-bg text-ht-danger-text",
   pending: "bg-muted text-muted-foreground",
 };
 
 function StatusIcon({ status, size }: { status: Status; size: "task" | "subtask" }) {
   const cls = size === "task" ? "h-[18px] w-[18px]" : "h-3.5 w-3.5";
-  if (status === "completed") return <CheckCircle2 className={`${cls} text-green-500`} />;
-  if (status === "in-progress") return <CircleDotDashed className={`${cls} text-blue-500`} />;
-  if (status === "need-help") return <CircleAlert className={`${cls} text-yellow-500`} />;
-  if (status === "failed") return <CircleX className={`${cls} text-red-500`} />;
+  if (status === "completed") return <CheckCircle2 className={`${cls} text-ht-green`} />;
+  if (status === "in-progress") return <CircleDotDashed className={`${cls} text-ht-teal`} />;
+  if (status === "need-help") return <CircleAlert className={`${cls} text-ht-warning`} />;
+  if (status === "failed") return <CircleX className={`${cls} text-ht-danger`} />;
   return <Circle className={`${cls} text-muted-foreground`} />;
 }
 
@@ -210,7 +210,7 @@ export function InvestigationPlan({ events, streaming }: { events: EngineEvent[]
   // The task currently being worked expands itself; finished ones fold away.
   const defaultExpanded = (taskId: string) => tasks.find((t) => t.id === taskId)?.status === "in-progress";
 
-  // Animation variants — verbatim from the reference.
+  // Animation variants - verbatim from the reference.
   const taskVariants = {
     hidden: { opacity: 0, y: prefersReducedMotion ? 0 : -5 },
     visible: {
@@ -329,7 +329,7 @@ export function InvestigationPlan({ events, streaming }: { events: EngineEvent[]
                 </motion.div>
               </motion.div>
 
-              {/* Subtasks — staggered */}
+              {/* Subtasks - staggered */}
               <AnimatePresence mode="wait">
                 {isExpanded && task.subtasks.length > 0 && (
                   <motion.div

@@ -1,5 +1,5 @@
 /**
- * Phase 3: the opportunity engine — Verifier-gated ranking + the bare-LLM contrast,
+ * Phase 3: the opportunity engine - Verifier-gated ranking + the bare-LLM contrast,
  * streamed live so every stage transition is watchable in the terminal:
  *
  *   STAGE 1 · EXPLORER (haiku, breadth)  →  hypotheses (+ honest unexplored surplus)
@@ -7,7 +7,7 @@
  *   STAGE 3 · PRIORITIZER (reach × value × verified uplift)  →  the ranked list
  *
  * Shows that ranking by VERIFIED incremental uplift (not raw conversion) demotes the
- * VIP trap and rejects the Q4 seasonality spike — and that a bare LLM (no statistics)
+ * VIP trap and rejects the Q4 seasonality spike - and that a bare LLM (no statistics)
  * gets fooled by both. Run: `pnpm --filter @lift/core opportunities`
  */
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -17,7 +17,7 @@ import { runEngineStreaming } from "../engine/engine-streaming.js";
 import type { Opportunity } from "../engine/types.js";
 
 function fmt(o: Opportunity): string {
-  const lift = o.upliftPp == null ? "—" : `${o.upliftPp >= 0 ? "+" : ""}${o.upliftPp.toFixed(1)}pp`;
+  const lift = o.upliftPp == null ? "-" : `${o.upliftPp >= 0 ? "+" : ""}${o.upliftPp.toFixed(1)}pp`;
   const ci = o.ci ? ` CI[${o.ci[0].toFixed(1)},${o.ci[1].toFixed(1)}]` : "";
   const p = o.pValue == null ? "" : ` p=${o.pValue.toFixed(3)}`;
   const raw = o.rawConversion == null ? "" : ` raw=${o.rawConversion.toFixed(1)}%`;
@@ -25,17 +25,17 @@ function fmt(o: Opportunity): string {
 }
 
 async function main(): Promise<void> {
-  console.log(`\n=== Lift Compass — Opportunity Engine ===`);
+  console.log(`\n=== Proofloop - Opportunity Engine ===`);
   const result = await runEngineStreaming(
     "Grow second purchases from one-time buyers",
     (e) => {
       if (e.kind === "run_started") console.log(`Goal: ${e.goal}  (${e.candidateCount} candidates)`);
-      else if (e.kind === "explorer_started") console.log(`\n─── STAGE 1 · EXPLORER (haiku, breadth) — ${e.probeCount} probes ───`);
+      else if (e.kind === "explorer_started") console.log(`\n─── STAGE 1 · EXPLORER (haiku, breadth) - ${e.probeCount} probes ───`);
       else if (e.kind === "hypothesis_proposed") {
         const tag = e.matchedProbe ? "→ probe" : "∅ no probe (unexplored)";
         console.log(`  💡 [${e.hypothesis.key}] ${e.hypothesis.rationale}  ${tag}`);
       } else if (e.kind === "planning") console.log(`\n─── STAGE 2 · VERIFIER (stats MCP + groundedness cross-check) ───`);
-      else if (e.kind === "memory_hit") console.log(`  🧠 skipping ${e.subject} — memory: ${e.claim}`);
+      else if (e.kind === "memory_hit") console.log(`  🧠 skipping ${e.subject} - memory: ${e.claim}`);
       else if (e.kind === "candidate_started") console.log(`  ▶ investigating: ${e.title}`);
       else if (e.kind === "candidate_verified") {
         const o = e.opportunity;
@@ -43,7 +43,7 @@ async function main(): Promise<void> {
         const g = o.grounded ? `  grounded=${o.grounded.verdict}` : "";
         console.log(`    ${mark}  ${o.title}${g}`);
       } else if (e.kind === "prioritizing") {
-        console.log(`\n─── STAGE 3 · PRIORITIZER (${e.formula}) — ${e.acceptedCount} accepted ───`);
+        console.log(`\n─── STAGE 3 · PRIORITIZER (${e.formula}) - ${e.acceptedCount} accepted ───`);
       }
     },
     { withBareLlmContrast: true },
@@ -58,7 +58,7 @@ async function main(): Promise<void> {
 
   if (result.explorer?.surplus.length) {
     console.log("\nUNEXPLORED HYPOTHESES (proposed by the Explorer; no probe exists yet):");
-    for (const h of result.explorer.surplus) console.log(`  ∅ [${h.key}] ${h.title} — ${h.rationale}`);
+    for (const h of result.explorer.surplus) console.log(`  ∅ [${h.key}] ${h.title} - ${h.rationale}`);
   }
 
   console.log("\n--- BARE LLM vs VERIFIER (the contrast) ---");
@@ -80,7 +80,7 @@ async function main(): Promise<void> {
     ["VIP trap is demoted (not accepted, CI includes 0)", !!vip && !vip.accepted && !!vip.ci && vip.ci[0] <= 0 && vip.ci[1] >= 0],
     ["seasonality spike is rejected as not-a-real-change", !!q4 && q4.verdict === "explained_by_seasonality"],
     ["bare LLM accepts the trap that the verifier rejects", !!vip && vip.bareLlm?.accepted === true && vip.accepted === false],
-    // Empirical finding (kept honest): a 2026-era bare LLM does NOT buy the spike — it hedges
+    // Empirical finding (kept honest): a 2026-era bare LLM does NOT buy the spike - it hedges
     // "can't tell without the baseline". It also cannot VERIFY it. The demo's claim is the
     // asymmetry: the bare judge is shown the spike and can only shrug; the Verifier decomposes
     // the series and quantifies it. Both sides must be present on command.

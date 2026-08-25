@@ -1,7 +1,7 @@
 import { Easing, type FontVariant } from "react-native";
 
 /**
- * Editorial-light design tokens — the storefront's single source of truth.
+ * Editorial-light design tokens - the storefront's single source of truth.
  * SSENSE/Aritzia direction: warm paper ground, ink type, hairline structure,
  * sharp corners, one restrained accent. The debug surface deliberately stays
  * dark: the storefront is paper, the SDK x-ray is ink.
@@ -44,7 +44,7 @@ export const theme = {
       textTransform: "uppercase" as const,
     },
     caption: { fontFamily: "Inter_400Regular", fontSize: 12, lineHeight: 16 },
-    /** Debug metrics — tabular so counters do not jitter. */
+    /** Debug metrics - tabular so counters do not jitter. */
     mono: { fontFamily: "Inter_500Medium", fontSize: 11, lineHeight: 15, fontVariant: ["tabular-nums"] as FontVariant[] },
   },
   motion: {

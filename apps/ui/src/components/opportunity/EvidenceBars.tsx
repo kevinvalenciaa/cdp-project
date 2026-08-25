@@ -6,7 +6,7 @@ export interface EvidenceBar {
   highlight?: boolean;
 }
 
-/** Hightouch's "evidence glance" — a tiny bar chart with exactly one highlighted bar. */
+/** A compact evidence glance with exactly one highlighted bar. */
 export function EvidenceBars({ bars }: { bars: EvidenceBar[] }) {
   const max = Math.max(...bars.map((b) => b.value), 0.0001);
   const label = bars.map((b) => `${b.label} ${b.value.toFixed(1)} percent`).join(", ");

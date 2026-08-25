@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
  * gradient dividers, voice-recorder mode, circular send/mic button) and
  * translated from its hard-coded dark palette to this app's light tokens.
  * Two technical changes only: the injected stylesheet is SSR-guarded, and
- * nothing else — message semantics are sanitized by the caller.
+ * nothing else - message semantics are sanitized by the caller.
  */
 
 // Utility function for className merging
@@ -338,7 +338,7 @@ const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
           <div
             ref={ref}
             className={cn(
-              "rounded-3xl border border-border bg-card p-2 shadow-ht-md transition-all duration-300",
+              "rounded-[20px] border border-border bg-card p-3 shadow-ht-sm transition-all duration-300",
               isLoading && "border-primary/50",
               className,
             )}
@@ -437,7 +437,7 @@ const PromptInputAction: React.FC<PromptInputActionProps> = ({
 const CustomDivider: React.FC = () => (
   <div className="relative mx-1 h-6 w-[1.5px]">
     <div
-      className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-[#9b87f5]/70 to-transparent"
+      className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-primary/40 to-transparent"
       style={{
         clipPath: "polygon(0% 0%, 100% 0%, 100% 40%, 140% 50%, 100% 60%, 100% 100%, 0% 100%, 0% 60%, -40% 50%, 0% 40%)",
       }}
@@ -665,7 +665,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                 className={cn(
                   "flex h-8 items-center gap-1 rounded-full border px-2 py-1 transition-all",
                   showSearch
-                    ? "border-[#1EAEDB] bg-[#1EAEDB]/15 text-[#1EAEDB]"
+                    ? "border-primary/45 bg-ht-teal-tint text-primary"
                     : "border-transparent bg-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -679,7 +679,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                     }}
                     transition={{ type: "spring", stiffness: 260, damping: 25 }}
                   >
-                    <Globe className={cn("h-4 w-4", showSearch ? "text-[#1EAEDB]" : "text-inherit")} />
+                    <Globe className={cn("h-4 w-4", showSearch ? "text-primary" : "text-inherit")} />
                   </motion.div>
                 </div>
                 <AnimatePresence>
@@ -689,7 +689,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                       animate={{ width: "auto", opacity: 1 }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="flex-shrink-0 overflow-hidden whitespace-nowrap text-xs text-[#1EAEDB]"
+                      className="flex-shrink-0 overflow-hidden whitespace-nowrap text-xs text-primary"
                     >
                       Search
                     </motion.span>
@@ -707,7 +707,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                 className={cn(
                   "flex h-8 items-center gap-1 rounded-full border px-2 py-1 transition-all",
                   showThink
-                    ? "border-[#8B5CF6] bg-[#8B5CF6]/15 text-[#8B5CF6]"
+                    ? "border-ht-green-border bg-ht-green-bg text-ht-green"
                     : "border-transparent bg-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -721,7 +721,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                     }}
                     transition={{ type: "spring", stiffness: 260, damping: 25 }}
                   >
-                    <BrainCog className={cn("h-4 w-4", showThink ? "text-[#8B5CF6]" : "text-inherit")} />
+                    <BrainCog className={cn("h-4 w-4", showThink ? "text-ht-green" : "text-inherit")} />
                   </motion.div>
                 </div>
                 <AnimatePresence>
@@ -731,7 +731,7 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                       animate={{ width: "auto", opacity: 1 }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="flex-shrink-0 overflow-hidden whitespace-nowrap text-xs text-[#8B5CF6]"
+                      className="flex-shrink-0 overflow-hidden whitespace-nowrap text-xs text-ht-green"
                     >
                       Think
                     </motion.span>

@@ -35,10 +35,10 @@ const GOALS: Goal[] = [
 const GUARDRAILS: GuardrailRule[] = [
   { id: "premium_no_discount", rule: "Never propose discounts or promo codes on premium / never-on-sale collections (e.g., Fall Flagship)." },
   { id: "seasonality_not_opportunity", rule: "Do not present an expected seasonal increase as a new opportunity or a behavior change." },
-  { id: "premium_brand_tone", rule: "Premium messaging stays aspirational — no aggressive discount/urgency language." },
+  { id: "premium_brand_tone", rule: "Premium messaging stays aspirational - no aggressive discount/urgency language." },
   {
     id: "frequency_cap",
-    rule: "Max 2 messages per customer per 7 days — machine-enforced (server: activation/caps.ts, device: @lift/sdk frequency ledger), not an LLM judgment.",
+    rule: "Max 2 messages per customer per 7 days - machine-enforced (server: activation/caps.ts, device: @lift/sdk frequency ledger), not an LLM judgment.",
   },
 ];
 
@@ -164,7 +164,7 @@ export const liveProvider: DataProvider = {
       try {
         // The run_finished handoff is deferred until after the engine resolves so we can
         // attach a DRAFT activation for the top opportunity (the Plan tab's content) before
-        // persisting — this is what keeps live mode at parity with the demo fixture.
+        // persisting - this is what keeps live mode at parity with the demo fixture.
         let finished: { result: Parameters<typeof toRunDetail>[0]; bandit: unknown } | null = null;
         await runEngineStreaming(
           goal,
@@ -212,7 +212,7 @@ export const liveProvider: DataProvider = {
             try {
               activation = await activateOpportunity(`live-${Date.now()}`, top.key);
             } catch {
-              /* draft is best-effort — the Plan tab shows its pre-launch placeholder */
+              /* draft is best-effort - the Plan tab shows its pre-launch placeholder */
             }
           }
           const detail = toRunDetail(result, bandit, goal, activation);
@@ -293,14 +293,14 @@ export const liveProvider: DataProvider = {
     const { ack, aggregate } = ingestBatch(batch);
     // The uplink: device-observed delivery facts land in agent Memory, so the
     // NEXT explorer run reads what delivery actually did (explorer.ts already
-    // renders prior insights into its prompt — no engine change needed).
+    // renders prior insights into its prompt - no engine change needed).
     if (aggregate) await uplinkToMemory(batch.batch_id, aggregate);
     return ack;
   },
 };
 
 /**
- * Short-lived Memory open/write/close with jittered retry — memory.duckdb is
+ * Short-lived Memory open/write/close with jittered retry - memory.duckdb is
  * single-writer and an activation may hold it briefly. On final failure we log
  * and move on: events + aggregate are already durable, the aggregate is
  * cumulative, and write() supersedes per subject, so the NEXT batch self-heals

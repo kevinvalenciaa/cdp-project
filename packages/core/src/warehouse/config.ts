@@ -5,13 +5,13 @@
  * the Verifier's rejections and the uplift engine's lift estimates are checked
  * against these values (see ground-truth.ts and the generated GROUND_TRUTH.md).
  *
- * The agents never read this file — they must *discover* these signals from the
+ * The agents never read this file - they must *discover* these signals from the
  * data through the read-only MCP. This is the teacher's copy.
  */
 
 export const CALENDAR = {
   dataStart: "2024-01-01",
-  today: "2026-06-15", // matches Hightouch's Agentic CDP post date
+  today: "2026-06-15", // fixed demo date for deterministic fixtures
   churnWindowDays: 90, // no order in the last 90 days => churn risk
 } as const;
 
@@ -29,7 +29,7 @@ export const COUNTS = {
 
 /**
  * Seasonality: a strong yearly curve (holiday peak in Nov–Dec, summer trough) plus a
- * mild weekend effect. This is the planted FALSE POSITIVE for time-series naivety —
+ * mild weekend effect. This is the planted FALSE POSITIVE for time-series naivety -
  * "orders up in Q4!" is seasonality, not a campaign effect. STL must absorb it.
  */
 export const SEASONALITY = {
@@ -41,7 +41,7 @@ export const SEASONALITY = {
 } as const;
 
 /**
- * Upcoming product drops (launch "next week" relative to TODAY) — makes the
+ * Upcoming product drops (launch "next week" relative to TODAY) - makes the
  * new-product-launch recommendation actionable.
  */
 export const UPCOMING_DROPS = [
@@ -88,7 +88,7 @@ export const CAMPAIGNS: PlantedCampaign[] = [
     targetDescription: "Customers with exactly one order, 30–180 days ago",
     audience: "one_time_buyers",
     treatmentRate: 0.14,
-    holdoutRate: 0.08, // +6pp TRUE incremental lift — the genuine headline opportunity
+    holdoutRate: 0.08, // +6pp TRUE incremental lift - the genuine headline opportunity
     holdoutFraction: 0.2,
     expectedVerdict: "real_lift",
   },
@@ -102,7 +102,7 @@ export const CAMPAIGNS: PlantedCampaign[] = [
     targetDescription: "Top-tier VIP big spenders",
     audience: "vip_high_value",
     treatmentRate: 0.42,
-    holdoutRate: 0.42, // ZERO incremental lift — the TRAP (huge raw conversion, would convert anyway)
+    holdoutRate: 0.42, // ZERO incremental lift - the TRAP (huge raw conversion, would convert anyway)
     holdoutFraction: 0.45, // large, balanced control so the empirical lift stays near 0
     expectedVerdict: "no_lift_trap",
   },
@@ -116,9 +116,9 @@ export const CAMPAIGNS: PlantedCampaign[] = [
     targetDescription: "First-time buyers who bought a single category",
     audience: "first_time_single_category",
     treatmentRate: 0.11,
-    holdoutRate: 0.07, // +4pp TRUE lift — supports the churn-prevention cross-sell archetype
+    holdoutRate: 0.07, // +4pp TRUE lift - supports the churn-prevention cross-sell archetype
     // Balanced 50/50 holdout is deliberate: +4pp at pooled p̄=0.09 needs ~800/arm for 80%
-    // power at α=.05 — a small unbalanced control leaves the TRUE lift undetectable, which
+    // power at α=.05 - a small unbalanced control leaves the TRUE lift undetectable, which
     // is a seed bug, not a finding. (Detecting it is the Verifier's job; giving the planted
     // truth enough power to be recoverable is the seed's job.)
     holdoutFraction: 0.5,
@@ -140,7 +140,7 @@ export const CAMPAIGNS: PlantedCampaign[] = [
   },
   {
     id: "SPRING_DROP_CREATIVE",
-    name: "Spring launch — product-drop creative",
+    name: "Spring launch - product-drop creative",
     channel: "email",
     type: "awareness",
     creativeStyle: "product_drop",
@@ -154,7 +154,7 @@ export const CAMPAIGNS: PlantedCampaign[] = [
   },
   {
     id: "SPRING_EVERGREEN_CREATIVE",
-    name: "Spring launch — evergreen creative",
+    name: "Spring launch - evergreen creative",
     channel: "email",
     type: "awareness",
     creativeStyle: "evergreen",
@@ -171,7 +171,7 @@ export const CAMPAIGNS: PlantedCampaign[] = [
   },
 ];
 
-/** Premium SKUs that never go on sale — the guardrail bait (Phase 4). */
+/** Premium SKUs that never go on sale - the guardrail bait (Phase 4). */
 export const GUARDRAIL = {
   premiumFraction: 0.2, // ~20% of products are premium
   neverDiscountFractionOfPremium: 0.5, // half of premium never goes on sale

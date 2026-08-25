@@ -3,7 +3,7 @@ import type { PolicySnapshot } from "@lift/protocol";
 import { callMcpTool } from "../harness/mcp-client.js";
 
 /**
- * Server-side posterior learning — the "learn" half of the split whose
+ * Server-side posterior learning - the "learn" half of the split whose
  * "select" half runs on the device (@lift/sdk policy.ts).
  *
  * campaign_sends already holds a two-slot (A/B) history per campaign; joining

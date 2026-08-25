@@ -12,8 +12,8 @@ import type {
 } from "@/lib/types";
 
 /**
- * The single contract the UI talks to. Two implementations — demo (deterministic
- * fixtures + scripted streams) and live (the real @lift/core engine) — selected by
+ * The single contract the UI talks to. Two implementations - demo (deterministic
+ * fixtures + scripted streams) and live (the real @lift/core engine) - selected by
  * LIFT_MODE. The UI never knows which is active.
  */
 export interface DataProvider {

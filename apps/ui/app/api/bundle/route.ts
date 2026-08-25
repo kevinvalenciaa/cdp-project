@@ -16,11 +16,11 @@ export function OPTIONS(): Response {
 }
 
 /**
- * GET /api/bundle — the rules pushed DOWN to devices.
+ * GET /api/bundle - the rules pushed DOWN to devices.
  *
  * The bundle_id is a content hash, so it doubles as the ETag: devices poll
  * with If-None-Match and pay for bytes only when the bundle actually changed.
- * Every response (200 AND 304) carries X-Server-Time — the SDK's clock-skew
+ * Every response (200 AND 304) carries X-Server-Time - the SDK's clock-skew
  * anchor, at zero extra round trips.
  */
 export async function GET(req: Request): Promise<Response> {
@@ -29,7 +29,7 @@ export async function GET(req: Request): Promise<Response> {
   const entry = await provider.getBundle();
   if (!entry) {
     return Response.json(
-      { error: "no bundle compiled yet — run the engine (or generate the demo fixture) first" },
+      { error: "no bundle compiled yet - run the engine (or generate the demo fixture) first" },
       { status: 404, headers: { ...CORS, "X-Server-Time": serverTime } },
     );
   }

@@ -39,7 +39,7 @@ async function main(): Promise<void> {
     const r = await checkAction(client, a, ledger);
     results.push({ action: a, ...r });
     console.log(`  ${r.allowed ? "✅ ALLOW " : "🛑 BLOCK "} ${a}`);
-    if (!r.allowed) console.log(`           rule: ${r.violatedRule ?? "?"} — ${r.reason}`);
+    if (!r.allowed) console.log(`           rule: ${r.violatedRule ?? "?"} - ${r.reason}`);
   }
 
   // --- Phase 4 gate ---

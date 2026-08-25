@@ -30,9 +30,9 @@ export const config = {
   queryTimeoutMs: envInt("QUERY_TIMEOUT_MS", 15_000),
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
   // Two tiers only, and both actually run: `reasoning` drives the harness orchestrator +
-  // investigators; `fanout` (cheap) drives breadth work — explorer, classification fan-out,
+  // investigators; `fanout` (cheap) drives breadth work - explorer, classification fan-out,
   // the bare-LLM contrast judge, groundedness, guardrails, creative drafting. A third
-  // "hard" escalation tier existed as config but nothing ever used it, so it was removed —
+  // "hard" escalation tier existed as config but nothing ever used it, so it was removed -
   // config that claims a capability that never runs is exactly the overstatement this
   // project bans.
   models: {

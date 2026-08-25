@@ -1,7 +1,7 @@
 # Composable-context business rules. These are injected as CONTEXT into the agents
 # (not hard-coded as prompt afterthoughts) and checked before any recommendation is
-# surfaced — directly answering Hightouch's failure mode where agents "proposed discounts
-# on premium products that never go on sale because nobody had told them not to."
+# surfaced to prevent agents from proposing discounts on premium products that never go
+# on sale because the relevant business rule was unavailable.
 #
 # Versioned and editable by the marketing team (the "you control the strategy" surface).
 
@@ -22,7 +22,7 @@ rules:
       discount/urgency language (e.g., "CLEARANCE", "blowout", "everything must go") for premium products.
 
 # frequency_cap is NOT a rule here anymore, deliberately. A cap is arithmetic over a send
-# ledger, not a judgment call — an LLM grading creative copy against "max 2 per week" can
+# ledger, not a judgment call - an LLM grading creative copy against "max 2 per week" can
 # never enforce it (a message body cannot violate a counter). It is machine-enforced:
 #   - server: activation/caps.ts (deterministic exclusion against campaign_sends)
 #   - device: @lift/sdk frequency.ts (monotonic-clock ledger at delivery time)

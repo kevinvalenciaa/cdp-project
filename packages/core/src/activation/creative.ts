@@ -20,7 +20,7 @@ export async function draftCreativeBrief(
         role: "user",
         content:
           `Write a concise marketing creative brief (max 5 short lines) for a fashion retailer.\n` +
-          `Opportunity: ${opp.title} — verified +${opp.upliftPp?.toFixed(1)}pp incremental lift.\n` +
+          `Opportunity: ${opp.title} - verified +${opp.upliftPp?.toFixed(1)}pp incremental lift.\n` +
           `Audience: ${audience.label} (${audience.persuadableReach} persuadable customers, channel: ${audience.channel}).\n` +
           `Stay aspirational and on-brand. Do NOT propose discounts on premium products. Output ONLY the brief.`,
       },

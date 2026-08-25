@@ -13,22 +13,24 @@ function explainerHtml(): string {
 export default function HowItWorks() {
   const html = explainerHtml();
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10">
-      <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-primary transition-colors hover:text-ht-teal-hover">
-        <ArrowLeft className="h-4 w-4" aria-hidden /> Back to the app
-      </Link>
+    <main className="min-h-dvh bg-[#e9eef5] p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-4xl rounded-[26px] border border-white/80 bg-background p-5 shadow-ht-md sm:p-8 lg:p-10">
+        <Link href="/" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-primary shadow-ht-xs transition-colors hover:text-ht-teal-hover">
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Back to the app
+        </Link>
 
-      <h1 className="mt-6 font-display text-4xl text-foreground">How Lift Compass works</h1>
-      <p className="mt-2 text-muted-foreground">
-        An Agentic CDP that finds proven opportunities, drafts the work, and learns every run.
-      </p>
+        <h1 className="mt-8 font-display text-4xl font-semibold tracking-[-0.035em] text-foreground">How Proofloop works</h1>
+        <p className="mt-2 text-muted-foreground">
+          An Agentic CDP that finds proven opportunities, drafts the work, and learns every run.
+        </p>
 
-      <div className="mt-8 space-y-6">
-        <PipelineDiagram />
-        <FlywheelDiagram />
+        <div className="mt-8 space-y-6">
+          <PipelineDiagram />
+          <FlywheelDiagram />
+        </div>
+
+        <article className="md mt-10 border-t border-border pt-8" dangerouslySetInnerHTML={{ __html: html }} />
       </div>
-
-      <article className="md mt-10 border-t border-border pt-8" dangerouslySetInnerHTML={{ __html: html }} />
     </main>
   );
 }

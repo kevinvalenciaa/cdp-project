@@ -2,12 +2,12 @@ import type { Predicate, PredicateLeaf } from "@lift/protocol";
 
 /**
  * Deterministic, total predicate evaluation. This is the device half of the
- * predicate contract — the server half is core's predicateToSql(), and
+ * predicate contract - the server half is core's predicateToSql(), and
  * delivery/parity.ts holds the two to identical membership over real rows.
  *
  * Total means: no input throws. A missing attribute, a type mismatch, or a
  * string inequality all evaluate to FALSE with the reason recorded in the
- * trail — an eligibility engine must never take the host app down.
+ * trail - an eligibility engine must never take the host app down.
  */
 
 export type AttrValue = string | number | boolean;

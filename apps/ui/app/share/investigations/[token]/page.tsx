@@ -8,7 +8,7 @@ import { getInvestigationRepository } from "@/server/investigations";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Shared investigation — Lift Compass",
+  title: "Shared investigation - Proofloop",
   robots: { index: false, follow: false },
 };
 
@@ -30,13 +30,13 @@ export default async function SharedInvestigationPage({
   }
   const snapshot = share.snapshot;
   return (
-    <main id="main" className="min-h-screen bg-ht-50 px-4 py-8 sm:px-6 lg:py-12">
-      <div className="mx-auto max-w-4xl">
-        <header className="rounded-2xl border border-border bg-card p-6 shadow-ht-xs lg:p-8">
+    <main id="main" className="min-h-dvh bg-[#e9eef5] px-4 py-6 sm:px-6 lg:py-10">
+      <div className="mx-auto max-w-5xl rounded-[26px] border border-white/80 bg-background p-4 shadow-ht-md sm:p-6 lg:p-8">
+        <header className="rounded-[20px] border border-border bg-card p-6 shadow-ht-xs lg:p-8">
           <div className="flex items-center gap-2 text-sm font-medium text-ht-teal">
-            <Sparkles className="h-4 w-4" aria-hidden /> Lift Compass investigation
+            <Sparkles className="h-4 w-4" aria-hidden /> Proofloop investigation
           </div>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">{snapshot.title}</h1>
+          <h1 className="mt-3 text-2xl font-semibold tracking-[-0.025em] text-foreground">{snapshot.title}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">{snapshot.objective}</p>
           <div className="mt-5 flex flex-wrap gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
@@ -56,7 +56,7 @@ export default async function SharedInvestigationPage({
           </h2>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {snapshot.opportunities.map((opportunity) => (
-              <article key={opportunity.occurrenceId} className="rounded-xl border border-border bg-card p-5 shadow-ht-xs">
+              <article key={opportunity.occurrenceId} className="rounded-[18px] border border-border bg-card p-5 shadow-ht-xs">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="inline-flex items-center gap-1.5 text-xs font-medium text-ht-green">
@@ -66,7 +66,7 @@ export default async function SharedInvestigationPage({
                     <p className="mt-0.5 text-sm text-muted-foreground">{opportunity.segment}</p>
                   </div>
                   {opportunity.impactMonthly > 0 && (
-                    <span className="shrink-0 font-mono text-sm font-semibold text-ht-green">
+                    <span className="shrink-0 text-sm font-semibold tabular-nums text-ht-green">
                       ~{moneyCompact(opportunity.impactMonthly)}/mo
                     </span>
                   )}
@@ -80,7 +80,7 @@ export default async function SharedInvestigationPage({
             ))}
           </div>
           {snapshot.opportunities.length === 0 && (
-            <div className="mt-3 rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            <div className="mt-3 rounded-[18px] border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
               No results were included in this snapshot.
             </div>
           )}
@@ -91,7 +91,7 @@ export default async function SharedInvestigationPage({
             <h2 id="shared-transcript-heading" className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               <MessageSquareText className="h-4 w-4" aria-hidden /> Transcript
             </h2>
-            <div className="mt-3 space-y-3 rounded-2xl border border-border bg-card p-5">
+            <div className="mt-3 space-y-3 rounded-[20px] border border-border bg-card p-5 shadow-ht-xs">
               {snapshot.transcript.map((message, index) => (
                 <div key={`${message.createdAt}-${index}`} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
                   <div

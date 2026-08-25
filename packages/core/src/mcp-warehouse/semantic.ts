@@ -17,7 +17,7 @@ interface Catalog {
   metrics: Record<string, MetricDef>;
   dimensions: Record<string, DimDef>;
   filterable: Record<string, string[]>;
-  /** Alias -> canonical metric name (resolution only — never widens the governed surface). */
+  /** Alias -> canonical metric name (resolution only - never widens the governed surface). */
   synonyms?: Record<string, string>;
   /** Documentary FK graph; runMetric stays single-table by design (see metrics.yaml). */
   relationships?: unknown;
@@ -74,7 +74,7 @@ export async function runMetric(
   filters?: Filter[],
 ): Promise<QueryResult & { metric: string; sql: string }> {
   // Resolve aliases first ("revenue" -> total_revenue): synonyms absorb naming drift
-  // without widening the surface — an unknown name still errors out-of-scope.
+  // without widening the surface - an unknown name still errors out-of-scope.
   const canonical = catalog.metrics[metric] ? metric : (catalog.synonyms?.[metric] ?? metric);
   const m = catalog.metrics[canonical];
   if (!m) {

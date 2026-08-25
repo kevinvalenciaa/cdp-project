@@ -56,7 +56,7 @@ async function callModel(
     return await tryModel(params.model);
   } catch (e) {
     if (fallbackModel && fallbackModel !== params.model && isRetryable(e)) {
-      console.error(`[harness] ${params.model} overloaded — falling back to ${fallbackModel}`);
+      console.error(`[harness] ${params.model} overloaded - falling back to ${fallbackModel}`);
       return await tryModel(fallbackModel);
     }
     throw e;
@@ -172,7 +172,7 @@ export function localToolDefs(): ToolDef[] {
     {
       name: "spawn_investigator",
       description:
-        "Spawn an isolated investigator subagent to dig into ONE focused question against the warehouse + stats tools. It returns only a tight summary — use this to keep your own context clean.",
+        "Spawn an isolated investigator subagent to dig into ONE focused question against the warehouse + stats tools. It returns only a tight summary - use this to keep your own context clean.",
       input_schema: {
         type: "object",
         properties: {

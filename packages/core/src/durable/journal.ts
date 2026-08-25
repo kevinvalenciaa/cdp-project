@@ -3,13 +3,13 @@ import { dirname, resolve } from "node:path";
 import { REPO_ROOT } from "../shared/env.js";
 
 /**
- * Durable step journal — the same memoize-and-resume semantics as Inngest's `step.run`,
+ * Durable step journal - the same memoize-and-resume semantics as Inngest's `step.run`,
  * implemented on an append-only on-disk journal so a run survives a crash.
  *
  * Each step's result is journaled by name. On resume with the same runId, completed steps
  * return their cached result WITHOUT re-executing (idempotent). Read-only warehouse/stats
  * queries are naturally idempotent, which is what makes this safe. (Inngest/DBOS are the
- * production targets; this externalizes the same state — see docs/DESIGN_DECISIONS.md.)
+ * production targets; this externalizes the same state - see docs/DESIGN_DECISIONS.md.)
  */
 export class Journal {
   private cache = new Map<string, unknown>();

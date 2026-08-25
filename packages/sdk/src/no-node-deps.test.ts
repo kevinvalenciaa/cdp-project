@@ -6,9 +6,9 @@ import { describe, expect, it } from "vitest";
 /**
  * Hermes safety gate. The SDK ships to a React Native runtime with no node
  * builtins and no way to load native node modules. If any RUNTIME source file
- * (tests excluded — they run under node by design) imports a node builtin or
+ * (tests excluded - they run under node by design) imports a node builtin or
  * anything beyond @lift/protocol, the package would crash on import inside the
- * host app — the classic way an "SDK" turns out to never have been run on a
+ * host app - the classic way an "SDK" turns out to never have been run on a
  * device. This test makes that failure impossible to ship silently.
  */
 
@@ -36,7 +36,7 @@ describe("no node dependencies in SDK runtime code", () => {
     const specifiers = importsOf(readFileSync(resolve(here, f), "utf8"));
     for (const s of specifiers) {
       const ok = s.startsWith("./") || s.startsWith("../") || ALLOWED_SPECIFIERS.has(s);
-      expect(ok, `${f} imports "${s}" — not loadable in Hermes`).toBe(true);
+      expect(ok, `${f} imports "${s}" - not loadable in Hermes`).toBe(true);
       expect(s.startsWith("node:"), `${f} imports node builtin "${s}"`).toBe(false);
     }
   });
@@ -53,7 +53,7 @@ describe("no node dependencies in SDK runtime code", () => {
         }
       }
     } catch {
-      /* dist not built yet — the src scan above still guards */
+      /* dist not built yet - the src scan above still guards */
     }
   });
 });

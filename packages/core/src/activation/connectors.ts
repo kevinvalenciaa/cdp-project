@@ -24,7 +24,7 @@ const DESTINATION_BY_CHANNEL: Record<string, string> = {
 };
 
 /**
- * SIMULATED destination connector (reverse-ETL / activation — Hightouch's DNA). Writes an
+ * SIMULATED destination connector for reverse ETL and activation. Writes an
  * audience-membership + payload artifact to disk. No real network calls, no real sends.
  */
 export function syncToDestination(runId: string, audience: AudienceDef, brief: string, variants: Variant[], cap: CapResult): SyncResult {
@@ -38,7 +38,7 @@ export function syncToDestination(runId: string, audience: AudienceDef, brief: s
     JSON.stringify(
       {
         simulated: true,
-        note: "SIMULATED activation — no real network calls and no real messages were sent.",
+        note: "SIMULATED activation - no real network calls and no real messages were sent.",
         destination,
         audience_label: audience.label,
         audience_filter: `${audience.filterSql} AND ${audience.persuadableSql}`,

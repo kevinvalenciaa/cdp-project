@@ -1,6 +1,6 @@
 # Governed semantic layer. run_metric resolves ONLY these metrics/dimensions and
 # errors out-of-scope (it never guesses). This is the "can't produce subtly-wrong
-# numbers across runs" property — route audited/KPI questions here; fall back to
+# numbers across runs" property - route audited/KPI questions here; fall back to
 # guarded run_sql only for genuine ad-hoc exploration.
 
 metrics:
@@ -76,7 +76,7 @@ synonyms:
   customers: customer_count
   repeat_rate: repeat_purchase_rate
 
-# Documentary only — runMetric stays single-table BY DESIGN. Joins would reintroduce the
+# Documentary only - runMetric stays single-table BY DESIGN. Joins would reintroduce the
 # silent-wrong-number class (fan-out duplication, missed join keys) this layer exists to
 # prevent; customer_360 is the governed pre-join for cross-table questions.
 relationships:

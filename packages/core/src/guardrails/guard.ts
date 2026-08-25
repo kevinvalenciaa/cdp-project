@@ -26,7 +26,7 @@ export function listRules(): Rule[] {
 
 /**
  * Check a proposed marketing action against the composable-context guardrails.
- * The rules are injected as context (Hightouch's "you control the strategy" surface),
+ * The rules are injected as user-controlled strategy context,
  * so changing guardrails.yaml changes agent behavior with no code change.
  */
 export async function checkAction(client: Anthropic, actionText: string, ledger?: CostLedger): Promise<GuardResult> {

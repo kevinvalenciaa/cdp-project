@@ -1,4 +1,13 @@
-import { Activity, BarChart3, Home, Rocket, Settings, Sparkles, type LucideIcon } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  LayoutDashboard,
+  MessageSquareText,
+  Rocket,
+  Settings,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -12,11 +21,12 @@ export interface NavGroup {
 }
 
 export const NAV_GROUPS: NavGroup[] = [
-  { items: [{ href: "/", label: "Home", icon: Home }] },
+  { items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard }] },
   {
     label: "Customer Studio",
     items: [
       { href: "/opportunities", label: "Opportunities", icon: Sparkles },
+      { href: "/investigations", label: "Investigations", icon: MessageSquareText },
       { href: "/activity", label: "Activity", icon: Activity },
     ],
   },

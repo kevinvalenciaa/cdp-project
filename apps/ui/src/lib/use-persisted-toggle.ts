@@ -14,7 +14,7 @@ export function usePersistedToggle(key: string, initial: boolean): [boolean, () 
       const stored = localStorage.getItem(key);
       if (stored != null) setOn(stored === "1");
     } catch {
-      /* private mode etc. — stay with the default */
+      /* private mode etc. - stay with the default */
     }
   }, [key]);
 

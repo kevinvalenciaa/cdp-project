@@ -2,10 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Hightouch product theme — light, warm-neutral grays, teal primary, dark-teal nav rail. */
+/*
+ * Proofloop product theme.
+ *
+ * The application uses Proofloop's teal/green identity with an airy,
+ * low-contrast dashboard framing from the visual reference: a pale blue-gray
+ * canvas, white elevated surfaces, generous radii, and a light navigation rail.
+ */
 @layer base {
   :root {
-    --background: 0 0% 96%; /* #F5F5F5 app bg */
+    --background: 216 33% 97%; /* #F6F8FB app canvas */
     --foreground: 340 3% 18%; /* #302D2E text-primary */
     --card: 0 0% 100%;
     --card-foreground: 340 3% 18%;
@@ -13,33 +19,33 @@
     --popover-foreground: 340 3% 18%;
     --primary: 190 100% 29%; /* #007A92 teal */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 98%; /* #FAFAFA */
+    --secondary: 214 30% 96%;
     --secondary-foreground: 340 3% 18%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 330 3% 40%; /* #696365 text-muted */
-    --accent: 0 0% 95%;
+    --muted: 214 28% 96%;
+    --muted-foreground: 220 9% 43%;
+    --accent: 190 40% 94%;
     --accent-foreground: 340 3% 18%;
     --destructive: 343 100% 41%; /* #D3003B */
     --destructive-foreground: 0 0% 100%;
-    --border: 330 3% 87%; /* #E0DEDF */
-    --input: 330 3% 87%;
+    --border: 216 20% 88%;
+    --input: 216 20% 86%;
     --ring: 190 100% 29%;
-    --radius: 0.5rem;
+    --radius: 1rem;
 
     --chart-teal: 190 100% 29%;
     --chart-green: 149 100% 21%;
     --chart-coral: 343 100% 41%;
     --chart-neutral: 0 0% 78%;
 
-    /* dark-teal nav rail (their real app) */
-    --sidebar-background: 168 45% 12%; /* near-black teal */
-    --sidebar-foreground: 160 10% 86%;
-    --sidebar-primary: 188 65% 46%;
+    /* Light rail with teal selection states. */
+    --sidebar-background: 216 33% 98%;
+    --sidebar-foreground: 220 13% 31%;
+    --sidebar-primary: 190 100% 29%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 168 42% 18%; /* active pill */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 168 35% 17%;
-    --sidebar-ring: 188 65% 46%;
+    --sidebar-accent: 190 48% 92%;
+    --sidebar-accent-foreground: 190 100% 23%;
+    --sidebar-border: 216 20% 89%;
+    --sidebar-ring: 190 100% 29%;
   }
 
   * {
@@ -49,8 +55,33 @@
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+  ::selection {
+    background: hsl(var(--primary) / 0.16);
+  }
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  .app-page {
+    @apply space-y-7 p-4 sm:p-6 lg:p-7 xl:p-8;
+  }
+
+  .surface-panel {
+    @apply rounded-[18px] border border-border bg-card shadow-ht-xs;
+  }
+
+  .metric-card {
+    @apply rounded-[18px] border border-border bg-card p-5 shadow-ht-xs;
+  }
+
+  .control-surface {
+    @apply rounded-[18px] border border-border bg-card p-3 shadow-ht-xs;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground;
   }
 }
 

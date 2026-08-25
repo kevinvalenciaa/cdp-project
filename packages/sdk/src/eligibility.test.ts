@@ -32,7 +32,7 @@ describe("attr:-prefixed segment_key resolves per user", () => {
       campaigns: bundle.campaigns.map((c) => ({ ...c, segment_key: "attr:value_tier" })),
       policy: {
         segments: {
-          // vip strongly favours arm_b; mid strongly favours arm_a — degenerate
+          // vip strongly favours arm_b; mid strongly favours arm_a - degenerate
           // posteriors so the assertion is implementation-independent.
           vip: { arm_a: { alpha: 1, beta: 1000 }, arm_b: { alpha: 1000, beta: 1 } },
           mid: { arm_a: { alpha: 1000, beta: 1 }, arm_b: { alpha: 1, beta: 1000 } },

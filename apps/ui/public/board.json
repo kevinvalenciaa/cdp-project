@@ -6,7 +6,7 @@
     "ranked": [
       {
         "key": "SPRING_DROP_CREATIVE",
-        "title": "Spring launch — product-drop creative",
+        "title": "Spring launch - product-drop creative",
         "segment": "Drop-lookalike audience (creative A/B vs evergreen)",
         "type": "experiment",
         "reach": 900,
@@ -22,7 +22,7 @@
         "accepted": true,
         "score": 10849.36826566291,
         "reason": "Significant +6.9% incremental lift (p=0.007, 95% CI excludes 0).",
-        "naiveClaim": "Campaign \"Spring launch — product-drop creative\" reached ~900 customers and converted at 13.1%.",
+        "naiveClaim": "Campaign \"Spring launch - product-drop creative\" reached ~900 customers and converted at 13.1%.",
         "evidence": {
           "conv_t": 92,
           "n_t": 704,
@@ -401,7 +401,7 @@
       },
       {
         "key": "SPRING_EVERGREEN_CREATIVE",
-        "title": "Spring launch — evergreen creative",
+        "title": "Spring launch - evergreen creative",
         "segment": "Drop-lookalike audience (creative A/B vs product-drop)",
         "type": "experiment",
         "reach": 173,
@@ -417,7 +417,7 @@
         "accepted": false,
         "score": 0,
         "reason": "Raw conversion 8.2% but incremental lift +0.8% is not significant (p=0.887, 95% CI [-10.0%, +11.6%] includes 0) (note: power=0.07 to detect a 3% effect).",
-        "naiveClaim": "Campaign \"Spring launch — evergreen creative\" reached ~173 customers and converted at 8.2%.",
+        "naiveClaim": "Campaign \"Spring launch - evergreen creative\" reached ~173 customers and converted at 8.2%.",
         "evidence": {
           "conv_t": 12,
           "n_t": 146,
@@ -584,7 +584,7 @@
       "excluded": 0,
       "anchor": "2026-04-25"
     },
-    "brief": "**CREATIVE BRIEF: Second Purchase SMS Campaign**\n\n**Objective:** Drive repeat purchase among one-time buyers via aspirational messaging that reinforces brand value without discounting premium products.\n\n**Tone:** Confident, curated, exclusive—celebrate their first choice and invite them into the next chapter of their style journey.\n\n**Key Message:** Position new arrivals as natural complements to their existing purchase; emphasize craftsmanship, exclusivity, and belonging to a discerning community.\n\n**Creative Direction:** Feature complementary pieces, styling inspiration, or limited-availability items; leverage social proof (\"favorites this season\") to create urgency without price reduction.\n\n**Call-to-Action:** \"Discover what's next\" or \"Complete your collection\"—personal, forward-looking, premium.",
+    "brief": "**CREATIVE BRIEF: Second Purchase SMS Campaign**\n\n**Objective:** Drive repeat purchase among one-time buyers via aspirational messaging that reinforces brand value without discounting premium products.\n\n**Tone:** Confident, curated, exclusive-celebrate their first choice and invite them into the next chapter of their style journey.\n\n**Key Message:** Position new arrivals as natural complements to their existing purchase; emphasize craftsmanship, exclusivity, and belonging to a discerning community.\n\n**Creative Direction:** Feature complementary pieces, styling inspiration, or limited-availability items; leverage social proof (\"favorites this season\") to create urgency without price reduction.\n\n**Call-to-Action:** \"Discover what's next\" or \"Complete your collection\"-personal, forward-looking, premium.",
     "variants": [
       {
         "id": "V1",
@@ -594,7 +594,7 @@
       {
         "id": "V2",
         "channel": "sms",
-        "text": "Welcome to the inner circle. New arrivals this season—handpicked to complement your style. Explore exclusives → [link]"
+        "text": "Welcome to the inner circle. New arrivals this season-handpicked to complement your style. Explore exclusives → [link]"
       }
     ],
     "guardrail": {

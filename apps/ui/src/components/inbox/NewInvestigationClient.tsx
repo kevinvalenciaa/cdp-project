@@ -24,7 +24,7 @@ export function NewInvestigationClient() {
       });
       const payload = (await response.json()) as { investigation?: InvestigationDetail; error?: string };
       if (!response.ok || !payload.investigation) throw new Error(payload.error ?? "Could not create the investigation.");
-      router.push(`/opportunities/${payload.investigation.id}`);
+      router.push(`/investigations/${payload.investigation.id}`);
       router.refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not create the investigation.");
@@ -33,17 +33,17 @@ export function NewInvestigationClient() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] items-center justify-center px-5 py-10 lg:min-h-screen">
-      <div className="w-full max-w-2xl text-center">
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-ht-teal-tint">
-          <Sparkles className="h-5 w-5 text-ht-teal" aria-hidden />
+    <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center p-4 sm:p-6 lg:min-h-full lg:p-8">
+      <div className="w-full max-w-3xl px-5 py-10 text-center sm:px-10 sm:py-14">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] bg-ht-teal-tint">
+          <Sparkles className="h-6 w-6 text-ht-teal" aria-hidden />
         </div>
-        <h1 className="mt-4 text-xl font-semibold tracking-tight text-foreground">Start an investigation</h1>
+        <h1 className="mt-5 text-2xl font-semibold tracking-[-0.025em] text-foreground">Start an investigation</h1>
         <p className="mx-auto mt-1.5 max-w-lg text-sm text-muted-foreground">
           Describe the business outcome. The agent team will scan the warehouse, verify every claim, and keep this
           investigation available for contextual follow-ups.
         </p>
-        <div className="mt-7 text-left">
+        <div className="mx-auto mt-8 max-w-2xl text-left">
           <PromptInputBox onSend={create} isLoading={submitting} placeholder="What should the agents investigate?" />
         </div>
         {error && (

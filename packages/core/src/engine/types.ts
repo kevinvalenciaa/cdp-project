@@ -21,17 +21,17 @@ export interface Opportunity {
   accepted: boolean; // only verified incremental wins are accepted
   score: number; // reach × value × uplift (0 if not accepted)
   reason: string;
-  /** The headline a naive marketer sees — what the bare LLM judges. Null = no claim to judge. */
+  /** The headline a naive marketer sees - what the bare LLM judges. Null = no claim to judge. */
   naiveClaim: string | null;
   /** Side-by-side: what a bare LLM (no statistical verifier) concluded. Absent when there was no claim. */
   bareLlm?: { accepted: boolean; reason: string };
   /** Human-readable numeric facts backing the reason (rendered in the UI evidence tile). */
   evidence: Record<string, unknown>;
-  /** Machine trail: executed SQL + fingerprints + the stats call — stored, not implied. */
+  /** Machine trail: executed SQL + fingerprints + the stats call - stored, not implied. */
   provenance: Provenance;
   /** Explorer-stage hypothesis that led here (static fallback when no LLM ran). */
   hypothesis?: { rationale: string; source: "llm" | "static" };
-  /** Verifier check #2 — LLM groundedness cross-check of the claim vs its evidence. */
+  /** Verifier check #2 - LLM groundedness cross-check of the claim vs its evidence. */
   grounded?: { verdict: "pass" | "demote" | "n/a"; reason: string };
 }
 

@@ -10,7 +10,7 @@ export interface StorageAdapter {
   removeItem(key: string): Promise<void>;
 }
 
-/** In-memory adapter — tests and ephemeral use. */
+/** In-memory adapter - tests and ephemeral use. */
 export class MemoryStorage implements StorageAdapter {
   private m = new Map<string, string>();
 

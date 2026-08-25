@@ -39,7 +39,7 @@ describe("unit conventions", () => {
     expect(pp(-0.16)).toBe("-0.2pp");
   });
 
-  it("does not confuse the two scales — the regression that shipped", () => {
+  it("does not confuse the two scales - the regression that shipped", () => {
     const treatment = 13.068181818; // percent
     const upliftPp = 6.945732838; // percentage points
 
@@ -100,7 +100,7 @@ describe("accepted opportunities are visually distinguishable from their holdout
   });
 
   /**
-   * The bug did not just print wrong numbers — it made the holdout bar 99.5% the height of
+   * The bug did not just print wrong numbers - it made the holdout bar 99.5% the height of
    * treatment, so a 2.1x effect looked like no effect at all. Guard the visual, not just the text.
    */
   it.each(accepted.map((o) => [o.key, o] as const))("%s: holdout bar is visibly shorter", (_key, o) => {

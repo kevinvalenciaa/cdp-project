@@ -6,11 +6,11 @@ import type { Rng } from "../shared/rng.js";
  *   - server: learn posteriors from campaign_sends (delivery/posteriors.ts) and
  *     ship them in the decision bundle as a PolicySnapshot
  *   - device: @lift/sdk policy.ts selects an arm from the shipped snapshot
- *     (the sampling functions are copied there verbatim — the SDK cannot
+ *     (the sampling functions are copied there verbatim - the SDK cannot
  *     depend on core)
  *
  * runBandit() consumes this module and must produce byte-identical results to
- * the pre-extraction implementation (guarded by bandit.test.ts) — the RNG call
+ * the pre-extraction implementation (guarded by bandit.test.ts) - the RNG call
  * order is part of the contract.
  */
 
@@ -54,7 +54,7 @@ export function initPolicy(segments: string[], variants: string[]): PolicyState 
 
 /**
  * Thompson sampling: draw a rate per variant from its posterior, take the max.
- * Iterates variants in index order with strict-greater tie-breaking — that
+ * Iterates variants in index order with strict-greater tie-breaking - that
  * ordering is load-bearing for byte-identical replay.
  */
 export function selectVariant(state: PolicyState, segmentIdx: number, rng: Rng): number {

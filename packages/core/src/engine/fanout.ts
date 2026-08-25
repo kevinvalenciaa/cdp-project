@@ -53,7 +53,7 @@ async function classifyOne(client: Anthropic, ledger: CostLedger, creative: Crea
 
 /**
  * Fan-out: hundreds of parallel cheap-model (Haiku) calls, each classifying ONE creative
- * — instead of standing up a vector store. See docs/FANOUT_VS_RAG.md.
+ * - instead of standing up a vector store. See docs/FANOUT_VS_RAG.md.
  */
 export async function fanoutClassify(
   client: Anthropic,

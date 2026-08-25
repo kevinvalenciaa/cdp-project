@@ -3,13 +3,13 @@ import { callMcpTool } from "../harness/mcp-client.js";
 import { FREQUENCY_CAP } from "../delivery/compile.js";
 
 /**
- * The server half of the frequency cap — deterministic arithmetic over the
+ * The server half of the frequency cap - deterministic arithmetic over the
  * send ledger, replacing the prose rule that used to sit in guardrails.yaml
  * (where an LLM graded creative copy against "max 2 per week", which a message
  * body cannot violate). The device half is @lift/sdk frequency.ts; both derive
  * from the same FREQUENCY_CAP constant.
  *
- * The window anchors on MAX(sent_at) — the newest send in the warehouse — not
+ * The window anchors on MAX(sent_at) - the newest send in the warehouse - not
  * on the wall clock. The seeded calendar is fixed, so a wall-clock window
  * would silently exclude nobody forever; the data anchor is deterministic AND
  * actually demonstrates the exclusion.

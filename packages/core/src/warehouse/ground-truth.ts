@@ -27,7 +27,7 @@ function check(name: string, pass: boolean, detail: string): void {
   checks.push({ name, pass, detail });
 }
 
-/** Two-proportion z (normal approx) — inline so the gate needs no stats service. */
+/** Two-proportion z (normal approx) - inline so the gate needs no stats service. */
 function zScore(s: CampaignStat): number {
   const pbar = (s.rate_treat * s.n_treat + s.rate_ctrl * s.n_ctrl) / (s.n_treat + s.n_ctrl);
   const se = Math.sqrt(pbar * (1 - pbar) * (1 / s.n_treat + 1 / s.n_ctrl));
@@ -57,12 +57,12 @@ async function main(): Promise<void> {
   check(
     "cross-sell lift is POWERED (z ≥ 1.96 → engine will rank it)",
     !!cross && zScore(cross) >= 1.96,
-    `z=${cross ? zScore(cross).toFixed(2) : "—"} n=${cross?.n_treat}/${cross?.n_ctrl}`,
+    `z=${cross ? zScore(cross).toFixed(2) : "-"} n=${cross?.n_treat}/${cross?.n_ctrl}`,
   );
 
   const near = stats.get("RETARGET_NEAR_MISS");
   check("near-miss (RETARGET_NEAR_MISS) lift is small/insignificant", !!near && Math.abs(near.lift) < 0.04, `lift=${(num(near?.lift) * 100).toFixed(1)}pp`);
-  check("near-miss stays INSIGNIFICANT (z < 1.96 — the contrast holds)", !!near && zScore(near) < 1.96, `z=${near ? zScore(near).toFixed(2) : "—"}`);
+  check("near-miss stays INSIGNIFICANT (z < 1.96 - the contrast holds)", !!near && zScore(near) < 1.96, `z=${near ? zScore(near).toFixed(2) : "-"}`);
 
   const drop = stats.get("SPRING_DROP_CREATIVE");
   const ever = stats.get("SPRING_EVERGREEN_CREATIVE");
@@ -97,7 +97,7 @@ async function main(): Promise<void> {
     console.log(`  ${c.pass ? "PASS" : "FAIL"}  ${c.name}  [${c.detail}]`);
     if (!c.pass) allPass = false;
   }
-  console.log(allPass ? "\n✅ All planted signals recovered.\n" : "\n❌ Some planted signals are missing — fix the generator.\n");
+  console.log(allPass ? "\n✅ All planted signals recovered.\n" : "\n❌ Some planted signals are missing - fix the generator.\n");
   process.exit(allPass ? 0 : 1);
 }
 

@@ -12,12 +12,12 @@ import type { Attrs } from "./predicate.js";
 export const SDK_VERSION = "0.1.0";
 
 /**
- * The public facade. Init is deliberately one call with sane defaults — the
+ * The public facade. Init is deliberately one call with sane defaults - the
  * host supplies its API base and storage, and everything else has a working
  * default that can be overridden.
  */
 export interface LiftConfig {
-  /** e.g. http://192.168.1.20:3000 — the dashboard serving /api/bundle + /api/ingest. */
+  /** e.g. http://192.168.1.20:3000 - the dashboard serving /api/bundle + /api/ingest. */
   apiBase: string;
   /** Host storage (AsyncStorage in RN). Defaults to in-memory (non-durable!). */
   storage?: StorageAdapter;
@@ -80,7 +80,7 @@ export class LiftCompass {
       (() => ({
         wallMs: Date.now(),
         // performance.now() where available (RN/Hermes has it); otherwise ms
-        // since SDK init — still monotonic within the process, which is the
+        // since SDK init - still monotonic within the process, which is the
         // guarantee the ledger needs.
         monotonicMs:
           typeof globalThis.performance?.now === "function" ? globalThis.performance.now() : Date.now() - monotonicStart,
@@ -178,7 +178,7 @@ export class LiftCompass {
 
   /**
    * Decide what (if anything) renders on a surface. Distinguishes "no bundle
-   * loaded yet" from "bundle says nothing" — different renders for the host.
+   * loaded yet" from "bundle says nothing" - different renders for the host.
    */
   async decide(surface: string): Promise<Decision | { outcome: "no_bundle"; surface: string; reason: string }> {
     if (!this.bundle) {
@@ -282,7 +282,7 @@ export class LiftCompass {
     };
   }
 
-  /** Re-run a campaign's predicate against current attrs — DebugPanel explain. */
+  /** Re-run a campaign's predicate against current attrs - DebugPanel explain. */
   explain(campaignId: string): string {
     const c = this.bundle?.campaigns.find((x) => x.campaign_id === campaignId);
     if (!c) return "campaign not in bundle";

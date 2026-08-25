@@ -4,10 +4,10 @@ import type { CostLedger } from "../shared/cost.js";
 import type { Opportunity } from "./types.js";
 
 /**
- * Verifier check #2 — the LLM groundedness cross-check (check #1 is the statistical gate).
+ * Verifier check #2 - the LLM groundedness cross-check (check #1 is the statistical gate).
  * Asks: do the numbers asserted in the opportunity's claim actually appear in its stored
  * evidence? This is deliberately DEMOTE-ONLY: it can pull an accepted opportunity out of
- * the ranked list, never promote a rejected one — the statistical verdict stays the source
+ * the ranked list, never promote a rejected one - the statistical verdict stays the source
  * of truth, and an ungrounded narrative is disqualifying even when the stats pass.
  * Fail-closed like guardrails/guard.ts: if the verdict cannot be parsed after one retry,
  * the opportunity is demoted rather than waved through.
@@ -23,7 +23,7 @@ export async function checkGroundedness(client: Anthropic, ledger: CostLedger, o
     `(asserted: uplift=${opp.upliftPp?.toFixed(2)}pp, p=${opp.pValue?.toFixed(4)}, reach=${opp.reach}, value=$${opp.value.toFixed(2)})`;
   // Derive the rates deterministically and hand them to the judge: its job is checking
   // that the CLAIM TEXT agrees with the evidence numbers (groundedness), not re-doing
-  // division — small models flub arithmetic, and a false demote is a real cost.
+  // division - small models flub arithmetic, and a false demote is a real cost.
   const ev = opp.evidence as { conv_t?: number; n_t?: number; conv_c?: number; n_c?: number };
   const derived =
     ev.n_t && ev.n_c

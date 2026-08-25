@@ -48,13 +48,13 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
   return (
     <div
       className={cn(
-        "mb-2 flex items-center rounded-md py-2 text-left",
-        collapsed ? "mx-2 justify-center px-0" : "mx-3 w-[calc(100%-1.5rem)] gap-2 px-2.5",
+        "mb-4 flex items-center rounded-2xl border border-sidebar-border bg-card py-3 text-left shadow-ht-xs",
+        collapsed ? "mx-3 justify-center px-0" : "mx-4 w-[calc(100%-2rem)] gap-3 px-3",
       )}
       aria-label={collapsed ? `${name} workspace` : undefined}
       title={collapsed ? `${name} workspace` : undefined}
     >
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-ht-green-accent/20 text-[11px] font-semibold text-ht-green-accent">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ht-teal-tint text-[11px] font-semibold text-ht-teal">
         {initials || "W"}
       </span>
       {!collapsed && (
@@ -66,7 +66,7 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
             id="workspace-select"
             value={selectedId}
             onChange={(event) => void selectWorkspace(event.target.value)}
-            className="block w-full truncate bg-transparent text-[13px] font-medium text-sidebar-foreground outline-none"
+            className="block w-full truncate bg-transparent text-[13px] font-semibold text-foreground outline-none"
           >
             {workspaces.length === 0 && <option value="">Fashion Retailer</option>}
             {workspaces.map((workspace) => (
@@ -75,7 +75,7 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
               </option>
             ))}
           </select>
-          <span className="block truncate text-[11px] capitalize text-sidebar-foreground/50">
+          <span className="mt-0.5 block truncate text-[11px] capitalize text-sidebar-foreground/55">
             {selected?.role ?? "owner"} workspace
           </span>
         </span>

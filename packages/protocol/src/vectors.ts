@@ -2,7 +2,7 @@ import { z } from "zod";
 import { DecisionBundleSchema } from "./bundle.js";
 
 /**
- * Golden decision vectors — the contract's spec-as-data.
+ * Golden decision vectors - the contract's spec-as-data.
  *
  * Each vectors/*.json file freezes (bundle, ctx, ledger, clock) -> expected
  * decision. They were authored BEFORE the SDK implementation as the behavioural

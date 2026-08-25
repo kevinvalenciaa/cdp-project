@@ -61,7 +61,7 @@ export async function durableRun(
         const fresh = Date.now() - Date.parse(known.lastValidated ?? known.createdAt) < FRESH_DAYS * 86_400_000;
         if (fresh) {
           skippedFromMemory.push({ subject: cand.key, claim: known.claim });
-          continue; // recently-confirmed dead-end — do not re-litigate
+          continue; // recently-confirmed dead-end - do not re-litigate
         }
         // Stale dead-end: cheap deterministic re-verification (SQL + stats, no LLM). If it
         // still holds, refresh last_validated and grow confidence a notch; if the verdict
@@ -83,7 +83,7 @@ export async function durableRun(
             await memory.write(toInsight(opp, runId));
             insightsWritten += 1;
           } catch {
-            /* gate rejection or supersede race — ignore */
+            /* gate rejection or supersede race - ignore */
           }
         }
         if (opts.crashAfter && executedThisRun >= opts.crashAfter) {

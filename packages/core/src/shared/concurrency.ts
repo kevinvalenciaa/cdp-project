@@ -1,6 +1,6 @@
 /** Run an async fn over items with a bounded concurrency pool (rate-limit friendly).
  *  Order-preserving: results[i] always corresponds to items[i], regardless of which
- *  worker finished first — callers can rely on input order for deterministic output. */
+ *  worker finished first - callers can rely on input order for deterministic output. */
 export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
   let next = 0;

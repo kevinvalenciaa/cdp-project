@@ -1,6 +1,6 @@
 {
   "name": "09_no_campaign_for_surface",
-  "description": "A surface no campaign targets returns no_campaign — distinct from suppressed and from an unloaded bundle.",
+  "description": "A surface no campaign targets returns no_campaign - distinct from suppressed and from an unloaded bundle.",
   "bundle": {
     "protocol_version": 1,
     "bundle_id": "bnd_vec_1",
@@ -50,14 +50,14 @@
             "arm_id": "arm_a",
             "template": "banner",
             "title": "Complete the look",
-            "body": "You picked a favorite — here is the piece that pairs with it.",
+            "body": "You picked a favorite - here is the piece that pairs with it.",
             "cta": "Shop the pairing"
           },
           {
             "arm_id": "arm_b",
             "template": "modal",
             "title": "Your next find",
-            "body": "One order in — the second is where the story starts.",
+            "body": "One order in - the second is where the story starts.",
             "cta": "Browse new arrivals"
           }
         ],
@@ -92,14 +92,14 @@
             "arm_id": "arm_a",
             "template": "banner",
             "title": "Complete the look",
-            "body": "You picked a favorite — here is the piece that pairs with it.",
+            "body": "You picked a favorite - here is the piece that pairs with it.",
             "cta": "Shop the pairing"
           },
           {
             "arm_id": "arm_b",
             "template": "modal",
             "title": "Your next find",
-            "body": "One order in — the second is where the story starts.",
+            "body": "One order in - the second is where the story starts.",
             "cta": "Browse new arrivals"
           }
         ],

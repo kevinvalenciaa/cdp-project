@@ -1,5 +1,5 @@
 /**
- * Audience predicates — the canonical eligibility language.
+ * Audience predicates - the canonical eligibility language.
  *
  * One predicate, two compilations that MUST agree:
  *   - predicateToSql()            -> warehouse WHERE clause (server side)
@@ -21,7 +21,7 @@ export interface PredicateLeaf {
 
 export type Predicate = PredicateLeaf | { all: Predicate[] } | { any: Predicate[] } | { not: Predicate };
 
-/** Same quoting rules as the semantic layer's fmtValue — numbers raw, booleans TRUE/FALSE, strings ''-escaped. */
+/** Same quoting rules as the semantic layer's fmtValue - numbers raw, booleans TRUE/FALSE, strings ''-escaped. */
 function fmtValue(v: string | number | boolean): string {
   if (typeof v === "number") return String(v);
   if (typeof v === "boolean") return v ? "TRUE" : "FALSE";

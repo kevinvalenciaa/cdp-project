@@ -3,7 +3,7 @@ import { elapsedMs, parseWindowMs, type Clock } from "./clock.js";
 import type { StorageAdapter } from "./storage.js";
 
 /**
- * The frequency ledger — the device half of the cap the server enforces with a
+ * The frequency ledger - the device half of the cap the server enforces with a
  * GROUP BY over campaign_sends. Same rule, different machine: here it is a
  * bounded per-user history with monotonic-clock windows, because the device
  * has no database and an untrusted wall clock.
@@ -80,7 +80,7 @@ export interface CapCheck {
 }
 
 /**
- * Pure cap check over an entry list — evaluateBundle() calls this, so it takes
+ * Pure cap check over an entry list - evaluateBundle() calls this, so it takes
  * the entries as a value rather than reading the ledger object.
  * `campaignId` scopes campaign-level caps; global caps pass undefined.
  */

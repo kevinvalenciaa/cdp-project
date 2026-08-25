@@ -1,7 +1,7 @@
 /**
  * The clock is the hardest design decision in this SDK, so it gets its own file.
  *
- * evaluateBundle() must be PURE so the golden vectors are deterministic — which
+ * evaluateBundle() must be PURE so the golden vectors are deterministic - which
  * means "now" is injected. But wall-clock "now" is exactly what the Settings
  * app (or DST, or a confused traveller) manipulates to defeat a P7D frequency
  * cap. You cannot have both purity and an adversarial clock unless time is a
@@ -12,12 +12,12 @@
  *                 window arithmetic whenever the ledger entry shares bootId.
  *   - bootId      random id regenerated each boot, pairing monotonic stamps.
  *   - skewMs      serverTime - deviceWall from the last response's server_time
- *                 anchor (every response carries it — no extra round trip).
+ *                 anchor (every response carries it - no extra round trip).
  *
  * Window rule: same boot -> monotonic elapsed. Across boots -> skew-corrected
  * wall elapsed. Ambiguous (entry claims a FUTURE wall time) -> elapsed 0, i.e.
  * treated as just-sent: the cap stays engaged. On ambiguity we suppress rather
- * than show — a user who fiddles with the date gets fewer messages, never more.
+ * than show - a user who fiddles with the date gets fewer messages, never more.
  */
 
 export interface Clock {
@@ -27,7 +27,7 @@ export interface Clock {
   skewMs: number;
 }
 
-/** Provider of "now" — injectable so tests and vectors control time completely. */
+/** Provider of "now" - injectable so tests and vectors control time completely. */
 export type ClockSource = () => Clock;
 
 /** Parse "session" or the ISO-8601 duration subset used by caps (P7D, PT24H, PT30M, P1DT12H). */
@@ -51,7 +51,7 @@ export interface TimedEntry {
 
 /**
  * Milliseconds since `entry` happened, as seen from `now`. Never negative:
- * a negative wall delta means the clock moved backwards past the entry — that
+ * a negative wall delta means the clock moved backwards past the entry - that
  * is the ambiguous case, and 0 keeps the entry inside every window.
  */
 export function elapsedMs(now: Clock, entry: TimedEntry): number {

@@ -2,10 +2,10 @@ import { Rng } from "../shared/rng.js";
 import { initPolicy, posteriorBest, selectVariant, update } from "./policy.js";
 
 /**
- * AI-Decisioning analog — a contextual Thompson-sampling bandit that learns the best
+ * AI-Decisioning analog - a contextual Thompson-sampling bandit that learns the best
  * message variant PER SEGMENT from outcomes. This is RL/optimization over delivery, and
- * is kept in its OWN module, deliberately separate from the context-engineering harness —
- * mirroring how Hightouch's AI Decisioning is a separate product from their agent harness.
+ * is kept in its OWN module, deliberately separate from the context-engineering harness -
+ * keeping decisioning separate from the agent harness.
  *
  * Measurement mirrors AI Decisioning: lift vs a random holdout, and vs a naive best-on-
  * average ("human marketing") baseline.
