@@ -1,4 +1,4 @@
-# Proofloop: a causally credible agentic CDP
+# Proofloop: Agentic CDP
 
 Proofloop is a working prototype of a closed-loop customer data platform. It continuously analyzes warehouse data, ranks marketing opportunities, verifies incremental lift, drafts activation plans, and learns from measured outcomes.
 
