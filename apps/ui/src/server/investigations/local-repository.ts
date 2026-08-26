@@ -652,6 +652,35 @@ export class LocalInvestigationRepository implements InvestigationRepository {
     return readState().runs.find((run) => run.id === runId) ?? null;
   }
 
+  async isCancelRequested(runId: string): Promise<boolean> {
+    return readState().runs.find((run) => run.id === runId)?.cancelRequested ?? false;
+  }
+
+  async failMessage(messageId: string, error: string): Promise<void> {
+    await mutate((state) => {
+      const input = state.messages.find((message) => message.id === messageId);
+      if (!input || input.status === "complete" || input.status === "cancelled") return;
+      input.status = "error";
+      input.error = error;
+      const reply: InvestigationMessage = {
+        id: randomUUID(),
+        investigationId: input.investigationId,
+        role: "assistant",
+        content: "That turn failed to complete. You can send the message again.",
+        status: "error",
+        intent: "answer",
+        clientMessageId: null,
+        runId: null,
+        citations: [],
+        error,
+        createdAt: iso(),
+      };
+      state.messages.push(reply);
+      this.addSystemEvent(state, input.investigationId, reply.id, null, { kind: "error", message: error });
+      this.touch(state, input.investigationId, reply.createdAt);
+    });
+  }
+
   async getRunCheckpointEvents(runId: string): Promise<EngineEvent[]> {
     return readState()
       .events.filter(

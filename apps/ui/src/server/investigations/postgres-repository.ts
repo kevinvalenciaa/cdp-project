@@ -782,6 +782,47 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
     return rows[0] ? runFrom(rows[0]) : null;
   }
 
+  async isCancelRequested(runId: string): Promise<boolean> {
+    // Deliberately narrow: this is polled once per streamed engine event, and
+    // `select *` would deserialize the context and result JSONB every time - tens
+    // of KB per event, dozens of times per run, to read one boolean.
+    const rows = await this.sql<Row[]>`
+      select cancel_requested from public.investigation_runs where id = ${runId}::uuid
+    `;
+    return Boolean(rows[0]?.cancel_requested);
+  }
+
+  async failMessage(messageId: string, error: string): Promise<void> {
+    await this.sql.begin(async (tx) => {
+      const inputs = await tx<Row[]>`
+        update public.investigation_messages
+        set status = 'error', error = ${error}
+        where id = ${messageId}::uuid and status not in ('complete', 'cancelled')
+        returning workspace_id, investigation_id
+      `;
+      if (!inputs[0]) return;
+      const replies = await tx<Row[]>`
+        insert into public.investigation_messages (
+          workspace_id, investigation_id, role, content, status, intent, error
+        )
+        values (
+          ${String(inputs[0].workspace_id)}::uuid, ${String(inputs[0].investigation_id)}::uuid,
+          'assistant', 'That turn failed to complete. You can send the message again.', 'error', 'answer', ${error}
+        )
+        returning id
+      `;
+      await this.insertSystemEvent(
+        tx,
+        String(inputs[0].workspace_id),
+        String(inputs[0].investigation_id),
+        String(replies[0]!.id),
+        null,
+        { kind: "error", message: error },
+      );
+      await this.touch(tx, String(inputs[0].investigation_id));
+    });
+  }
+
   async getRunCheckpointEvents(runId: string): Promise<EngineEvent[]> {
     const rows = await this.sql<Row[]>`
       select payload

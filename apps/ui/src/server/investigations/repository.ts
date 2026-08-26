@@ -81,10 +81,19 @@ export interface InvestigationRepository {
   heartbeatJob(jobId: string, workerId: string, leaseSeconds: number): Promise<void>;
   getMessage(messageId: string): Promise<InvestigationMessage | null>;
   getRun(runId: string): Promise<InvestigationRun | null>;
+  /** Narrow cancellation probe, polled per streamed event - never load the whole run for this. */
+  isCancelRequested(runId: string): Promise<boolean>;
   getRunCheckpointEvents(runId: string): Promise<EngineEvent[]>;
   getScopedResults(investigationId: string): Promise<OpportunityOccurrence[]>;
   completeAnswer(messageId: string, content: string, citations: string[]): Promise<void>;
   completeClarification(messageId: string, question: string): Promise<void>;
+  /**
+   * Terminal failure for a message whose assistant turn never produced a reply.
+   * Without this a job that exhausts its retries left the input message "queued"
+   * forever, and enqueueMessage then rejected every later message with CONFLICT -
+   * an investigation locked with no way out.
+   */
+  failMessage(messageId: string, error: string): Promise<void>;
   enqueueRun(messageId: string, context: InvestigationContextV1, goal: string): Promise<InvestigationRun>;
   markRunRunning(runId: string): Promise<void>;
   appendEngineEvent(run: InvestigationRun, event: EngineEvent, dedupeKey: string): Promise<InvestigationEventEnvelope | null>;

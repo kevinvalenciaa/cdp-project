@@ -142,6 +142,7 @@ export const demoProvider: DataProvider = {
     const events = buildActivity({ ...RUN, goal });
     for (const e of events) {
       await sleep(e.kind === "planning" ? 900 : e.kind === "candidate_verified" ? 520 : e.kind === "run_finished" ? 300 : 180, signal);
+      if (signal?.aborted) return; // sleep resolves on abort; stop rather than emit a stale event
       yield e;
     }
   },
@@ -157,9 +158,11 @@ export const demoProvider: DataProvider = {
       "Measuring incremental lift against a holdout…",
     ]) {
       await sleep(650, signal);
+      if (signal?.aborted) return;
       yield { kind: "step", label };
     }
     await sleep(400, signal);
+    if (signal?.aborted) return;
     yield { kind: "act_finished", result };
   },
 
