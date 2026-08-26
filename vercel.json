@@ -6,6 +6,7 @@
   "outputDirectory": "apps/ui/.next",
   "env": {
     "LIFT_MODE": "demo",
-    "LIFT_PUBLIC_DEMO": "true"
+    "LIFT_PUBLIC_DEMO": "true",
+    "LIFT_INVESTIGATION_STATE_PATH": "/tmp/lift/investigations-state.json"
   }
 }

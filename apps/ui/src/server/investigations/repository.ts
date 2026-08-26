@@ -52,6 +52,8 @@ export interface InvestigationRepository {
     investigationId: string,
     input: { content: string; clientMessageId: string; intentHint: MessageIntent },
   ): Promise<InvestigationMessage>;
+  /** Cheap scoped existence probe - the SSE stream must not load a whole investigation to 404. */
+  investigationExists(ctx: RequestContext, investigationId: string): Promise<boolean>;
   listEvents(ctx: RequestContext, investigationId: string, after: number): Promise<InvestigationEventEnvelope[]>;
   waitForInvestigationEvent?(
     investigationId: string,

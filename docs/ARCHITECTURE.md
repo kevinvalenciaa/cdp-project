@@ -12,7 +12,7 @@ Every root `pnpm` script maps to a runner in `packages/core/src/run/`:
 |---|---|---|---|
 | `pnpm seed` | `warehouse/seed.ts` - builds the DuckDB warehouse + writes `GROUND_TRUTH.md` | no | no |
 | `pnpm ground-truth` | `warehouse/ground-truth.ts` - proves every planted signal is recoverable (exit-code gate) | no | no |
-| `pnpm opportunities` | `run/opportunities.ts` - the ranked board, streamed live with stage headers + the bare-LLM contrast (gated) | **yes** | **yes** (`pnpm stats:serve`) |
+| `pnpm opportunities` | `run/opportunities.ts` - the ranked board, streamed live with stage headers + the bare-LLM contrast (gated) | **yes** | spawned automatically |
 | `pnpm demo` | `run/demo.ts` - the LLM harness investigating one goal (plan, pivot, subagent, scratchpad) | **yes** | **yes** |
 | `pnpm fanout` | `run/fanout-demo.ts` - parallel Haiku classification + guardrails | **yes** | no |
 | `pnpm durable` | `run/durable-demo.ts` - memory compounding + crash-resume (deterministic, $0) | no | **yes** |

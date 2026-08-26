@@ -484,28 +484,67 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
     return rows.map(eventFrom);
   }
 
+  /**
+   * One process-wide LISTEN, fanned out to every waiting stream.
+   *
+   * This used to LISTEN on entry and UNLISTEN in the finally, and it is called
+   * once per idle second per connected client. postgres.js backs listen() with a
+   * single shared max:1 connection, so N viewers meant 2N extra serialized round
+   * trips per second queued through one socket - and a NOTIFY arriving between an
+   * UNLISTEN and the next LISTEN was simply dropped, which quietly degraded the
+   * long-poll into a one-second poll while still paying for the churn.
+   */
+  private listenerReady: Promise<void> | null = null;
+  private readonly eventWaiters = new Map<string, Set<() => void>>();
+
+  private async ensureEventListener(): Promise<void> {
+    this.listenerReady ??= this.sql
+      .listen("investigation_events", (payload) => {
+        const waiters = this.eventWaiters.get(String(payload));
+        if (!waiters) return;
+        // Copy before waking: each callback removes itself from the set.
+        for (const wake of [...waiters]) wake();
+      })
+      .then(() => undefined)
+      .catch((error) => {
+        // Fall back to plain polling rather than failing the stream.
+        this.listenerReady = null;
+        console.error("[repository] could not LISTEN for investigation events:", error);
+      });
+    return this.listenerReady;
+  }
+
   async waitForInvestigationEvent(
     investigationId: string,
     signal: AbortSignal,
     timeoutMs: number,
   ): Promise<void> {
-    let wake: (() => void) | null = null;
-    const notified = new Promise<void>((resolve) => {
-      wake = resolve;
+    await this.ensureEventListener();
+    const waiters = this.eventWaiters.get(investigationId) ?? new Set<() => void>();
+    this.eventWaiters.set(investigationId, waiters);
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        waiters.delete(finish);
+        if (waiters.size === 0) this.eventWaiters.delete(investigationId);
+        signal.removeEventListener("abort", finish);
+        resolve();
+      };
+      const timer = setTimeout(finish, timeoutMs);
+      signal.addEventListener("abort", finish, { once: true });
+      waiters.add(finish);
     });
-    const listener = await this.sql.listen("investigation_events", (payload) => {
-      if (payload === investigationId) wake?.();
-    });
-    const onAbort = () => wake?.();
-    signal.addEventListener("abort", onAbort, { once: true });
-    const timer = setTimeout(() => wake?.(), timeoutMs);
-    try {
-      await notified;
-    } finally {
-      clearTimeout(timer);
-      signal.removeEventListener("abort", onAbort);
-      await listener.unlisten();
-    }
+  }
+
+  async investigationExists(ctx: RequestContext, investigationId: string): Promise<boolean> {
+    const rows = await this.sql<Row[]>`
+      select 1 from public.investigations
+      where id = ${investigationId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+    `;
+    return rows.length > 0;
   }
 
   async listWorkspaceEvents(ctx: RequestContext, limit = 200): Promise<InvestigationEventEnvelope[]> {

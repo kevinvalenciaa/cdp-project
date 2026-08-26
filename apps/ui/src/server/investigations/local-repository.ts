@@ -475,6 +475,11 @@ export class LocalInvestigationRepository implements InvestigationRepository {
     });
   }
 
+  async investigationExists(ctx: RequestContext, investigationId: string): Promise<boolean> {
+    const item = readState().investigations.find((candidate) => candidate.id === investigationId);
+    return item != null && item.workspaceId === ctx.workspaceId;
+  }
+
   async listEvents(ctx: RequestContext, investigationId: string, after: number): Promise<InvestigationEventEnvelope[]> {
     const state = readState();
     const investigation = state.investigations.find((item) => item.id === investigationId);

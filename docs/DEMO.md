@@ -6,7 +6,9 @@ Prefix agent commands with `MODEL_REASONING=claude-haiku-4-5-20251001` if Sonnet
 ## 0:00–0:20 - The job-to-be-done
 > "A marketer asks: grow second purchases from one-time buyers. Most tools give 30 undifferentiated ideas. Watch this give a short, ranked list - each proven with a holdout."
 
-Show the board: `pnpm board && pnpm ui:dev` → open `localhost:3000`.
+Show the board: `pnpm ui:dev` → open `localhost:3000`.
+(`board.json` and `bundle.json` are committed, so there is nothing to regenerate.
+`pnpm board` rebuilds them from a real engine run and needs `ANTHROPIC_API_KEY`.)
 
 ## 0:20–0:50 - The harness thinking
 Run `pnpm demo`. Point at the trace:
