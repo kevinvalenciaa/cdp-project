@@ -69,13 +69,17 @@ export function OpportunityDetail({
   const result = finished?.result ?? null;
   const lastStep = [...events].reverse().find((e) => e.kind === "step") as Extract<ActivationEvent, { kind: "step" }> | undefined;
   const launching = status === "streaming";
+  // An opportunity that is already live cannot be launched again - the API now
+  // answers 409, and the button has to say so rather than offering the action.
+  const alreadyLive = activationStatus === "live";
+  const canLaunch = canActivate && !alreadyLive && Boolean(occurrenceId);
 
   function handleOpenChange(next: boolean) {
     if (!next) reset();
     onOpenChange(next);
   }
   function approve() {
-    if (!o || !canActivate || !occurrenceId) return;
+    if (!o || !canLaunch || !occurrenceId) return;
     const params = new URLSearchParams({ key: o.key, occurrenceId });
     start(`/api/activations/stream?${params.toString()}`, (e) => {
       if (e.kind === "act_finished") toast.success(`Launched - measured ${e.result.measurement.upliftPp >= 0 ? "+" : ""}${e.result.measurement.upliftPp.toFixed(1)}pp lift`);
@@ -320,6 +324,11 @@ export function OpportunityDetail({
                   launching.
                 </div>
               )}
+              {canActivate && alreadyLive && (
+                <div className="rounded-2xl border border-border bg-background p-4 text-sm text-muted-foreground">
+                  This opportunity is already live. Its measured result is on the Launched screen.
+                </div>
+              )}
             </TabsContent>
           )}
 
@@ -365,11 +374,11 @@ export function OpportunityDetail({
               </Button>
               <Button
                 onClick={approve}
-                disabled={launching || !canActivate || !occurrenceId}
+                disabled={launching || !canLaunch}
                 className="bg-primary text-primary-foreground hover:bg-ht-teal-hover"
               >
                 {launching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {launching ? "Launching…" : "Approve & launch"}
+                {launching ? "Launching…" : alreadyLive ? "Already live" : "Approve & launch"}
               </Button>
             </>
           ) : (

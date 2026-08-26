@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { monthlyImpact, moneyCompact, pp } from "@/lib/format";
 import type {
   InvestigationContextV1,
+  InvestigationMessage,
   JobRecord,
   OpportunityOccurrence,
   RequestContext,
@@ -11,11 +12,15 @@ import { getProvider } from "@/server/data-provider";
 import { getInvestigationRepository } from "./index";
 
 const LEASE_SECONDS = 60;
+/** How long to wait before re-draining a queue that still holds backed-off retries. */
+const RETRY_SWEEP_MS = Math.max(250, Number(process.env.WORKER_RETRY_SWEEP_MS ?? 2_500));
 const ASSISTANT_CONCURRENCY = Math.max(1, Number(process.env.ASSISTANT_WORKER_CONCURRENCY ?? 4));
 const ENGINE_CONCURRENCY = Math.max(1, Number(process.env.ENGINE_WORKER_CONCURRENCY ?? 1));
+const CONCURRENCY: Record<JobRecord["queue"], number> = {
+  assistant: ASSISTANT_CONCURRENCY,
+  engine: ENGINE_CONCURRENCY,
+};
 const activeControllers = new Map<string, AbortController>();
-let assistantDrain: Promise<void> | null = null;
-let engineDrain: Promise<void> | null = null;
 
 function workerContext(job: JobRecord): RequestContext {
   return {
@@ -62,16 +67,20 @@ function groundedAnswer(content: string, results: OpportunityOccurrence[]) {
   };
 }
 
-async function buildContext(job: JobRecord, messageId: string): Promise<InvestigationContextV1> {
+/**
+ * `message` and `results` are passed in rather than re-read: processAssistantJob
+ * has already fetched both, and against the local repository each repeat read is
+ * another synchronous parse of the whole state file.
+ */
+async function buildContext(
+  job: JobRecord,
+  message: InvestigationMessage,
+  results: OpportunityOccurrence[],
+): Promise<InvestigationContextV1> {
   const repository = await getInvestigationRepository();
-  const message = await repository.getMessage(messageId);
-  if (!message) throw new Error("Input message no longer exists.");
   const investigation = await repository.getInvestigation(workerContext(job), job.investigationId);
   if (!investigation) throw new Error("Investigation no longer exists.");
-  const [results, workspaceInsights] = await Promise.all([
-    repository.getScopedResults(job.investigationId),
-    repository.listInsights(workerContext(job)),
-  ]);
+  const workspaceInsights = await repository.listInsights(workerContext(job));
   return {
     version: 1,
     objective: investigation.objective,
@@ -117,7 +126,7 @@ async function processAssistantJob(job: JobRecord): Promise<void> {
     const answer = groundedAnswer(message.content, results);
     await repository.completeAnswer(message.id, answer.content, answer.citations);
   } else {
-    const context = await buildContext(job, message.id);
+    const context = await buildContext(job, message, results);
     await repository.enqueueRun(message.id, context, message.content);
   }
 }
@@ -138,7 +147,12 @@ async function processEngineJob(job: JobRecord, workerId: string): Promise<void>
   const controller = new AbortController();
   activeControllers.set(run.id, controller);
   const heartbeat = setInterval(() => {
-    void repository.heartbeatJob(job.id, workerId, LEASE_SECONDS);
+    // A rejection here used to be unhandled: `void` silences the lint warning but
+    // attaches no handler, and Node's default --unhandled-rejections=throw turns a
+    // single transient DB blip into a dead web server mid-run.
+    repository.heartbeatJob(job.id, workerId, LEASE_SECONDS).catch((error) => {
+      console.error(`[worker] heartbeat failed for job ${job.id}:`, error);
+    });
   }, 15_000);
   let eventIndex = 0;
   let result = null;
@@ -148,8 +162,7 @@ async function processEngineJob(job: JobRecord, workerId: string): Promise<void>
       checkpointEvents,
       workspaceInsights: run.context.workspaceInsights,
     })) {
-      const latest = await repository.getRun(run.id);
-      if (latest?.cancelRequested) controller.abort();
+      if (await repository.isCancelRequested(run.id)) controller.abort();
       if (controller.signal.aborted) break;
       if (event.kind === "cost") streamedCost = event.usd;
       const eventWithCost =
@@ -166,61 +179,136 @@ async function processEngineJob(job: JobRecord, workerId: string): Promise<void>
       if (eventWithCost.kind === "run_finished") result = eventWithCost.result;
       if (event.kind === "error") throw new Error(event.message);
     }
-    const finalRun = await repository.getRun(run.id);
-    if (finalRun?.cancelRequested || controller.signal.aborted) {
+    if (controller.signal.aborted || (await repository.isCancelRequested(run.id))) {
       await repository.finalizeRunCancellation(run.id);
       return;
     }
     if (!result) throw new Error("The engine stream ended without a final result.");
     await repository.completeRun(run.id, result);
+  } catch (error) {
+    // A provider that tears its stream down on abort surfaces as a throw. That is
+    // a cancellation the user asked for, not a failed attempt to retry.
+    if (controller.signal.aborted || (await repository.isCancelRequested(run.id))) {
+      await repository.finalizeRunCancellation(run.id);
+      return;
+    }
+    throw error;
   } finally {
     clearInterval(heartbeat);
     activeControllers.delete(run.id);
   }
 }
 
-async function drain(queue: JobRecord["queue"]): Promise<void> {
+/** `retryPending` means the queue still holds work that is only waiting on a backoff. */
+type DrainOutcome = { retryPending: boolean };
+
+async function drain(queue: JobRecord["queue"]): Promise<DrainOutcome> {
   const repository = await getInvestigationRepository();
   const workerId = `${process.pid}:${queue}:${randomUUID()}`;
+  let retryPending = false;
   while (true) {
-    const job = await repository.claimJob(queue, workerId, LEASE_SECONDS);
-    if (!job) return;
+    let job: JobRecord | null;
+    try {
+      // claimJob used to sit outside the try, so a transient failure rejected the
+      // whole drain promise instead of ending the pass cleanly.
+      job = await repository.claimJob(queue, workerId, LEASE_SECONDS);
+    } catch (error) {
+      console.error(`[worker] could not claim from the ${queue} queue:`, error);
+      return { retryPending: true };
+    }
+    if (!job) return { retryPending };
     try {
       if (queue === "assistant") await processAssistantJob(job);
       else await processEngineJob(job, workerId);
       await repository.completeJob(job.id);
+      // Routing an "investigate" turn enqueues an engine job. Wake that queue now
+      // rather than depending on the assistant pass finishing first.
+      if (queue === "assistant") pump("engine");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (job.runId && job.attempts >= job.maxAttempts) await repository.failRun(job.runId, message);
-      await repository.failJob(job.id, message);
+      const terminal = job.attempts >= job.maxAttempts;
+      try {
+        if (terminal) {
+          // Assistant jobs carry no runId, so failRun never fired for them and the
+          // input message stayed "queued" forever. enqueueMessage then rejected
+          // every later message with CONFLICT and the investigation was locked
+          // with no way out - no send, no cancel, no archive.
+          if (job.runId) await repository.failRun(job.runId, message);
+          else if (job.messageId) await repository.failMessage(job.messageId, message);
+        } else {
+          retryPending = true;
+        }
+        await repository.failJob(job.id, message);
+      } catch (bookkeepingError) {
+        console.error(`[worker] could not record the failure of job ${job.id}:`, bookkeepingError);
+        return { retryPending: true };
+      }
     }
   }
 }
 
-export function kickInvestigationWorkers(): void {
-  if (!assistantDrain) {
-    assistantDrain = Promise.all(
-      Array.from({ length: ASSISTANT_CONCURRENCY }, () => drain("assistant")),
-    ).then(() => undefined).finally(() => {
-      assistantDrain = null;
-      // Routing may have enqueued an engine job after the engine drain checked
-      // an empty queue, so give that queue one more finite drain.
-      if (!engineDrain) {
-        engineDrain = Promise.all(
-          Array.from({ length: ENGINE_CONCURRENCY }, () => drain("engine")),
-        ).then(() => undefined).finally(() => {
-          engineDrain = null;
-        });
+type QueueState = {
+  running: Promise<void> | null;
+  rekick: boolean;
+  sweep: ReturnType<typeof setTimeout> | null;
+};
+
+const queues: Record<JobRecord["queue"], QueueState> = {
+  assistant: { running: null, rekick: false, sweep: null },
+  engine: { running: null, rekick: false, sweep: null },
+};
+
+/**
+ * Start a pass over `queue`, or record that another one is owed.
+ *
+ * The old version no-opped whenever a drain handle was non-null, and the handle
+ * only cleared once every concurrent drain had already returned empty. A job
+ * enqueued in that window was silently orphaned: nothing polls in the web
+ * process, so the UI span on "Investigation running..." forever.
+ */
+function pump(queue: JobRecord["queue"]): void {
+  const state = queues[queue];
+  if (state.sweep) {
+    clearTimeout(state.sweep);
+    state.sweep = null;
+  }
+  if (state.running) {
+    state.rekick = true;
+    return;
+  }
+  state.rekick = false;
+  state.running = Promise.all(Array.from({ length: CONCURRENCY[queue] }, () => drain(queue)))
+    .then((outcomes) => outcomes.some((outcome) => outcome.retryPending))
+    .catch((error) => {
+      console.error(`[worker] the ${queue} drain failed:`, error);
+      return true;
+    })
+    .then((retryPending) => {
+      state.running = null;
+      if (state.rekick) {
+        pump(queue);
+      } else if (retryPending) {
+        // failJob defers a retry by a couple of seconds. Nothing else wakes the
+        // queue inside the web process, so without this sweep one transient
+        // failure parked the job indefinitely.
+        state.sweep = setTimeout(() => {
+          state.sweep = null;
+          pump(queue);
+        }, RETRY_SWEEP_MS);
+        state.sweep.unref?.();
       }
     });
-  }
-  if (!engineDrain) {
-    engineDrain = Promise.all(
-      Array.from({ length: ENGINE_CONCURRENCY }, () => drain("engine")),
-    ).then(() => undefined).finally(() => {
-      engineDrain = null;
-    });
-  }
+}
+
+export function kickInvestigationWorkers(): void {
+  pump("assistant");
+  pump("engine");
+}
+
+/** Run both queues to quiescence in the caller's turn. Used by tests and the CLI. */
+export async function drainInvestigationQueues(): Promise<void> {
+  await drain("assistant");
+  await drain("engine");
 }
 
 export function abortActiveRun(runId: string): void {

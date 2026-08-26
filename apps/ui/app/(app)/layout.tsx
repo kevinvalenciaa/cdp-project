@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { LayoutShell } from "@/components/shell/LayoutShell";
-import { SIDEBAR_COOKIE_NAME } from "@/components/ui/sidebar";
+import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-cookie";
 import { getRequestContext } from "@/server/auth";
 
 // Always render fresh (live data updates per request; harmless for demo).

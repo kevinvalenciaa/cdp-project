@@ -118,8 +118,30 @@ A verified opportunity compiles into a portable decision bundle that the device 
 
 ## Deploy
 
-- **Demo on Vercel:** run `vercel`. The included `vercel.json` pins `LIFT_MODE=demo`, which needs no API key or Python runtime.
-- **Live web and worker:** configure Supabase, build the image, then run `docker compose -f docker-compose.worker.yml up`. The web process serves Next.js; the worker owns leased assistant and engine jobs.
+- **Demo on Vercel:** run `vercel`. The included `vercel.json` sets
+  `LIFT_MODE=demo` (no API key or Python runtime), `LIFT_PUBLIC_DEMO=true`
+  (serving anonymously is refused in production unless it is chosen on purpose),
+  and points the demo state file at `/tmp`, the only writable path on a Lambda.
+  There is no separate worker there, so the event stream pumps the queues for as
+  long as a client is watching.
+- **Live web and durable worker:** configure Supabase, then
+  `cp .env.example .env`, fill it in, and run
+  `docker compose -f docker-compose.worker.yml up --build`. The web process
+  serves Next.js; the long-lived worker owns leased assistant and engine jobs.
+  Two requirements the compose file now enforces rather than leaving to
+  discovery: `DATABASE_URL` is mandatory, because the two containers coordinate
+  only through Postgres, and `NEXT_PUBLIC_SUPABASE_*` are passed as **build**
+  args, because Next inlines them into the client bundle at build time.
+
+To run the production server locally:
+
+```bash
+pnpm ui:build && LIFT_PUBLIC_DEMO=true pnpm ui:start
+```
+
+`LIFT_PUBLIC_DEMO` is needed because `next start` sets `NODE_ENV=production`,
+where the app refuses to serve without authentication unless the anonymous demo
+is opted into explicitly.
 
 ## Known limits
 

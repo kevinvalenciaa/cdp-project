@@ -45,12 +45,31 @@ export interface DataProvider {
   ingest(batch: EventBatch): Promise<IngestAck>;
 }
 
+/**
+ * Resolves early on abort rather than rejecting.
+ *
+ * Rejecting made cancellation look like a crash: the demo provider sits in here
+ * for most of a run, so aborting threw out of the consumer's `for await` before
+ * it could reach its own cancellation handling, and the worker booked it as a
+ * failed attempt. Callers detect cancellation by checking `signal.aborted` after
+ * the await, which is what every caller here already does.
+ *
+ * The listener is registered with `once` and removed on the normal path, so a
+ * long run does not pile up one listener per event on a single signal.
+ */
 export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
-  return new Promise((res, rej) => {
-    const t = setTimeout(res, ms);
-    signal?.addEventListener("abort", () => {
-      clearTimeout(t);
-      rej(new Error("aborted"));
-    });
+  return new Promise((resolve) => {
+    if (signal?.aborted) {
+      resolve();
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const finish = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", finish);
+      resolve();
+    };
+    timer = setTimeout(finish, ms);
+    signal?.addEventListener("abort", finish, { once: true });
   });
 }

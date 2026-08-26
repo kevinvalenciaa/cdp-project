@@ -5,10 +5,11 @@ import { Loader2, Sparkles } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 
-export function LoginClient({ configured }: { configured: boolean }) {
+export function LoginClient({ configured, error = null }: { configured: boolean; error?: string | null }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [callbackError, setCallbackError] = useState<string | null>(error);
 
   async function signIn(event: React.FormEvent) {
     event.preventDefault();
@@ -17,6 +18,7 @@ export function LoginClient({ configured }: { configured: boolean }) {
       return;
     }
     setLoading(true);
+    setCallbackError(null);
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -34,6 +36,11 @@ export function LoginClient({ configured }: { configured: boolean }) {
         </div>
         <h1 className="mt-5 text-2xl font-semibold tracking-[-0.025em] text-foreground">Sign in to Proofloop</h1>
         <p className="mt-1 text-sm text-muted-foreground">Use your workspace email to continue.</p>
+        {callbackError && (
+          <p role="alert" className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {callbackError}
+          </p>
+        )}
         <form onSubmit={signIn} className="mt-6 space-y-4">
           <label className="block">
             <span className="text-xs font-medium text-foreground">Email</span>

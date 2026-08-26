@@ -14,8 +14,20 @@ COPY . .
 
 RUN pnpm install --frozen-lockfile
 RUN cd services/stats && uv sync
-RUN pnpm --filter @lift/core build
+# Build the libraries topologically (protocol -> sdk -> core) before anything that
+# resolves them through their dist entrypoints. .dockerignore strips **/dist, so
+# nothing arrives prebuilt in the build context.
+RUN pnpm --filter "./packages/**" build
 RUN pnpm --filter @lift/core seed          # build the synthetic warehouse + ground truth
+
+# Next inlines NEXT_PUBLIC_* at build time, so Supabase credentials have to be
+# present here - supplying them only via env_file at run time leaves the browser
+# client holding `undefined` and no one can sign in. Omit them to build the
+# no-auth demo image; docker-compose.worker.yml passes them through as build args.
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
 RUN pnpm --filter @lift/ui build
 
 ENV LIFT_MODE=live

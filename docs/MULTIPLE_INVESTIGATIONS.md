@@ -3,7 +3,9 @@
 The Opportunities product now has two layers:
 
 - `/opportunities` is the workspace-wide current-truth inbox.
-- `/opportunities/[investigationId]` is a persistent conversation whose Results drawer is scoped to that investigation.
+- `/investigations/[investigationId]` is a persistent conversation whose Results
+  drawer is scoped to that investigation. (`/opportunities/[investigationId]` is
+  a redirect kept for older links.)
 
 Every verified candidate is stored as an immutable occurrence. A workspace projection points to the newest occurrence for each opportunity key, so a later rejection supersedes an older accepted result without erasing its history. Only a current, accepted, unexpired occurrence may be activated.
 
@@ -14,16 +16,29 @@ Submitting a message persists it and a job in one transaction. Assistant jobs cl
 Run both processes in production:
 
 ```bash
-pnpm ui:dev
-pnpm ui:worker
+pnpm ui:build                             # builds @lift/protocol, @lift/sdk, @lift/core, then Next
+pnpm ui:start                             # the production server, not next dev
+pnpm ui:worker                            # in a second process
 ```
 
 The web process may run on Vercel, while the live engine worker needs a long-lived Node container with the existing warehouse and Stats MCP dependencies.
 
 The same production image can run both roles with
-`docker compose -f docker-compose.worker.yml up`. The worker has no public
-port; its 60-second leases make an interrupted job recoverable by another
+`docker compose -f docker-compose.worker.yml up --build`. The worker has no
+public port; its 60-second leases make an interrupted job recoverable by another
 worker after the lease expires. `/api/health` is the web readiness endpoint.
+
+**`DATABASE_URL` is mandatory for the two-process topology.** Without it each
+process falls back to its own local state file, so the web container enqueues
+jobs the worker never sees and investigations sit `queued` forever with no error.
+The compose file fails fast rather than letting that happen silently.
+
+Where no separate worker exists - the Vercel demo, or a single `pnpm ui:dev` -
+the web process drains the queues itself. The POST handlers kick the workers and
+return, which is only sufficient while the process stays alive, so the
+investigation event stream also re-pumps the queues every couple of seconds for
+as long as a client is watching. That is what makes create -> run -> results
+complete on a platform that suspends the instance as soon as a response flushes.
 
 ## Persistence modes
 

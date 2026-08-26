@@ -28,7 +28,7 @@ import type {
   WorkspaceRole,
   WorkspaceSummary,
 } from "@/lib/investigations";
-import { canAdmin, canWrite, type InvestigationRepository, RepositoryError } from "./repository";
+import { boundedLimit, canAdmin, canWrite, type InvestigationRepository, RepositoryError } from "./repository";
 
 type Row = Record<string, unknown>;
 type QuerySql = Sql | TransactionSql;
@@ -165,10 +165,14 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
 
   async resolveWorkspace(user: { id: string; email: string }, preferredWorkspaceId?: string): Promise<RequestContext> {
     return this.sql.begin(async (tx) => {
+      // Runs on every authenticated request. `do update` unconditionally wrote a
+      // new row version each time, producing a dead tuple per page view in a
+      // table with one row per user; the email almost never changes.
       await tx`
         insert into public.profiles (id, email)
         values (${user.id}::uuid, ${user.email})
         on conflict (id) do update set email = excluded.email, updated_at = now()
+        where public.profiles.email is distinct from excluded.email
       `;
       let rows: Row[] = [];
       if (preferredWorkspaceId) {
@@ -190,19 +194,34 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
         `;
       }
       if (!rows[0]) {
+        // First sign-in bootstraps a workspace. Next renders the app layout and
+        // the page in parallel and each calls getRequestContext, so two
+        // transactions reach here at once with the same deterministic slug; a
+        // bare insert made the loser fail on workspaces_slug_key and threw an
+        // unhandled error out of a Server Component on the very first login.
+        // `do nothing` + re-select makes the loser adopt the winner's workspace.
         const local = user.email.split("@")[0]?.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "workspace";
         const slug = `${local}-${user.id.slice(0, 8)}`;
-        const workspaces = await tx<Row[]>`
+        let workspaces = await tx<Row[]>`
           insert into public.workspaces (name, slug)
           values (${`${local}'s workspace`}, ${slug})
+          on conflict (slug) do nothing
           returning id
         `;
+        if (!workspaces[0]) {
+          workspaces = await tx<Row[]>`select id from public.workspaces where slug = ${slug}`;
+        }
         const workspaceId = String(workspaces[0]!.id);
         await tx`
           insert into public.workspace_memberships (workspace_id, user_id, role)
           values (${workspaceId}::uuid, ${user.id}::uuid, 'owner')
+          on conflict (workspace_id, user_id) do nothing
         `;
-        rows = [{ workspace_id: workspaceId, role: "owner" }];
+        rows = await tx<Row[]>`
+          select membership.workspace_id, membership.role
+          from public.workspace_memberships membership
+          where membership.user_id = ${user.id}::uuid and membership.workspace_id = ${workspaceId}::uuid
+        `;
       }
       return {
         userId: user.id,
@@ -279,7 +298,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
           )
         )
       order by investigation.last_activity_at desc, investigation.id
-      limit ${Math.min(options.limit ?? 100, 100)}
+      limit ${boundedLimit(options.limit, 100)}
     `;
     return rows.map((row) => this.summaryFrom(row));
   }
@@ -323,7 +342,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
   }
 
   async getInvestigation(ctx: RequestContext, investigationId: string): Promise<InvestigationDetail | null> {
-    const [investigations, messages, runs, results] = await Promise.all([
+    const [investigations, messages, runs, results, cursor] = await Promise.all([
       this.sql<Row[]>`
         select investigation.*,
           (
@@ -359,6 +378,10 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
         where investigation_id = ${investigationId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
         order by opportunity_key, verified_at desc
       `,
+      this.sql<Row[]>`
+        select coalesce(max(id), 0) last_event_id from public.investigation_events
+        where investigation_id = ${investigationId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+      `,
     ]);
     if (!investigations[0]) return null;
     return {
@@ -366,6 +389,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
       messages: messages.map(messageFrom),
       runs: runs.map(runFrom),
       results: results.map(occurrenceFrom).sort((a, b) => b.impactMonthly - a.impactMonthly),
+      lastEventId: Number(cursor[0]?.last_event_id ?? 0),
     };
   }
 
@@ -460,28 +484,67 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
     return rows.map(eventFrom);
   }
 
+  /**
+   * One process-wide LISTEN, fanned out to every waiting stream.
+   *
+   * This used to LISTEN on entry and UNLISTEN in the finally, and it is called
+   * once per idle second per connected client. postgres.js backs listen() with a
+   * single shared max:1 connection, so N viewers meant 2N extra serialized round
+   * trips per second queued through one socket - and a NOTIFY arriving between an
+   * UNLISTEN and the next LISTEN was simply dropped, which quietly degraded the
+   * long-poll into a one-second poll while still paying for the churn.
+   */
+  private listenerReady: Promise<void> | null = null;
+  private readonly eventWaiters = new Map<string, Set<() => void>>();
+
+  private async ensureEventListener(): Promise<void> {
+    this.listenerReady ??= this.sql
+      .listen("investigation_events", (payload) => {
+        const waiters = this.eventWaiters.get(String(payload));
+        if (!waiters) return;
+        // Copy before waking: each callback removes itself from the set.
+        for (const wake of [...waiters]) wake();
+      })
+      .then(() => undefined)
+      .catch((error) => {
+        // Fall back to plain polling rather than failing the stream.
+        this.listenerReady = null;
+        console.error("[repository] could not LISTEN for investigation events:", error);
+      });
+    return this.listenerReady;
+  }
+
   async waitForInvestigationEvent(
     investigationId: string,
     signal: AbortSignal,
     timeoutMs: number,
   ): Promise<void> {
-    let wake: (() => void) | null = null;
-    const notified = new Promise<void>((resolve) => {
-      wake = resolve;
+    await this.ensureEventListener();
+    const waiters = this.eventWaiters.get(investigationId) ?? new Set<() => void>();
+    this.eventWaiters.set(investigationId, waiters);
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        waiters.delete(finish);
+        if (waiters.size === 0) this.eventWaiters.delete(investigationId);
+        signal.removeEventListener("abort", finish);
+        resolve();
+      };
+      const timer = setTimeout(finish, timeoutMs);
+      signal.addEventListener("abort", finish, { once: true });
+      waiters.add(finish);
     });
-    const listener = await this.sql.listen("investigation_events", (payload) => {
-      if (payload === investigationId) wake?.();
-    });
-    const onAbort = () => wake?.();
-    signal.addEventListener("abort", onAbort, { once: true });
-    const timer = setTimeout(() => wake?.(), timeoutMs);
-    try {
-      await notified;
-    } finally {
-      clearTimeout(timer);
-      signal.removeEventListener("abort", onAbort);
-      await listener.unlisten();
-    }
+  }
+
+  async investigationExists(ctx: RequestContext, investigationId: string): Promise<boolean> {
+    const rows = await this.sql<Row[]>`
+      select 1 from public.investigations
+      where id = ${investigationId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+    `;
+    return rows.length > 0;
   }
 
   async listWorkspaceEvents(ctx: RequestContext, limit = 200): Promise<InvestigationEventEnvelope[]> {
@@ -575,6 +638,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
           ${String(rows[0].run_id)}::uuid, ${occurrenceId}, ${String(rows[0].opportunity_key)},
           ${ctx.userId}::uuid, 'live', ${tx.json(pgJson(result))}
         )
+        on conflict (occurrence_id) do nothing
       `;
     });
   }
@@ -620,7 +684,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
           )
         )
       order by occurrence.impact_monthly desc, occurrence.opportunity_key
-      limit ${Math.min(filters.limit ?? 500, 500)}
+      limit ${boundedLimit(filters.limit, 500)}
     `;
     const now = Date.now();
     return rows
@@ -763,6 +827,47 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
     return rows[0] ? runFrom(rows[0]) : null;
   }
 
+  async isCancelRequested(runId: string): Promise<boolean> {
+    // Deliberately narrow: this is polled once per streamed engine event, and
+    // `select *` would deserialize the context and result JSONB every time - tens
+    // of KB per event, dozens of times per run, to read one boolean.
+    const rows = await this.sql<Row[]>`
+      select cancel_requested from public.investigation_runs where id = ${runId}::uuid
+    `;
+    return Boolean(rows[0]?.cancel_requested);
+  }
+
+  async failMessage(messageId: string, error: string): Promise<void> {
+    await this.sql.begin(async (tx) => {
+      const inputs = await tx<Row[]>`
+        update public.investigation_messages
+        set status = 'error', error = ${error}
+        where id = ${messageId}::uuid and status not in ('complete', 'cancelled')
+        returning workspace_id, investigation_id
+      `;
+      if (!inputs[0]) return;
+      const replies = await tx<Row[]>`
+        insert into public.investigation_messages (
+          workspace_id, investigation_id, role, content, status, intent, error
+        )
+        values (
+          ${String(inputs[0].workspace_id)}::uuid, ${String(inputs[0].investigation_id)}::uuid,
+          'assistant', 'That turn failed to complete. You can send the message again.', 'error', 'answer', ${error}
+        )
+        returning id
+      `;
+      await this.insertSystemEvent(
+        tx,
+        String(inputs[0].workspace_id),
+        String(inputs[0].investigation_id),
+        String(replies[0]!.id),
+        null,
+        { kind: "error", message: error },
+      );
+      await this.touch(tx, String(inputs[0].investigation_id));
+    });
+  }
+
   async getRunCheckpointEvents(runId: string): Promise<EngineEvent[]> {
     const rows = await this.sql<Row[]>`
       select payload
@@ -856,6 +961,21 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
       if (!inputs[0]) throw new RepositoryError("NOT_FOUND", "Message not found.");
       const workspaceId = String(inputs[0].workspace_id);
       const investigationId = String(inputs[0].investigation_id);
+      // investigation_one_active_run_idx is a partial unique index over
+      // (investigation_id) where status in ('queued','running'). A stale active
+      // run - a crashed worker, or a cancellation that never finalized - made the
+      // insert below raise 23505, which rolled the whole transaction back and
+      // left the user message 'queued'. enqueueMessage then answered 409 for
+      // every subsequent message, permanently. Detect it here and surface a
+      // CONFLICT the API can explain instead of a constraint violation.
+      const active = await tx<Row[]>`
+        select id from public.investigation_runs
+        where investigation_id = ${investigationId}::uuid and status in ('queued', 'running')
+        limit 1
+      `;
+      if (active[0]) {
+        throw new RepositoryError("CONFLICT", "This investigation already has a run in progress.");
+      }
       const assistants = await tx<Row[]>`
         insert into public.investigation_messages (
           workspace_id, investigation_id, role, content, status, intent
@@ -1126,6 +1246,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
 
   async cancelRun(ctx: RequestContext, runId: string): Promise<InvestigationRun | null> {
     if (!canWrite(ctx.role)) throw new RepositoryError("FORBIDDEN", "This workspace role cannot cancel runs.");
+    let matched = false;
     await this.sql.begin(async (tx) => {
       const rows = await tx<Row[]>`
         update public.investigation_runs
@@ -1136,6 +1257,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
         returning investigation_id, assistant_message_id, status
       `;
       if (!rows[0]) return;
+      matched = true;
       if (rows[0].status === "cancelled") {
         await tx`update public.jobs set status = 'cancelled' where run_id = ${runId}::uuid and status = 'queued'`;
         await tx`
@@ -1152,7 +1274,19 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
         );
       }
     });
-    return this.getRun(runId);
+    // `return` inside the transaction callback only exits the callback, so
+    // without this guard a run belonging to another workspace fell straight
+    // through to getRun(), which is deliberately unscoped for the worker. That
+    // handed the caller the whole RunDetail - goal, transcript, every rejected
+    // opportunity and its evidence - with a 200. A run this caller cannot write
+    // to must be indistinguishable from one that does not exist.
+    if (!matched) return null;
+    // Re-read scoped as well, so the boundary does not rest on `matched` alone.
+    const rows = await this.sql<Row[]>`
+      select * from public.investigation_runs
+      where id = ${runId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+    `;
+    return rows[0] ? runFrom(rows[0]) : null;
   }
 
   async finalizeRunCancellation(runId: string): Promise<void> {
@@ -1234,19 +1368,27 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
   }
 
   async revokeShare(ctx: RequestContext, shareId: string): Promise<boolean> {
-    const rows = canAdmin(ctx.role)
-      ? await this.sql<Row[]>`
-          update public.share_snapshots set revoked_at = now()
-          where id = ${shareId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
-          returning id
-        `
-      : await this.sql<Row[]>`
-          update public.share_snapshots set revoked_at = now()
-          where id = ${shareId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
-            and created_by = ${ctx.userId}::uuid
-          returning id
-        `;
-    return Boolean(rows[0]);
+    return this.sql.begin(async (tx) => {
+      // Folding the permission check into the WHERE clause made "you may not
+      // revoke this" indistinguishable from "no such share", so the same action
+      // answered 403 locally and 404 in production. Separate the two: the share
+      // is already workspace-scoped, so telling a member why they cannot revoke
+      // it leaks nothing.
+      const existing = await tx<Row[]>`
+        select created_by from public.share_snapshots
+        where id = ${shareId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+      `;
+      if (!existing[0]) return false;
+      if (!canAdmin(ctx.role) && String(existing[0].created_by) !== ctx.userId) {
+        throw new RepositoryError("FORBIDDEN", "Only the creator or an administrator can revoke this share.");
+      }
+      const rows = await tx<Row[]>`
+        update public.share_snapshots set revoked_at = now()
+        where id = ${shareId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+        returning id
+      `;
+      return Boolean(rows[0]);
+    });
   }
 
   private summaryFrom(row: Row): InvestigationSummary {

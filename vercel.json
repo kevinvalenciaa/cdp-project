@@ -5,6 +5,8 @@
   "buildCommand": "pnpm --filter @lift/protocol build && pnpm --filter @lift/core build && pnpm --filter @lift/ui build",
   "outputDirectory": "apps/ui/.next",
   "env": {
-    "LIFT_MODE": "demo"
+    "LIFT_MODE": "demo",
+    "LIFT_PUBLIC_DEMO": "true",
+    "LIFT_INVESTIGATION_STATE_PATH": "/tmp/lift/investigations-state.json"
   }
 }

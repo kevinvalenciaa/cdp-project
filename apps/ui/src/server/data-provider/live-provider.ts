@@ -22,7 +22,7 @@ import type {
 } from "@/lib/types";
 import { ingestBatch, renderDeliveryClaim, type SuppressionAggregate } from "@/server/delivery/ingest-store";
 import { store } from "@/server/store";
-import { release, tryAcquire } from "@/server/run-lock";
+import { acquire, release } from "@/server/run-lock";
 import { type DataProvider, sleep } from "./types";
 
 const GOALS: Goal[] = [
@@ -154,11 +154,23 @@ export const liveProvider: DataProvider = {
 
   streamRun(goal, signal, execution) {
     return bridge<EngineEvent>(async (push) => {
-      if (!tryAcquire("run")) {
-        push({ kind: "error", message: "A discovery run is already in progress." });
+      // Queue behind an in-flight run instead of refusing. The worker rethrows
+      // error events, and a rethrow is a failed attempt: three fast retries all
+      // lost the same race and the run was marked failed, so the user was told
+      // "The investigation failed." for work that was merely waiting its turn.
+      if (!(await acquire("run"))) {
+        push({ kind: "error", message: "Timed out waiting for the in-progress discovery run to finish." });
         return;
       }
+      if (signal?.aborted) {
+        release("run");
+        return;
+      }
+      // Kept so the finished run can be persisted with its activity log, which is
+      // what /api/bundle and the Activity screen read back.
+      const emitted: EngineEvent[] = [];
       const emit = (e: EngineEvent) => {
+        emitted.push(e);
         push(e);
       };
       try {
@@ -198,7 +210,14 @@ export const liveProvider: DataProvider = {
           },
           {
             withBareLlmContrast: true,
-            memory: false,
+            // runEngineStreaming gates its insight writeback on this flag. With
+            // it off, live runs stopped persisting verified insights to the core
+            // Memory store, while ingest's uplinkToMemory kept writing
+            // device-observed delivery facts into that same store for nobody to
+            // read - the "device tells the next run what delivery did" loop was
+            // write-only. The repository's own insights still ride in via
+            // priorInsights; these are the durable engine-side ones.
+            memory: true,
             priorInsights: execution?.workspaceInsights,
             resume: resumeState(execution?.checkpointEvents ?? []),
           },
@@ -216,6 +235,12 @@ export const liveProvider: DataProvider = {
             }
           }
           const detail = toRunDetail(result, bandit, goal, activation);
+          // getBundle() compiles from store.getLatestRun()?.activation. When the
+          // investigations pipeline took over persistence, the only saveRun call
+          // was removed but getBundle was left reading it, so /api/bundle
+          // answered 404 forever in live mode however many runs completed - the
+          // device delivery loop could never receive a bundle.
+          store.saveRun(detail, emitted);
           push({ kind: "run_finished", result: detail });
         }
       } catch (e) {
@@ -241,6 +266,19 @@ export const liveProvider: DataProvider = {
       }
       try {
         const result = await activateOpportunity(`live-${Date.now()}`, key);
+        // /launched and the dashboard tile read store.listActivations() in live
+        // mode; without this the launch was recorded nowhere the UI looks.
+        store.addActivation({
+          opportunityKey: result.opportunity.key,
+          title: result.opportunity.title,
+          destination: result.sync?.destination ?? "-",
+          audienceSize: result.audience.persuadableReach,
+          upliftPp: result.measurement.upliftPp,
+          pValue: result.measurement.pValue,
+          verdict: result.measurement.verdict,
+          status: "live",
+          launchedAt: new Date().toISOString().slice(0, 10),
+        });
         push({ kind: "act_finished", result });
       } catch (e) {
         push({ kind: "error", message: String(e) });

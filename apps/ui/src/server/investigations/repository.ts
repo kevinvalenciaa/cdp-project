@@ -52,6 +52,8 @@ export interface InvestigationRepository {
     investigationId: string,
     input: { content: string; clientMessageId: string; intentHint: MessageIntent },
   ): Promise<InvestigationMessage>;
+  /** Cheap scoped existence probe - the SSE stream must not load a whole investigation to 404. */
+  investigationExists(ctx: RequestContext, investigationId: string): Promise<boolean>;
   listEvents(ctx: RequestContext, investigationId: string, after: number): Promise<InvestigationEventEnvelope[]>;
   waitForInvestigationEvent?(
     investigationId: string,
@@ -69,16 +71,31 @@ export interface InvestigationRepository {
   ): Promise<void>;
   listOpportunities(ctx: RequestContext, filters?: OpportunityFilters): Promise<WorkspaceOpportunity[]>;
   getWorkspaceOpportunity(ctx: RequestContext, key: string): Promise<{ opportunity: WorkspaceOpportunity; history: OpportunityOccurrence[] } | null>;
+  // --- Worker-internal surface. ---------------------------------------------
+  // Everything below takes no RequestContext and is therefore NOT workspace
+  // scoped: the worker dequeues jobs across all tenants and already knows the
+  // ids it is allowed to touch. Never reach these from a route handler with an
+  // id supplied by the client - go through a ctx-taking method instead, or you
+  // reintroduce a cross-tenant read.
   claimJob(queue: JobRecord["queue"], workerId: string, leaseSeconds: number): Promise<JobRecord | null>;
   completeJob(jobId: string): Promise<void>;
   failJob(jobId: string, error: string): Promise<void>;
   heartbeatJob(jobId: string, workerId: string, leaseSeconds: number): Promise<void>;
   getMessage(messageId: string): Promise<InvestigationMessage | null>;
   getRun(runId: string): Promise<InvestigationRun | null>;
+  /** Narrow cancellation probe, polled per streamed event - never load the whole run for this. */
+  isCancelRequested(runId: string): Promise<boolean>;
   getRunCheckpointEvents(runId: string): Promise<EngineEvent[]>;
   getScopedResults(investigationId: string): Promise<OpportunityOccurrence[]>;
   completeAnswer(messageId: string, content: string, citations: string[]): Promise<void>;
   completeClarification(messageId: string, question: string): Promise<void>;
+  /**
+   * Terminal failure for a message whose assistant turn never produced a reply.
+   * Without this a job that exhausts its retries left the input message "queued"
+   * forever, and enqueueMessage then rejected every later message with CONFLICT -
+   * an investigation locked with no way out.
+   */
+  failMessage(messageId: string, error: string): Promise<void>;
   enqueueRun(messageId: string, context: InvestigationContextV1, goal: string): Promise<InvestigationRun>;
   markRunRunning(runId: string): Promise<void>;
   appendEngineEvent(run: InvestigationRun, event: EngineEvent, dedupeKey: string): Promise<InvestigationEventEnvelope | null>;
@@ -111,4 +128,20 @@ export function canWrite(role: WorkspaceRole): boolean {
 
 export function canAdmin(role: WorkspaceRole): boolean {
   return role === "owner" || role === "admin";
+}
+
+/**
+ * Backstop for a repository read's row count.
+ *
+ * `pageMax` is the largest page a route may ask for. The ceiling here is
+ * pageMax + 1 because paginate() deliberately requests one row beyond the page to
+ * detect whether another one exists. Clamping to exactly pageMax swallowed that
+ * sentinel, so at limit === pageMax the caller could never be told there was a
+ * next page - pagination stopped dead after page one, in Postgres only, while
+ * the local repository (which did not clamp) paged correctly and hid the bug
+ * from every test and demo.
+ */
+export function boundedLimit(requested: number | undefined, pageMax: number): number {
+  if (requested === undefined || !Number.isFinite(requested)) return pageMax;
+  return Math.min(Math.max(Math.trunc(requested), 1), pageMax + 1);
 }

@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Loader2, MessageSquareText, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Archive, ChevronDown, Loader2, MessageSquareText, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { InvestigationSummary } from "@/lib/investigations";
 import { usePersistedToggle } from "@/lib/use-persisted-toggle";
 import { cn } from "@/lib/utils";
 
-export function OpportunitiesSidebar({ investigations }: { investigations: InvestigationSummary[] }) {
+export function OpportunitiesSidebar({
+  investigations,
+  hasMore = false,
+}: {
+  investigations: InvestigationSummary[];
+  hasMore?: boolean;
+}) {
   const pathname = usePathname();
   const [sidebarOpen, toggleSidebar] = usePersistedToggle("ui.opportunities-sidebar-open", true);
   const hasActiveRun = investigations.some((investigation) => investigation.activeRunStatus);
@@ -50,6 +56,23 @@ export function OpportunitiesSidebar({ investigations }: { investigations: Inves
           </Link>
         );
       })}
+      {/* This rail is capped, and nothing else linked to the full index - so once
+          a workspace passed the cap, every older investigation was unreachable
+          through the UI even though the page listing them already existed. */}
+      {hasMore && (
+        <Link
+          href="/opportunities/investigations"
+          aria-label={collapsed ? "All investigations" : undefined}
+          title={collapsed ? "All investigations" : undefined}
+          className={cn(
+            "flex items-center rounded-xl text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+            collapsed ? "h-10 justify-center px-0" : "gap-2.5 px-3 py-2.5",
+          )}
+        >
+          <Archive className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" aria-hidden />
+          {!collapsed && <span className="min-w-0 flex-1 truncate">All investigations</span>}
+        </Link>
+      )}
     </nav>
     );
   }

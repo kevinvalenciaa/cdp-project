@@ -40,21 +40,50 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
   const feedRef = useRef<HTMLDivElement>(null);
   const lastEventRef = useRef(0);
 
+  const reloadPending = useRef(false);
   const reload = useCallback(async () => {
-    const response = await fetch(`/api/investigations/${initialInvestigation.id}`, { cache: "no-store" });
-    if (!response.ok) return;
-    const payload = (await response.json()) as { investigation: InvestigationDetail };
-    setInvestigation(payload.investigation);
-    setTitle(payload.investigation.title);
-    router.refresh();
+    // A burst of terminal events used to fire one full reload each - a fetch plus
+    // an RSC round trip per event - so opening an investigation with a few
+    // completed turns issued a dozen or more of both at once. Collapse a burst
+    // into one trailing refresh.
+    if (reloadPending.current) return;
+    reloadPending.current = true;
+    try {
+      const response = await fetch(`/api/investigations/${initialInvestigation.id}`, { cache: "no-store" });
+      if (!response.ok) return;
+      const payload = (await response.json()) as { investigation: InvestigationDetail };
+      setInvestigation(payload.investigation);
+      setTitle(payload.investigation.title);
+      router.refresh();
+    } catch {
+      // A refresh that loses the network is not fatal; the stream will emit again.
+    } finally {
+      reloadPending.current = false;
+    }
   }, [initialInvestigation.id, router]);
 
   useEffect(() => {
+    // Seed the cursor past everything the server already rendered into
+    // initialInvestigation. Starting at 0 made the server replay the entire
+    // history on every mount and reconnect, and each replayed terminal event
+    // triggered a reload of state we were already holding.
+    if (lastEventRef.current === 0) {
+      lastEventRef.current = initialInvestigation.lastEventId ?? 0;
+    }
     const source = new EventSource(
       `/api/investigations/${initialInvestigation.id}/events?after=${lastEventRef.current}`,
     );
     source.onmessage = (message) => {
-      const envelope = JSON.parse(message.data) as InvestigationEventEnvelope;
+      let envelope: InvestigationEventEnvelope;
+      try {
+        envelope = JSON.parse(message.data) as InvestigationEventEnvelope;
+      } catch {
+        // A truncated frame (proxy buffering, an intermediary that ignores
+        // X-Accel-Buffering) used to throw out of the handler. The browser
+        // swallowed it, the cursor never advanced and reload never ran, so the
+        // transcript silently froze for the rest of the session.
+        return;
+      }
       lastEventRef.current = Math.max(lastEventRef.current, envelope.id);
       if (envelope.runId && isEngineEvent(envelope.event)) {
         setLiveEvents((current) => ({
@@ -78,7 +107,7 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
       // transient disconnect harmless.
     };
     return () => source.close();
-  }, [initialInvestigation.id, reload]);
+  }, [initialInvestigation.id, initialInvestigation.lastEventId, reload]);
 
   useEffect(() => {
     feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });

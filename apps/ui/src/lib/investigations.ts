@@ -131,6 +131,13 @@ export interface InvestigationDetail extends InvestigationSummary {
   messages: InvestigationMessage[];
   runs: InvestigationRun[];
   results: OpportunityOccurrence[];
+  /**
+   * Highest event id already reflected in this payload. The client opens its
+   * event stream at this cursor; starting from 0 made the server replay the whole
+   * history on every mount and reconnect, and every replayed terminal event
+   * triggered a refetch of state the client was already holding.
+   */
+  lastEventId: number;
 }
 
 export type ShareScope = "proven" | "transcript" | "full";

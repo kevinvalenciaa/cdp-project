@@ -26,6 +26,7 @@ export function ShareInvestigationDialog({
   const [creating, setCreating] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const [shares, setShares] = useState<ManagedShare[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,14 +58,33 @@ export function ShareInvestigationDialog({
       });
       const payload = (await response.json()) as { share?: { url: string }; error?: string };
       if (!response.ok || !payload.share) throw new Error(payload.error ?? "Could not create the share link.");
+      // The snapshot exists from here on. Anything that fails below is a
+      // convenience, not the operation - copying used to sit inside this try, so
+      // a clipboard rejection reported "Could not create the share link." for a
+      // link that had in fact been created, and skipped loadShares() so the live
+      // token never appeared in the list and could not be revoked from here.
       setUrl(payload.share.url);
-      await navigator.clipboard.writeText(payload.share.url);
-      setCopied(true);
+      await copyToClipboard(payload.share.url);
       await loadShares();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not create the share link.");
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function copyToClipboard(value: string) {
+    // navigator.clipboard is undefined outside a secure context, which includes
+    // any plain-HTTP origin that is not localhost, and rejects when the document
+    // is not focused or permission is denied.
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setCopyFailed(false);
+    } catch {
+      setCopied(false);
+      setCopyFailed(true);
     }
   }
 
@@ -120,19 +140,29 @@ export function ShareInvestigationDialog({
           </label>
 
           {url && (
-            <div className="flex items-center gap-2 rounded-2xl border border-ht-green-border bg-ht-green-bg p-3.5">
-              <Link2 className="h-4 w-4 shrink-0 text-ht-green" aria-hidden />
-              <input readOnly value={url} className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-hidden" />
-              <button
-                onClick={async () => {
-                  await navigator.clipboard.writeText(url);
-                  setCopied(true);
-                }}
-                className="rounded-sm p-1 text-ht-green"
-                aria-label="Copy link"
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </button>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 rounded-2xl border border-ht-green-border bg-ht-green-bg p-3.5">
+                <Link2 className="h-4 w-4 shrink-0 text-ht-green" aria-hidden />
+                <input
+                  readOnly
+                  value={url}
+                  onFocus={(event) => event.currentTarget.select()}
+                  className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-hidden"
+                />
+                <button
+                  onClick={() => void copyToClipboard(url)}
+                  className="rounded-sm p-1 text-ht-green"
+                  aria-label="Copy link"
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </button>
+              </div>
+              {copyFailed && (
+                <p className="text-xs text-muted-foreground">
+                  The snapshot was created, but this browser would not let the page write to the clipboard. Select the
+                  link above and copy it manually.
+                </p>
+              )}
             </div>
           )}
 

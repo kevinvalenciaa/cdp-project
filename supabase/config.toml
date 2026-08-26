@@ -45,8 +45,11 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:3010"
-additional_redirect_urls = ["http://localhost:3010/**"]
+# Must match where the app actually runs (`pnpm ui:dev` -> next dev on 3000), or
+# GoTrue rejects the unlisted redirect and falls back to site_url, dropping the
+# user on a port with nothing listening. 3011 is the Playwright e2e server.
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**", "http://127.0.0.1:3011/**"]
 jwt_expiry = 3600
 enable_signup = true
 enable_anonymous_sign_ins = false

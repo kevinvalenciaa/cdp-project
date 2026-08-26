@@ -145,7 +145,9 @@ test("preserves the product copy, controls, and route content", async ({ page })
   const recentInvestigations = page.locator('aside[aria-label="Recent investigations"]');
   await expect(recentInvestigations).toBeVisible();
   await expect(recentInvestigations.getByText("Recent investigations", { exact: true })).toBeVisible();
-  await expect(recentInvestigations.getByText("View all investigations", { exact: true })).toHaveCount(0);
+  // The rail is capped, and links out to the full index only when there is
+  // more than it shows. With the seeded demo there is not, so no link.
+  await expect(recentInvestigations.getByText("All investigations", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("navigation", { name: "Primary" }).getByText("Recent investigations")).toHaveCount(0);
   await expect(recentInvestigations).toHaveCSS("width", "232px");
   await recentInvestigations.getByRole("button", { name: "Collapse recent investigations" }).click();

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Check, ChevronsUpDown, Settings } from "lucide-react";
+import { BookOpen, Check, ChevronsUpDown, LogOut, Settings } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -18,7 +18,6 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/c
 import type { WorkspaceSummary } from "@/lib/investigations";
 
 const FALLBACK_WORKSPACE = "Fashion Retailer";
-const ACCOUNT_EMAIL = "maria@fashionretailer.com";
 
 function initials(name: string): string {
   return (
@@ -41,7 +40,9 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [account, setAccount] = useState<{ email: string; role: string } | null>(null);
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const selected = useMemo(
     () => workspaces.find((workspace) => workspace.id === selectedId) ?? workspaces[0],
@@ -52,11 +53,20 @@ export function NavUser() {
     let active = true;
     fetch("/api/workspaces", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
-      .then((payload: { workspaces: WorkspaceSummary[]; selectedWorkspaceId: string } | null) => {
-        if (!active || !payload) return;
-        setWorkspaces(payload.workspaces);
-        setSelectedId(payload.selectedWorkspaceId);
-      })
+      .then(
+        (
+          payload: {
+            workspaces: WorkspaceSummary[];
+            selectedWorkspaceId: string;
+            account?: { email: string; role: string };
+          } | null,
+        ) => {
+          if (!active || !payload) return;
+          setWorkspaces(payload.workspaces);
+          setSelectedId(payload.selectedWorkspaceId);
+          setAccount(payload.account ?? null);
+        },
+      )
       .catch(() => {});
     return () => {
       active = false;
@@ -74,7 +84,22 @@ export function NavUser() {
     if (response.ok) window.location.reload();
   }
 
+  async function signOut() {
+    setSigningOut(true);
+    setOpen(false);
+    try {
+      const { createSupabaseBrowserClient } = await import("@/lib/supabase-browser");
+      await createSupabaseBrowserClient().auth.signOut();
+    } catch {
+      // Not configured (local demo) - fall through to /login either way.
+    }
+    window.location.assign("/login");
+  }
+
   const workspaceName = selected?.name ?? FALLBACK_WORKSPACE;
+  // Render nothing rather than a wrong identity until /api/workspaces answers.
+  const accountEmail = account?.email ?? "";
+  const accountInitial = accountEmail.trim()[0]?.toUpperCase() ?? "?";
 
   return (
     <SidebarMenu>
@@ -84,14 +109,14 @@ export function NavUser() {
             <SidebarMenuButton
               size="lg"
               className="cursor-pointer hover:bg-sidebar-accent data-[state=open]:bg-sidebar-accent"
-              tooltip={ACCOUNT_EMAIL}
+              tooltip={accountEmail || workspaceName}
             >
               <Avatar className="size-8 rounded-full">
-                <AvatarFallback>M</AvatarFallback>
+                <AvatarFallback>{accountInitial}</AvatarFallback>
               </Avatar>
               <span className="grid min-w-0 flex-1 text-left leading-tight">
                 <span className="truncate text-[13px] font-semibold text-foreground">{workspaceName}</span>
-                <span className="truncate text-[11px] text-sidebar-foreground/65">{ACCOUNT_EMAIL}</span>
+                <span className="truncate text-[11px] text-sidebar-foreground/65">{accountEmail}</span>
               </span>
               <ChevronsUpDown className="ml-auto size-4" aria-hidden />
             </SidebarMenuButton>
@@ -106,9 +131,9 @@ export function NavUser() {
             <DropdownMenuLabel>Signed in</DropdownMenuLabel>
             <DropdownMenuItem className="gap-2" disabled>
               <Avatar className="size-7">
-                <AvatarFallback>M</AvatarFallback>
+                <AvatarFallback>{accountInitial}</AvatarFallback>
               </Avatar>
-              <span className="truncate text-sm text-foreground">{ACCOUNT_EMAIL}</span>
+              <span className="truncate text-sm text-foreground">{accountEmail || "Loading…"}</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -144,6 +169,10 @@ export function NavUser() {
                   <BookOpen aria-hidden />
                   Docs &amp; support
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={signingOut} onSelect={() => void signOut()}>
+                <LogOut aria-hidden />
+                Sign out
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
