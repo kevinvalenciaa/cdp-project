@@ -4,8 +4,6 @@ Proofloop is a prototype agentic customer data platform. It reads a warehouse, r
 
 The ranking signal is **reach × value × incremental uplift**, not raw conversion. Every claim has to clear a statistics gate and a groundedness check before it can be promoted, so a campaign with 42% raw conversion and no incremental lift gets demoted instead of scaled.
 
-For a non-technical overview, read [`docs/EXPLAINER.md`](docs/EXPLAINER.md) or open `/how-it-works` in the web app.
-
 > **Status:** the agents, warehouse queries, statistics, verifier, memory, and bandit all run. Customer data is synthetic with a deterministic answer key in `packages/core/GROUND_TRUTH.md`. Campaign delivery and outcomes are simulated.
 
 ## How it works
@@ -89,8 +87,6 @@ If Sonnet is congested, prefix a command with `MODEL_REASONING=claude-haiku-4-5-
 
 ## What it proves
 
-These are asserted by exit-code gates (`pnpm ground-truth`, `pnpm opportunities`, `pnpm durable`), not just described. Realized numbers live in `packages/core/GROUND_TRUTH.md`.
-
 - **It catches the trap.** The VIP campaign converts at ~42% but its lift confidence interval includes zero, so it gets demoted. The bare LLM accepts it: *"42% conversion is exceptional, scale it."*
 - **It checks seasonality instead of guessing.** Shown a raw Q4 spike, the bare LLM can only hedge. The verifier has the series and the statistics: STL attributes nearly all of the spike to the seasonal component and rejects the claim with numbers.
 - **It surfaces at least three real opportunities** (second-purchase SMS, spring product-drop creative, cross-category cross-sell), each with lift, p-value, a groundedness check, and stored query provenance.
@@ -98,7 +94,7 @@ These are asserted by exit-code gates (`pnpm ground-truth`, `pnpm opportunities`
 
 ## Web application
 
-`apps/ui` is a Next.js workspace for setting a goal, running an investigation, reviewing verified opportunities, approving activation work, and measuring outcomes. It supports persistent investigation chats, a per-chat results drawer, a workspace-wide latest-truth inbox, background runs, and revocable share snapshots. See [`docs/MULTIPLE_INVESTIGATIONS.md`](docs/MULTIPLE_INVESTIGATIONS.md) for the product model, Supabase schema, and worker process.
+`apps/ui` is a Next.js workspace for setting a goal, running an investigation, reviewing verified opportunities, approving activation work, and measuring outcomes. It supports persistent investigation chats, a per-chat results drawer, a workspace-wide latest-truth inbox, background runs, and revocable share snapshots. 
 
 One environment flag swaps the data source behind an identical UI:
 
@@ -107,53 +103,8 @@ pnpm ui:dev                    # demo mode: fixture-backed, instant, no key requ
 LIFT_MODE=live pnpm ui:dev     # live mode: real engine over SSE (needs a key and a seeded warehouse)
 ```
 
-## Delivery path
-
-A verified opportunity compiles into a portable decision bundle that the device evaluates on its own. Two details are worth calling out:
-
-- **One predicate, two evaluators.** The server compiles audience predicates to SQL; the device evaluates them with `matchPredicate`. `delivery/parity.test.ts` runs both against real `customer_360` rows and requires identical membership.
-- **One frequency cap, two machines.** The server groups over `campaign_sends`; the device keeps a persisted ledger on monotonic-clock windows, so rolling the device date forward does not un-cap a user. When the clock is ambiguous, delivery is suppressed.
-
-`decodeBundle` skips campaigns it does not understand and records the reason, so a newer server never breaks an older client. The event queue persists before flushing, deletes only on ack, and reports dropped events rather than hiding them. Scope is limited to in-app delivery; push would need APNs or FCM, and activation artifacts stay marked `"simulated": true`.
-
-## Deploy
-
-- **Demo on Vercel:** run `vercel`. The included `vercel.json` sets
-  `LIFT_MODE=demo` (no API key or Python runtime), `LIFT_PUBLIC_DEMO=true`
-  (serving anonymously is refused in production unless it is chosen on purpose),
-  and points the demo state file at `/tmp`, the only writable path on a Lambda.
-  There is no separate worker there, so the event stream pumps the queues for as
-  long as a client is watching.
-- **Live web and durable worker:** configure Supabase, then
-  `cp .env.example .env`, fill it in, and run
-  `docker compose -f docker-compose.worker.yml up --build`. The web process
-  serves Next.js; the long-lived worker owns leased assistant and engine jobs.
-  Two requirements the compose file now enforces rather than leaving to
-  discovery: `DATABASE_URL` is mandatory, because the two containers coordinate
-  only through Postgres, and `NEXT_PUBLIC_SUPABASE_*` are passed as **build**
-  args, because Next inlines them into the client bundle at build time.
-
-To run the production server locally:
-
-```bash
-pnpm ui:build && LIFT_PUBLIC_DEMO=true pnpm ui:start
-```
-
-`LIFT_PUBLIC_DEMO` is needed because `next start` sets `NODE_ENV=production`,
-where the app refuses to serve without authentication unless the anonymous demo
-is opted into explicitly.
-
-## Known limits
-
-- `runAndReadAll` materializes full results server-side before applying the 1,000-row cap. The fix is a streaming reader with a pushed-down `LIMIT`.
-- Single-file DuckDB behind one MCP process. Swapping in Snowflake or BigQuery with a connection pool is the path forward; the MCP contract is the part that survives.
-- The device API has no per-workspace connector registry, so bundle and ingest routing is unauthenticated.
-- Memory is a table scan. Fine at hundreds of insights, needs indexing and retrieval ranking at millions.
-- The open-ended harness is less resumable than the investigation engine, which checkpoints its explorer, candidate, and ranking stages.
-
 ## Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — technical walkthrough
-- [`docs/DESIGN_DECISIONS.md`](docs/DESIGN_DECISIONS.md) — build-vs-buy rationale
 - [`docs/FANOUT_VS_RAG.md`](docs/FANOUT_VS_RAG.md) — why fan-out over retrieval
 - [`docs/EXPLAINER.md`](docs/EXPLAINER.md) — non-technical overview
