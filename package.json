@@ -28,7 +28,7 @@
     "ui:start": "pnpm --filter @lift/ui start",
     "ui:worker": "pnpm --filter @lift/ui worker",
     "ui:import-investigations": "pnpm --filter @lift/ui investigations:import",
-    "ui:test:e2e": "pnpm --filter @lift/ui test:e2e",
+    "ui:test:e2e": "pnpm build:deps && pnpm --filter @lift/ui test:e2e",
     "board": "pnpm board:data && pnpm ui:build",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm build:deps && pnpm -r --if-present typecheck",

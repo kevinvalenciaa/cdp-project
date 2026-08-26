@@ -39,7 +39,7 @@ test("multiple chats keep running, answer from evidence, share snapshots, and ag
   });
   page.on("pageerror", (error) => consoleErrors.push(error.message));
   await page.addInitScript(() => {
-    localStorage.removeItem("ui.sidebar-open");
+    localStorage.removeItem("ui.opportunities-sidebar-open");
     localStorage.removeItem("ui.results-rail-open");
   });
 

@@ -11,6 +11,22 @@ const workspaceId = process.env.TEST_SUPABASE_WORKSPACE_ID;
 const enabled = Boolean(databaseUrl && userId && workspaceId);
 const sql = databaseUrl ? postgres(databaseUrl, { max: 1 }) : null;
 
+if (!enabled) {
+  // Say so loudly. This is the *production* persistence path, and silently
+  // skipping it made a green `pnpm test` look like it covered the repository
+  // that actually ships. Every divergence between the two implementations found
+  // in review - an unscoped read in cancelRun, a missing status guard in
+  // markRunRunning, non-idempotent recordActivation, 403-vs-404 on revokeShare,
+  // a limit clamp that killed pagination - lived in this file's blind spot.
+  console.warn(
+    "\n[skipped] PostgresInvestigationRepository integration tests.\n" +
+      "  The production persistence path is NOT covered by this run.\n" +
+      "  Set TEST_DATABASE_URL, TEST_SUPABASE_USER_ID and TEST_SUPABASE_WORKSPACE_ID to enable them.\n" +
+      "  With a local stack: supabase start && supabase db reset, then use the connection string it prints\n" +
+      "  and the ids in supabase/tests/integration_fixture.sql. See .env.example.\n",
+  );
+}
+
 afterAll(async () => {
   await sql?.end();
 });
