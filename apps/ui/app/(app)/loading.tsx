@@ -16,12 +16,12 @@ export default function Loading() {
       <div className="app-page">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-[18px]" />
+            <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
-          <Skeleton className="h-64 rounded-[18px]" />
-          <Skeleton className="h-64 rounded-[18px]" />
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
         </div>
       </div>
     </>

@@ -15,7 +15,7 @@ export default function HowItWorks() {
   return (
     <main className="min-h-dvh bg-[#e9eef5] p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-4xl rounded-[26px] border border-white/80 bg-background p-5 shadow-ht-md sm:p-8 lg:p-10">
-        <Link href="/" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-primary shadow-ht-xs transition-colors hover:text-ht-teal-hover">
+        <Link href="/" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-primary transition-colors hover:text-ht-teal-hover">
           <ArrowLeft className="h-4 w-4" aria-hidden /> Back to the app
         </Link>
 

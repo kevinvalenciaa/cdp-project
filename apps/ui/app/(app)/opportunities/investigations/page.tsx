@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Archive, ArrowRight, MessageSquareText, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
+import { Button } from "@/components/ui/button";
 import { getRequestContext } from "@/server/auth";
 import { getInvestigationRepository } from "@/server/investigations";
 
@@ -16,12 +17,11 @@ export default async function InvestigationsPage() {
         title="Investigations"
         description="Persistent conversations, their run state, and the proven opportunities they produced."
         actions={
-          <Link
-            href="/investigations"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-ht-xs"
-          >
-            <Plus className="h-4 w-4" /> New investigation
-          </Link>
+          <Button asChild>
+            <Link href="/investigations">
+              <Plus aria-hidden /> New investigation
+            </Link>
+          </Button>
         }
       />
       <div className="app-page">
@@ -30,7 +30,7 @@ export default async function InvestigationsPage() {
             <Link
               key={investigation.id}
               href={`/investigations/${investigation.id}`}
-              className="flex items-center gap-4 rounded-[18px] border border-border bg-card p-5 shadow-ht-xs transition-all hover:-translate-y-0.5 hover:border-ht-400 hover:shadow-ht-sm"
+              className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-ht-400 hover:shadow-ht-sm"
             >
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ht-teal-tint">
                 {investigation.status === "archived" ? (

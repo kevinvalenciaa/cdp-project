@@ -99,7 +99,7 @@ export function ShareInvestigationDialog({
             <select
               value={scope}
               onChange={(event) => setScope(event.target.value as ShareScope)}
-              className="mt-1.5 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring/20"
+              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-hidden focus:ring-2 focus:ring-ring/20"
             >
               <option value="proven">Proven results only</option>
               <option value="transcript">Proven results and transcript</option>
@@ -111,7 +111,7 @@ export function ShareInvestigationDialog({
             <select
               value={expiry}
               onChange={(event) => setExpiry(event.target.value as typeof expiry)}
-              className="mt-1.5 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring/20"
+              className="mt-1.5 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-hidden focus:ring-2 focus:ring-ring/20"
             >
               <option value="7">In 7 days</option>
               <option value="30">In 30 days</option>
@@ -122,13 +122,13 @@ export function ShareInvestigationDialog({
           {url && (
             <div className="flex items-center gap-2 rounded-2xl border border-ht-green-border bg-ht-green-bg p-3.5">
               <Link2 className="h-4 w-4 shrink-0 text-ht-green" aria-hidden />
-              <input readOnly value={url} className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none" />
+              <input readOnly value={url} className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-hidden" />
               <button
                 onClick={async () => {
                   await navigator.clipboard.writeText(url);
                   setCopied(true);
                 }}
-                className="rounded p-1 text-ht-green"
+                className="rounded-sm p-1 text-ht-green"
                 aria-label="Copy link"
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -152,7 +152,7 @@ export function ShareInvestigationDialog({
                       </span>
                       <button
                         onClick={() => revoke(share.id)}
-                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-ht-danger-text"
+                        className="rounded-sm p-1 text-muted-foreground hover:bg-muted hover:text-ht-danger-text"
                         aria-label="Revoke snapshot"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

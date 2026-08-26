@@ -1,35 +1,20 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Circle, type LucideIcon, Rocket, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, Rocket, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusPill } from "@/components/common/StatusPill";
+import { StatCard, StatCardGrid } from "@/components/dashboard/StatCard";
+import { Button } from "@/components/ui/button";
+import {
+  ChartCard,
+  ChartCardActions,
+  ChartCardDescription,
+  ChartCardHeader,
+  ChartCardHeading,
+  ChartCardTitle,
+} from "@/components/ui/chart-card";
 import { getRequestContext } from "@/server/auth";
 import { getInvestigationRepository } from "@/server/investigations";
 import { confidenceLabel, isSignificant, moneyCompact, pctFromPercent, pp, verdictMeta } from "@/lib/format";
-
-function StatTile({
-  label,
-  value,
-  sub,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: LucideIcon;
-}) {
-  return (
-    <div className="metric-card min-h-[116px]">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground/80">{label}</span>
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ht-teal-tint">
-          <Icon className="h-4 w-4 text-ht-teal" aria-hidden />
-        </span>
-      </div>
-      <div className="mt-2 text-[28px] font-semibold tracking-[-0.03em] tabular-nums text-foreground">{value}</div>
-      {sub && <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>}
-    </div>
-  );
-}
 
 export default async function HomePage() {
   const ctx = await getRequestContext({ redirectToLogin: true });
@@ -48,53 +33,54 @@ export default async function HomePage() {
         title="Dashboard"
         description="Your Agentic CDP at a glance - what the agents found while you were away."
         actions={
-          <Link
-            href="/opportunities"
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-ht-xs transition-all hover:-translate-y-px hover:bg-ht-teal-hover"
-          >
-            Review opportunities <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          <Button asChild>
+            <Link href="/opportunities">
+              Review opportunities <ArrowRight aria-hidden />
+            </Link>
+          </Button>
         }
       />
       <div className="app-page">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatTile
+        <StatCardGrid>
+          <StatCard
             label="Ready for review"
             value={String(ranked.length)}
             sub={ranked.length ? "proven with a holdout" : "run discovery to begin"}
             icon={Sparkles}
           />
-          <StatTile
+          <StatCard
             label="Est. incremental revenue"
             value={`~${moneyCompact(totalImpact)}/mo`}
             sub="if all are launched"
             icon={TrendingUp}
           />
           {/* The Verifier's work, made countable. This is the differentiator on the first screen. */}
-          <StatTile
+          <StatCard
             label="Rejected by the Verifier"
             value={String(rejected.length)}
             sub="no provable incremental lift"
             icon={ShieldCheck}
           />
-          <StatTile
+          <StatCard
             label="Launched"
             value={String(activations.length)}
             sub={measured.length ? `${measured.length} measuring lift` : "none in flight"}
             icon={Rocket}
           />
-        </div>
+        </StatCardGrid>
 
-        <div className="grid gap-5 xl:grid-cols-3">
+        <div className="grid gap-4 xl:grid-cols-3">
           {/* Proven - what to act on */}
-          <section className="surface-panel overflow-hidden xl:col-span-2">
-            <div className="border-b border-border px-5 py-5 sm:px-6">
-              <h2 className="text-lg font-semibold tracking-[-0.02em] text-foreground">Proven opportunities</h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Ranked by reach × value × <em>incremental</em> uplift - not raw conversion.
-              </p>
-            </div>
-            <ul className="divide-y divide-border px-2 py-2 sm:px-3">
+          <ChartCard className="overflow-hidden xl:col-span-2">
+            <ChartCardHeader>
+              <ChartCardTitle>
+                <ChartCardHeading>Proven opportunities</ChartCardHeading>
+                <ChartCardDescription>
+                  Ranked by reach × value × <em>incremental</em> uplift - not raw conversion.
+                </ChartCardDescription>
+              </ChartCardTitle>
+            </ChartCardHeader>
+            <ul className="-mt-2 divide-y divide-border px-3">
               {ranked.slice(0, 4).map((item, i) => {
                 const o = item.current.opportunity;
                 return (
@@ -128,17 +114,19 @@ export default async function HomePage() {
                 <li className="px-4 py-8 text-sm text-muted-foreground">No run yet - open Opportunities to run discovery.</li>
               )}
             </ul>
-          </section>
+          </ChartCard>
 
           {/* Ruled out - why to trust the list above */}
-          <section className="surface-panel overflow-hidden">
-            <div className="border-b border-border px-5 py-5">
-              <h2 className="text-lg font-semibold tracking-[-0.02em] text-foreground">Ruled out overnight</h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Candidates that convert well but could not be shown to <em>cause</em> the conversion.
-              </p>
-            </div>
-            <ul className="divide-y divide-border px-2 py-2">
+          <ChartCard className="overflow-hidden">
+            <ChartCardHeader>
+              <ChartCardTitle>
+                <ChartCardHeading>Ruled out overnight</ChartCardHeading>
+                <ChartCardDescription>
+                  Candidates that convert well but could not be shown to <em>cause</em> the conversion.
+                </ChartCardDescription>
+              </ChartCardTitle>
+            </ChartCardHeader>
+            <ul className="-mt-2 divide-y divide-border px-3">
               {rejected.slice(0, 4).map((item) => {
                 const o = item.current.opportunity;
                 const m = verdictMeta(o.verdict);
@@ -160,25 +148,27 @@ export default async function HomePage() {
                 <li className="px-4 py-8 text-sm text-muted-foreground">Nothing ruled out yet.</li>
               )}
             </ul>
-          </section>
+          </ChartCard>
         </div>
 
         {/* Closing the loop - what was launched and what it actually did */}
         {activations.length > 0 && (
-          <section className="surface-panel overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-5 sm:px-6">
-              <div>
-                <h2 className="text-lg font-semibold tracking-[-0.02em] text-foreground">Launched &amp; measuring</h2>
-                <p className="mt-0.5 text-sm text-muted-foreground">Measured against a holdout after launch.</p>
-              </div>
-              <Link
-                href="/launched"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-              >
-                View all <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-            </div>
-            <ul className="divide-y divide-border px-2 py-2 sm:px-3">
+          <ChartCard className="overflow-hidden">
+            <ChartCardHeader>
+              <ChartCardTitle>
+                <ChartCardHeading>Launched &amp; measuring</ChartCardHeading>
+                <ChartCardDescription>Measured against a holdout after launch.</ChartCardDescription>
+              </ChartCardTitle>
+              <ChartCardActions>
+                <Link
+                  href="/launched"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  View all <ArrowRight className="size-4" aria-hidden />
+                </Link>
+              </ChartCardActions>
+            </ChartCardHeader>
+            <ul className="-mt-2 divide-y divide-border px-3">
               {activations.slice(0, 3).map((a) => (
                 <li key={a.opportunityKey} className="flex items-center justify-between gap-3 rounded-xl px-3 py-3.5 transition-colors hover:bg-muted/45">
                   <span className="min-w-0">
@@ -193,7 +183,7 @@ export default async function HomePage() {
                 </li>
               ))}
             </ul>
-          </section>
+          </ChartCard>
         )}
       </div>
     </>

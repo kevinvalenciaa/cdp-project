@@ -260,7 +260,7 @@ export function OpportunityDetail({
                     </h3>
                     <div className="space-y-2">
                       {activation.variants.map((v) => (
-                        <div key={v.id} className="rounded-2xl border border-border bg-card p-4 text-sm text-foreground shadow-ht-xs">
+                        <div key={v.id} className="rounded-2xl border border-border bg-card p-4 text-sm text-foreground">
                           <span className="mr-2 font-mono text-xs text-muted-foreground">{v.id}</span>
                           {v.text}
                         </div>

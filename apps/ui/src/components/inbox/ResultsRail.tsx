@@ -62,7 +62,7 @@ export function ResultsRail({
             <li key={o.key}>
               <button
                 onClick={() => onOpen(o)}
-                className="w-full rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-ht-xs transition-all hover:-translate-y-px hover:border-ht-400 hover:shadow-ht-sm"
+                className="w-full rounded-2xl border border-border bg-card px-4 py-3.5 text-left transition-all hover:-translate-y-px hover:border-ht-400 hover:shadow-ht-sm"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex min-w-0 items-center gap-2">
@@ -133,7 +133,7 @@ export function ResultsRail({
               <li key={o.key}>
                 <button
                   onClick={() => onOpen(o)}
-                  className="flex w-full items-center justify-between gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-left shadow-ht-xs transition-colors hover:border-ht-400"
+                  className="flex w-full items-center justify-between gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-ht-400"
                 >
                   <span className="truncate text-sm text-foreground">{o.title}</span>
                   <StatusPill tone={m.tone}>{m.label}</StatusPill>

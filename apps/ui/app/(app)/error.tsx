@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <div className="m-4 flex flex-col items-center justify-center rounded-[20px] border border-border bg-card px-6 py-20 text-center shadow-ht-xs sm:m-6 lg:m-8">
+    <div className="m-4 flex flex-col items-center justify-center rounded-[20px] border border-border bg-card px-6 py-20 text-center sm:m-6 lg:m-8">
       <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ht-danger-bg text-ht-danger">
         <AlertTriangle className="h-6 w-6" aria-hidden />
       </span>

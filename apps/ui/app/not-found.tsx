@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Compass } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
@@ -12,12 +13,9 @@ export default function NotFound() {
         <p className="mt-1 text-sm text-muted-foreground">
           That page does not exist. The opportunity board is the best place to pick things back up.
         </p>
-        <Link
-          href="/"
-          className="mt-5 inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-ht-xs transition-colors hover:bg-ht-teal-hover"
-        >
-          Back to Home
-        </Link>
+        <Button asChild className="mt-5">
+          <Link href="/">Back to Home</Link>
+        </Button>
       </div>
     </div>
   );

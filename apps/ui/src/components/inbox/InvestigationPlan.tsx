@@ -294,7 +294,7 @@ export function InvestigationPlan({ events, streaming }: { events: EngineEvent[]
                 className="group flex items-center rounded-md px-1 py-1.5"
                 whileHover={{ backgroundColor: "rgba(0,0,0,0.03)", transition: { duration: 0.2 } }}
               >
-                <div className="mr-2 flex-shrink-0">
+                <div className="mr-2 shrink-0">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={task.status}
@@ -318,7 +318,7 @@ export function InvestigationPlan({ events, streaming }: { events: EngineEvent[]
                     </span>
                   </div>
                   <motion.span
-                    className={`rounded px-1.5 py-0.5 text-[11px] ${STATUS_BADGE[task.status]}`}
+                    className={`rounded-sm px-1.5 py-0.5 text-[11px] ${STATUS_BADGE[task.status]}`}
                     variants={statusBadgeVariants}
                     initial="initial"
                     animate="animate"
@@ -363,7 +363,7 @@ export function InvestigationPlan({ events, streaming }: { events: EngineEvent[]
                               whileHover={{ backgroundColor: "rgba(0,0,0,0.03)", transition: { duration: 0.2 } }}
                               layout
                             >
-                              <div className="mr-2 flex-shrink-0">
+                              <div className="mr-2 shrink-0">
                                 <AnimatePresence mode="wait">
                                   <motion.div
                                     key={subtask.status}
@@ -403,7 +403,7 @@ export function InvestigationPlan({ events, streaming }: { events: EngineEvent[]
                                         {subtask.tools.map((tool, idx) => (
                                           <motion.span
                                             key={idx}
-                                            className="rounded bg-secondary/60 px-1.5 py-0.5 font-mono text-[10px] font-medium text-secondary-foreground shadow-sm"
+                                            className="rounded-sm bg-secondary/60 px-1.5 py-0.5 font-mono text-[10px] font-medium text-secondary-foreground shadow-xs"
                                             initial={{ opacity: 0, y: -5 }}
                                             animate={{ opacity: 1, y: 0, transition: { duration: 0.2, delay: idx * 0.05 } }}
                                             whileHover={{

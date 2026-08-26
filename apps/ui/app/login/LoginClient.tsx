@@ -42,7 +42,7 @@ export function LoginClient({ configured }: { configured: boolean }) {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm outline-none focus:border-ht-400 focus:ring-2 focus:ring-ring/20"
+              className="mt-1.5 h-11 w-full rounded-md border border-input bg-background px-3.5 text-sm outline-hidden focus:border-ht-400 focus:ring-2 focus:ring-ring/20"
               placeholder="you@company.com"
             />
           </label>

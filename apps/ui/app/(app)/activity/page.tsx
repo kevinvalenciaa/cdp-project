@@ -4,6 +4,7 @@ import type { EngineEvent } from "@/lib/types";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
+import { Button } from "@/components/ui/button";
 import { getRequestContext } from "@/server/auth";
 import { getInvestigationRepository } from "@/server/investigations";
 
@@ -30,12 +31,11 @@ export default async function ActivityPage() {
             title="No activity yet"
             description="Every plan, query, rejection and confirmation the agents make shows up here."
             action={
-              <Link
-                href="/investigations"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-ht-xs"
-              >
-                Run an investigation <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
+              <Button asChild>
+                <Link href="/investigations">
+                  Run an investigation <ArrowRight aria-hidden />
+                </Link>
+              </Button>
             }
           />
         )}

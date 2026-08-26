@@ -53,7 +53,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, ...props }, ref) => (
   <textarea
     className={cn(
-      "ai-prompt-textarea flex min-h-[44px] w-full resize-none rounded-md border-none bg-transparent px-3 py-2.5 text-base text-foreground outline-none ring-0 placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
+      "ai-prompt-textarea flex min-h-[44px] w-full resize-none rounded-md border-none bg-transparent px-3 py-2.5 text-base text-foreground outline-hidden ring-0 placeholder:text-muted-foreground focus:outline-hidden focus:ring-0 focus:ring-offset-0 focus-visible:outline-hidden focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     ref={ref}
@@ -93,7 +93,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/40 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className,
     )}
     {...props}
@@ -139,13 +139,17 @@ DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
 // Button Component
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "outline" | "ghost";
+  variant?: "default" | "special" | "outline" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
 }
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", ...props }, ref) => {
     const variantClasses = {
       default: "bg-primary hover:bg-ht-teal-hover text-primary-foreground",
+      // Mirrors the gradient CTA in components/ui/button.tsx - the send button
+      // is the one control in here that carries the product's primary action.
+      special:
+        "bg-[radial-gradient(228.59%_228.57%_at_50%_0%,_oklch(0.6544_0.0956_218.6)_0%,_oklch(0.4544_0.0956_218.6)_100%)] text-primary-foreground shadow-[0px_0.75px_0px_0px_rgba(255,255,255,0.20)_inset,0px_1px_2px_0px_rgba(0,0,0,0.40),0px_0px_0px_1px_oklch(0.5044_0.0956_218.6)] hover:brightness-110",
       outline: "border border-border bg-transparent hover:bg-muted",
       ghost: "bg-transparent hover:bg-muted",
     };
@@ -153,12 +157,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       default: "h-10 px-4 py-2",
       sm: "h-8 px-3 text-sm",
       lg: "h-12 px-6",
-      icon: "h-8 w-8 rounded-full aspect-[1/1]",
+      icon: "h-8 w-8 rounded-md aspect-[1/1]",
     };
     return (
       <button
         className={cn(
-          "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50",
           variantClasses[variant],
           sizeClasses[size],
           className,
@@ -335,18 +339,32 @@ const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
             disabled,
           }}
         >
+          {/*
+           * Two layers: a frosted grey ring with a hairline white outer stroke,
+           * and the white composer surface inset inside it. The ring is what
+           * separates the composer from the page without a hard border.
+           */}
           <div
             ref={ref}
-            className={cn(
-              "rounded-[20px] border border-border bg-card p-3 shadow-ht-sm transition-all duration-300",
-              isLoading && "border-primary/50",
-              className,
-            )}
+            className={cn("overflow-hidden p-1 backdrop-blur-lg transition-all duration-300", className)}
+            style={{
+              borderRadius: "20px",
+              background: "rgba(115, 115, 115, 0.15)",
+              boxShadow:
+                "0px 10px 15px -3px rgba(0,0,0,0.1), 0px 4px 6px -2px rgba(0,0,0,0.05), 0px 0px 0px 0.5px rgba(255,255,255,0.95)",
+            }}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
           >
-            {children}
+            <div
+              className={cn(
+                "overflow-hidden rounded-2xl bg-white px-1 pb-1.5 pt-2 transition-colors",
+                isLoading && "ring-1 ring-inset ring-primary/25",
+              )}
+            >
+              {children}
+            </div>
           </div>
         </PromptInputContext.Provider>
       </TooltipProvider>
@@ -656,48 +674,28 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
               </button>
             </PromptInputAction>
 
-            <div className="flex items-center">
+            {/*
+             * Styled as the segmented control the reference uses for composer
+             * modes, but these stay two independent toggles - Search and Think
+             * can be on together, so a single-select Tabs would change what the
+             * composer actually does.
+             */}
+            <div className="flex h-8 items-center gap-0.5 rounded-md border border-neutral-200 bg-neutral-50 p-0.5">
               <button
                 type="button"
                 onClick={() => handleToggleChange("search")}
                 aria-label="Toggle warehouse search"
                 aria-pressed={showSearch}
                 className={cn(
-                  "flex h-8 items-center gap-1 rounded-full border px-2 py-1 transition-all",
+                  "inline-flex h-full items-center gap-1 rounded-sm border px-2 text-xs font-medium transition-colors",
                   showSearch
-                    ? "border-primary/45 bg-ht-teal-tint text-primary"
-                    : "border-transparent bg-transparent text-muted-foreground hover:text-foreground",
+                    ? "border-neutral-200 bg-white text-primary shadow-sm"
+                    : "border-transparent text-neutral-500 hover:bg-neutral-200/50",
                 )}
               >
-                <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center">
-                  <motion.div
-                    animate={{ rotate: showSearch ? 360 : 0, scale: showSearch ? 1.1 : 1 }}
-                    whileHover={{
-                      rotate: showSearch ? 360 : 15,
-                      scale: 1.1,
-                      transition: { type: "spring", stiffness: 300, damping: 10 },
-                    }}
-                    transition={{ type: "spring", stiffness: 260, damping: 25 }}
-                  >
-                    <Globe className={cn("h-4 w-4", showSearch ? "text-primary" : "text-inherit")} />
-                  </motion.div>
-                </div>
-                <AnimatePresence>
-                  {showSearch && (
-                    <motion.span
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: "auto", opacity: 1 }}
-                      exit={{ width: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex-shrink-0 overflow-hidden whitespace-nowrap text-xs text-primary"
-                    >
-                      Search
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                <Globe className="size-3.5 shrink-0" aria-hidden />
+                Search
               </button>
-
-              <CustomDivider />
 
               <button
                 type="button"
@@ -705,38 +703,14 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
                 aria-label="Toggle deeper reasoning"
                 aria-pressed={showThink}
                 className={cn(
-                  "flex h-8 items-center gap-1 rounded-full border px-2 py-1 transition-all",
+                  "inline-flex h-full items-center gap-1 rounded-sm border px-2 text-xs font-medium transition-colors",
                   showThink
-                    ? "border-ht-green-border bg-ht-green-bg text-ht-green"
-                    : "border-transparent bg-transparent text-muted-foreground hover:text-foreground",
+                    ? "border-neutral-200 bg-white text-ht-green shadow-sm"
+                    : "border-transparent text-neutral-500 hover:bg-neutral-200/50",
                 )}
               >
-                <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center">
-                  <motion.div
-                    animate={{ rotate: showThink ? 360 : 0, scale: showThink ? 1.1 : 1 }}
-                    whileHover={{
-                      rotate: showThink ? 360 : 15,
-                      scale: 1.1,
-                      transition: { type: "spring", stiffness: 300, damping: 10 },
-                    }}
-                    transition={{ type: "spring", stiffness: 260, damping: 25 }}
-                  >
-                    <BrainCog className={cn("h-4 w-4", showThink ? "text-ht-green" : "text-inherit")} />
-                  </motion.div>
-                </div>
-                <AnimatePresence>
-                  {showThink && (
-                    <motion.span
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: "auto", opacity: 1 }}
-                      exit={{ width: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex-shrink-0 overflow-hidden whitespace-nowrap text-xs text-ht-green"
-                    >
-                      Think
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                <BrainCog className="size-3.5 shrink-0" aria-hidden />
+                Think
               </button>
             </div>
           </div>
@@ -753,15 +727,15 @@ export const PromptInputBox = React.forwardRef((props: PromptInputBoxProps, ref:
             }
           >
             <Button
-              variant="default"
+              variant={isRecording || !hasContent ? "ghost" : "special"}
               size="icon"
               className={cn(
-                "h-8 w-8 rounded-full transition-all duration-200",
+                "h-8 w-8 shrink-0 transition-all duration-200",
                 isRecording
-                  ? "bg-transparent text-red-500 hover:bg-muted hover:text-red-400"
+                  ? "text-red-500 hover:bg-muted hover:text-red-400"
                   : hasContent
-                    ? "bg-primary text-primary-foreground hover:bg-ht-teal-hover"
-                    : "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? ""
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
               onClick={() => {
                 if (isLoading) onStop();

@@ -1,87 +1,409 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* globals.css lives under app/, so point the scanner at both source roots. */
+@source '../app';
+@source '../src';
+
+@custom-variant dark (&:is(.dark *));
 
 /*
  * Proofloop product theme.
  *
- * The application uses Proofloop's teal/green identity with an airy,
- * low-contrast dashboard framing from the visual reference: a pale blue-gray
- * canvas, white elevated surfaces, generous radii, and a light navigation rail.
+ * Token structure, radii, shadow ramp and shell geometry follow the reference
+ * design system verbatim. The only substitution is hue: the reference violet
+ * primary is replaced by Proofloop's teal #007A92, which converts to
+ * oklch(0.532 0.0956 218.6) — within 0.007 L of the value it replaces, so it
+ * drops into the ramp without relighting anything.
+ *
+ * Verdict colors (green proven / coral rejected / amber superseded) are content
+ * semantics rather than branding, so they keep their Proofloop values.
  */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0 0 0);
+  --card: oklch(0.9881 0 0);
+  --card-foreground: oklch(0.3523 0 0);
+  --popover: oklch(0.9911 0 0);
+  --popover-foreground: oklch(0.2435 0 0);
+  --primary: oklch(0.532 0.0956 218.6); /* #007A92 */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(1 0 0);
+  --secondary-foreground: oklch(0.5756 0.0956 218.6);
+  --muted: oklch(0.9521 0 0);
+  --muted-foreground: hsla(0, 0%, 45%, 1);
+  --accent: oklch(0.974 0.004 218.6);
+  --accent-foreground: oklch(0.2435 0 0);
+  --destructive: hsl(343 100% 41%); /* #D3003B */
+  --destructive-foreground: oklch(1 0 0);
+  --border: hsla(195, 17%, 92%, 1);
+  --input: hsla(0, 0%, 80%, 1);
+  --ring: oklch(0.532 0.0956 218.6);
+
+  /* Semantic states — Proofloop verdict palette, deliberately not re-hued. */
+  --success: hsl(149 100% 21%); /* #006B34 */
+  --success-foreground: oklch(1 0 0);
+  --warning: hsl(27 100% 35%); /* #B25100 */
+  --warning-foreground: oklch(1 0 0);
+  --error: hsl(343 100% 41%);
+
+  /* Charts keep their meaning: teal primary, green positive, coral risk. */
+  --chart-1: hsl(190 100% 29%);
+  --chart-2: hsl(149 100% 21%);
+  --chart-3: hsl(343 100% 41%);
+  --chart-4: hsl(27 100% 35%);
+  --chart-5: hsl(0 0% 78%);
+
+  --sidebar: oklch(0.974 0.004 218.6);
+  --sidebar-foreground: oklch(0.3523 0 0);
+  --sidebar-input: oklch(0.94 0.004 218.6);
+  --sidebar-primary: oklch(0.3523 0 0);
+  --sidebar-primary-foreground: oklch(0.3523 0 0);
+  --sidebar-accent: oklch(1 0 0);
+  --sidebar-accent-foreground: oklch(0.3523 0 0);
+  --sidebar-border: oklch(0.9006 0 0);
+  --sidebar-ring: oklch(0.9006 0 0);
+
+  --font-sans: var(--font-outfit), sans-serif;
+  --font-serif: var(--font-outfit), sans-serif;
+  --font-mono: var(--font-outfit), sans-serif;
+
+  --radius: 0.7rem;
+
+  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+  --shadow-xl:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+/*
+ * Dark tokens are defined for parity with the reference system, which also
+ * ships light-only. Nothing mounts the `.dark` class today; this exists so a
+ * future toggle has a complete palette to switch to rather than a half-theme.
+ */
+.dark {
+  --background: oklch(0.1776 0 0);
+  --foreground: oklch(0.9491 0 0);
+  --card: oklch(0.2134 0 0);
+  --card-foreground: oklch(0.9491 0 0);
+  --popover: oklch(0.2134 0 0);
+  --popover-foreground: oklch(0.9491 0 0);
+  --primary: oklch(0.7385 0.0956 218.6);
+  --primary-foreground: oklch(0.2029 0.024 218.6);
+  --secondary: oklch(0.532 0.0956 218.6);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.252 0 0);
+  --muted-foreground: oklch(0.7699 0 0);
+  --accent: oklch(0.285 0 0);
+  --accent-foreground: oklch(0.9491 0 0);
+  --destructive: oklch(0.6271 0.1936 33.339);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.2351 0.0115 218.6);
+  --input: oklch(0.4017 0 0);
+  --ring: oklch(0.7385 0.0956 218.6);
+  --sidebar: oklch(0.2103 0.0059 218.6);
+  --sidebar-foreground: oklch(0.9674 0.0013 218.6);
+  --sidebar-input: oklch(0.7 0.0013 218.6);
+  --sidebar-primary: oklch(0.532 0.0956 218.6);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.2739 0.0055 218.6);
+  --sidebar-accent-foreground: oklch(0.9674 0.0013 218.6);
+  --sidebar-border: oklch(0.2739 0.0055 218.6);
+  --sidebar-ring: oklch(0.8711 0.0055 218.6);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-input: var(--sidebar-input);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /*
+   * Proofloop brand hexes, for the components that need an exact value rather
+   * than a semantic token (verdict pills, evidence bars, chart series).
+   */
+  --color-ht-teal: #007a92;
+  --color-ht-teal-hover: #00677a;
+  --color-ht-teal-tint: #ecfcff;
+  --color-ht-green: #006b34;
+  --color-ht-green-bg: #eaf5ee;
+  --color-ht-green-border: #6fce8e;
+  --color-ht-green-accent: #40de9e;
+  --color-ht-warning: #b25100;
+  --color-ht-warning-bg: #fff6ec;
+  --color-ht-danger: #d3003b;
+  --color-ht-danger-bg: #fff1f1;
+  --color-ht-danger-text: #9a0028;
+  --color-ht-50: #fafafa;
+  --color-ht-100: #f5f5f5;
+  --color-ht-200: #ebebeb;
+  --color-ht-300: #e0dedf;
+  --color-ht-400: #c7c2c3;
+  --color-ht-500: #8f8a8b;
+  --color-ht-600: #696365;
+  --color-ht-700: #4b494a;
+  --color-ht-800: #302d2e;
+  --color-ht-900: #1f1d1e;
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+  --font-display: var(--font-sans);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  /* Retained Proofloop elevation ramp, used by cards that predate the port. */
+  --shadow-ht-xs: 0 1px 2px rgba(31, 45, 61, 0.025),
+    0 8px 24px -18px rgba(31, 45, 61, 0.18);
+  --shadow-ht-sm: 0 8px 24px -16px rgba(31, 45, 61, 0.2),
+    0 2px 6px rgba(31, 45, 61, 0.035);
+  --shadow-ht-md: 0 20px 45px -24px rgba(31, 45, 61, 0.28),
+    0 4px 12px rgba(31, 45, 61, 0.05);
+
+  --animate-slide-up: slide-up 0.25s ease-out;
+  --animate-shimmer: shimmer 2.5s ease-in-out infinite;
+  --animate-pill-shimmer: pill-shimmer 1.6s ease-in-out infinite;
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes pill-shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}
+
 @layer base {
-  :root {
-    --background: 216 33% 97%; /* #F6F8FB app canvas */
-    --foreground: 340 3% 18%; /* #302D2E text-primary */
-    --card: 0 0% 100%;
-    --card-foreground: 340 3% 18%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 340 3% 18%;
-    --primary: 190 100% 29%; /* #007A92 teal */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 214 30% 96%;
-    --secondary-foreground: 340 3% 18%;
-    --muted: 214 28% 96%;
-    --muted-foreground: 220 9% 43%;
-    --accent: 190 40% 94%;
-    --accent-foreground: 340 3% 18%;
-    --destructive: 343 100% 41%; /* #D3003B */
-    --destructive-foreground: 0 0% 100%;
-    --border: 216 20% 88%;
-    --input: 216 20% 86%;
-    --ring: 190 100% 29%;
-    --radius: 1rem;
-
-    --chart-teal: 190 100% 29%;
-    --chart-green: 149 100% 21%;
-    --chart-coral: 343 100% 41%;
-    --chart-neutral: 0 0% 78%;
-
-    /* Light rail with teal selection states. */
-    --sidebar-background: 216 33% 98%;
-    --sidebar-foreground: 220 13% 31%;
-    --sidebar-primary: 190 100% 29%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 190 48% 92%;
-    --sidebar-accent-foreground: 190 100% 23%;
-    --sidebar-border: 216 20% 89%;
-    --sidebar-ring: 190 100% 29%;
-  }
-
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings:
+      'liga' 1,
+      'kern' 1;
+    /* Keeps content from shifting when a route's height changes. */
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
   }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-foreground);
+  }
+
   ::selection {
-    background: hsl(var(--primary) / 0.16);
-  }
-  :focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    background: color-mix(in oklab, var(--primary) 16%, transparent);
   }
 }
 
 @layer components {
+  /*
+   * Page and surface shims. Every route wrapper and panel in the app routes
+   * through one of these, so the whole product picks up the reference anatomy
+   * from a single definition rather than thirty call-site edits.
+   */
   .app-page {
-    @apply space-y-7 p-4 sm:p-6 lg:p-7 xl:p-8;
+    @apply flex flex-col gap-6 p-6;
+  }
+
+  /*
+   * Flex children default to `min-width: auto`, so a section whose min-content
+   * width exceeds the page (a wide card grid on a narrow phone) would push the
+   * document sideways instead of shrinking. Opting every direct child down to
+   * min-w-0 keeps the inner truncate/line-clamp rules in charge of overflow.
+   */
+  .app-page > * {
+    @apply min-w-0;
   }
 
   .surface-panel {
-    @apply rounded-[18px] border border-border bg-card shadow-ht-xs;
+    @apply rounded-xl border border-border bg-white;
   }
 
   .metric-card {
-    @apply rounded-[18px] border border-border bg-card p-5 shadow-ht-xs;
+    @apply relative flex flex-row items-center justify-start rounded-2xl border border-border bg-linear-to-b from-ht-teal/[0.07] via-white to-white p-4;
   }
 
   .control-surface {
-    @apply rounded-[18px] border border-border bg-card p-3 shadow-ht-xs;
+    @apply rounded-xl border border-border bg-white p-3;
+  }
+}
+
+@layer utilities {
+  .btn-primary-gradient {
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-primary) 88%, white 12%),
+      color-mix(in oklab, var(--color-primary) 100%, black 6%)
+    );
+    color: var(--color-primary-foreground);
+  }
+  .btn-primary-gradient:hover {
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-primary) 90%, white 10%),
+      color-mix(in oklab, var(--color-primary) 100%, black 10%)
+    );
+  }
+  .btn-primary-gradient:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--color-ring) 40%, transparent 60%);
   }
 
-  .eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground;
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Auto-hide scrollbar: invisible at rest, fades in on scroll/hover. */
+  .scrollbar-auto-hide {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.2s ease-out;
+  }
+  .scrollbar-auto-hide:hover,
+  .scrollbar-auto-hide:focus-within {
+    scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+  }
+  .scrollbar-auto-hide::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-auto-hide::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-auto-hide::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    transition: background-color 0.2s ease-out;
+  }
+  .scrollbar-auto-hide:hover::-webkit-scrollbar-thumb,
+  .scrollbar-auto-hide:focus-within::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-border {
+    border-radius: 20px !important;
+    border: 0.5px solid #e5e5e5 !important;
+    box-shadow:
+      0 1px 3px 0 rgba(0, 0, 0, 0.1),
+      0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 0 5px color-mix(in srgb, #f4f2f2, transparent 70%) !important;
+  }
+
+  .pill-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--primary) 8%, transparent) 0%,
+      color-mix(in oklab, var(--primary) 20%, transparent) 50%,
+      color-mix(in oklab, var(--primary) 8%, transparent) 100%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-pill-shimmer);
+  }
+
+  .shimmer-effect {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-effect::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+    animation: var(--animate-shimmer);
+    pointer-events: none;
   }
 }
 
@@ -119,7 +441,7 @@
   @apply text-foreground/90 not-italic font-medium;
 }
 .md code {
-  @apply bg-muted text-primary px-1.5 py-0.5 rounded text-sm font-mono;
+  @apply bg-muted text-primary px-1.5 py-0.5 rounded-sm text-sm font-mono;
 }
 .md a {
   @apply text-primary underline;

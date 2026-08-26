@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Sparkles } from "lucide-react";
 import type { InvestigationDetail } from "@/lib/investigations";
 import { PromptInputBox } from "@/components/ui/ai-prompt-box";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function NewInvestigationClient() {
   const router = useRouter();
@@ -33,12 +34,15 @@ export function NewInvestigationClient() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center p-4 sm:p-6 lg:min-h-full lg:p-8">
+    <div className="relative flex min-h-[calc(100dvh-4rem)] items-center justify-center p-4 sm:p-6 lg:min-h-full lg:p-8">
+      {/* The only nav affordance on this route below md, where the rail is a sheet. */}
+      <SidebarTrigger className="absolute left-4 top-4 md:hidden" />
       <div className="w-full max-w-3xl px-5 py-10 text-center sm:px-10 sm:py-14">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] bg-ht-teal-tint">
-          <Sparkles className="h-6 w-6 text-ht-teal" aria-hidden />
+        {/* Same neumorphic plate the dashboard stat glyphs sit on. */}
+        <div className="mx-auto flex size-14 items-center justify-center rounded-lg border border-[#FAFDFF] bg-white shadow-[0.5px_0.5px_3px_0_rgba(0,0,0,0.15),-4px_-4px_4px_0_rgba(0,0,0,0.02)_inset,2px_2px_4px_0_rgba(0,122,146,0.15)_inset]">
+          <Sparkles className="size-6 text-ht-teal" aria-hidden />
         </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-[-0.025em] text-foreground">Start an investigation</h1>
+        <h1 className="mt-5 text-2xl font-semibold tracking-[-0.02em] text-foreground">Start an investigation</h1>
         <p className="mx-auto mt-1.5 max-w-lg text-sm text-muted-foreground">
           Describe the business outcome. The agent team will scan the warehouse, verify every claim, and keep this
           investigation available for contextual follow-ups.

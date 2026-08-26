@@ -20,6 +20,8 @@ import type {
 } from "@/lib/investigations";
 import type { EngineEvent, Opportunity, RunDetail } from "@/lib/types";
 import { usePersistedToggle } from "@/lib/use-persisted-toggle";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { PromptInputBox } from "@/components/ui/ai-prompt-box";
 import { InvestigationPlan } from "@/components/inbox/InvestigationPlan";
 import { ResultsRail } from "@/components/inbox/ResultsRail";
@@ -162,8 +164,9 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
   return (
     <>
       <div className="bg-background xl:flex xl:h-full xl:gap-4 xl:p-4">
-        <div className="relative flex min-w-0 flex-1 flex-col bg-card xl:overflow-hidden xl:rounded-[20px] xl:border xl:border-border xl:shadow-ht-xs">
+        <div className="relative flex min-w-0 flex-1 flex-col bg-white xl:overflow-hidden xl:rounded-xl xl:border xl:border-border">
           <div className="flex min-h-16 items-center gap-3 border-b border-border px-5 pr-36">
+            <SidebarTrigger className="-ml-1 md:hidden" />
             <Link href="/investigations" className="text-xs text-muted-foreground hover:text-foreground">
               Investigations
             </Link>
@@ -175,7 +178,7 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
               }}
-              className="min-w-0 flex-1 truncate bg-transparent text-sm font-medium text-foreground outline-none"
+              className="min-w-0 flex-1 truncate bg-transparent text-sm font-medium text-foreground outline-hidden"
               aria-label="Investigation title"
             />
             {activeRun && (
@@ -188,27 +191,25 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
 
           <div className="absolute right-4 top-3 z-10 flex items-center gap-1.5">
             {!railOpen && (
-              <button
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={toggleRail}
                 aria-label="Open results"
                 title="Open results"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-foreground transition-colors hover:border-border hover:bg-muted"
               >
-                <FileChartColumn className="h-5 w-5" aria-hidden />
-              </button>
+                <FileChartColumn aria-hidden />
+              </Button>
             )}
-            <button
-              onClick={() => setShareOpen(true)}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3.5 text-sm font-semibold text-primary-foreground shadow-ht-xs transition-all hover:-translate-y-px hover:bg-ht-teal-hover"
-            >
-              <Share2 className="h-4 w-4" aria-hidden />
+            <Button onClick={() => setShareOpen(true)}>
+              <Share2 aria-hidden />
               <span className="hidden sm:inline">Share</span>
-            </button>
+            </Button>
           </div>
 
           <div ref={feedRef} className="min-h-0 flex-1 overflow-y-auto">
             <div className="mx-auto w-full max-w-3xl space-y-7 px-5 py-7 sm:px-7 lg:py-9">
-              <div className="rounded-2xl border border-border bg-background px-4 py-3.5">
+              <div className="rounded-xl border border-border bg-neutral-50 px-4 py-3.5">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Investigation objective
                 </div>
@@ -224,26 +225,27 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
                   <div key={message.id}>
                     {message.role === "user" ? (
                       <div className="flex justify-end">
-                        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-relaxed text-primary-foreground shadow-ht-xs">
+                        <div className="max-w-[85%] rounded-xl rounded-br-md bg-primary px-4 py-3 text-sm leading-relaxed text-primary-foreground">
                           {message.content}
                         </div>
                       </div>
                     ) : (
                       <div className="flex gap-3">
-                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-ht-teal-tint">
-                          <Sparkles className="h-3.5 w-3.5 text-ht-teal" aria-hidden />
+                        {/* Same neumorphic plate the dashboard stat glyphs sit on. */}
+                        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-[#FAFDFF] bg-white shadow-[0.5px_0.5px_3px_0_rgba(0,0,0,0.15),-4px_-4px_4px_0_rgba(0,0,0,0.02)_inset,2px_2px_4px_0_rgba(0,122,146,0.15)_inset]">
+                          <Sparkles className="size-4 text-ht-teal" aria-hidden />
                         </div>
                         <div className="min-w-0 flex-1">
                           {run && (run.status === "queued" || run.status === "running") ? (
-                            <div className="rounded-2xl rounded-tl-md border border-border bg-background px-4 py-3.5 shadow-ht-xs">
+                            <div className="rounded-xl rounded-tl-md border border-border bg-white px-4 py-3.5">
                               <InvestigationPlan events={events} streaming />
                             </div>
                           ) : (
                             <div
-                              className={`whitespace-pre-wrap rounded-2xl rounded-tl-md border px-4 py-3 text-sm leading-relaxed shadow-ht-xs ${
+                              className={`whitespace-pre-wrap rounded-xl rounded-tl-md border px-4 py-3 text-sm leading-relaxed ${
                                 message.status === "error"
                                   ? "border-ht-danger/25 bg-ht-danger-bg text-ht-danger-text"
-                                  : "border-border bg-background text-foreground"
+                                  : "border-border bg-white text-foreground"
                               }`}
                             >
                               {message.status === "queued" || message.status === "running" ? (
@@ -302,10 +304,10 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
             </div>
           </div>
 
-          <div className="border-t border-border bg-card/90 px-5 py-4 backdrop-blur sm:px-7">
+          <div className="border-t border-border bg-white/90 px-5 py-4 backdrop-blur sm:px-7">
             <div className="mx-auto w-full max-w-3xl">
               {investigation.status === "archived" ? (
-                <div className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                <div className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
                   <Archive className="h-4 w-4" aria-hidden /> This investigation is archived and read-only.
                 </div>
               ) : (
@@ -336,9 +338,9 @@ export function InvestigationClient({ initialInvestigation }: { initialInvestiga
           />
         )}
         <aside
-          className={`bg-card/95 backdrop-blur transition-[width] duration-200 ease-out ${
+          className={`bg-white/95 backdrop-blur transition-[width] duration-200 ease-out ${
             railOpen
-              ? "fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-y-auto rounded-t-[24px] border-t border-border shadow-ht-md xl:static xl:z-auto xl:max-h-none xl:w-[420px] xl:shrink-0 xl:rounded-[20px] xl:border xl:border-t xl:shadow-ht-xs"
+              ? "fixed inset-x-0 bottom-0 z-40 max-h-[78vh] overflow-y-auto rounded-t-[24px] border-t border-border shadow-lg xl:static xl:z-auto xl:max-h-none xl:w-[420px] xl:shrink-0 xl:rounded-xl xl:border xl:border-t xl:shadow-none"
               : "hidden xl:invisible xl:block xl:w-0 xl:shrink-0 xl:overflow-hidden"
           }`}
           aria-label="Investigation results"

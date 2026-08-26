@@ -32,7 +32,7 @@ export default async function SharedInvestigationPage({
   return (
     <main id="main" className="min-h-dvh bg-[#e9eef5] px-4 py-6 sm:px-6 lg:py-10">
       <div className="mx-auto max-w-5xl rounded-[26px] border border-white/80 bg-background p-4 shadow-ht-md sm:p-6 lg:p-8">
-        <header className="rounded-[20px] border border-border bg-card p-6 shadow-ht-xs lg:p-8">
+        <header className="rounded-[20px] border border-border bg-card p-6 lg:p-8">
           <div className="flex items-center gap-2 text-sm font-medium text-ht-teal">
             <Sparkles className="h-4 w-4" aria-hidden /> Proofloop investigation
           </div>
@@ -56,7 +56,7 @@ export default async function SharedInvestigationPage({
           </h2>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {snapshot.opportunities.map((opportunity) => (
-              <article key={opportunity.occurrenceId} className="rounded-[18px] border border-border bg-card p-5 shadow-ht-xs">
+              <article key={opportunity.occurrenceId} className="rounded-xl border border-border bg-card p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="inline-flex items-center gap-1.5 text-xs font-medium text-ht-green">
@@ -80,7 +80,7 @@ export default async function SharedInvestigationPage({
             ))}
           </div>
           {snapshot.opportunities.length === 0 && (
-            <div className="mt-3 rounded-[18px] border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            <div className="mt-3 rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
               No results were included in this snapshot.
             </div>
           )}
@@ -91,7 +91,7 @@ export default async function SharedInvestigationPage({
             <h2 id="shared-transcript-heading" className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               <MessageSquareText className="h-4 w-4" aria-hidden /> Transcript
             </h2>
-            <div className="mt-3 space-y-3 rounded-[20px] border border-border bg-card p-5 shadow-ht-xs">
+            <div className="mt-3 space-y-3 rounded-[20px] border border-border bg-card p-5">
               {snapshot.transcript.map((message, index) => (
                 <div key={`${message.createdAt}-${index}`} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
                   <div
