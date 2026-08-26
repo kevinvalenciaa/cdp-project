@@ -69,6 +69,12 @@ export interface InvestigationRepository {
   ): Promise<void>;
   listOpportunities(ctx: RequestContext, filters?: OpportunityFilters): Promise<WorkspaceOpportunity[]>;
   getWorkspaceOpportunity(ctx: RequestContext, key: string): Promise<{ opportunity: WorkspaceOpportunity; history: OpportunityOccurrence[] } | null>;
+  // --- Worker-internal surface. ---------------------------------------------
+  // Everything below takes no RequestContext and is therefore NOT workspace
+  // scoped: the worker dequeues jobs across all tenants and already knows the
+  // ids it is allowed to touch. Never reach these from a route handler with an
+  // id supplied by the client - go through a ctx-taking method instead, or you
+  // reintroduce a cross-tenant read.
   claimJob(queue: JobRecord["queue"], workerId: string, leaseSeconds: number): Promise<JobRecord | null>;
   completeJob(jobId: string): Promise<void>;
   failJob(jobId: string, error: string): Promise<void>;

@@ -1126,6 +1126,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
 
   async cancelRun(ctx: RequestContext, runId: string): Promise<InvestigationRun | null> {
     if (!canWrite(ctx.role)) throw new RepositoryError("FORBIDDEN", "This workspace role cannot cancel runs.");
+    let matched = false;
     await this.sql.begin(async (tx) => {
       const rows = await tx<Row[]>`
         update public.investigation_runs
@@ -1136,6 +1137,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
         returning investigation_id, assistant_message_id, status
       `;
       if (!rows[0]) return;
+      matched = true;
       if (rows[0].status === "cancelled") {
         await tx`update public.jobs set status = 'cancelled' where run_id = ${runId}::uuid and status = 'queued'`;
         await tx`
@@ -1152,7 +1154,19 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
         );
       }
     });
-    return this.getRun(runId);
+    // `return` inside the transaction callback only exits the callback, so
+    // without this guard a run belonging to another workspace fell straight
+    // through to getRun(), which is deliberately unscoped for the worker. That
+    // handed the caller the whole RunDetail - goal, transcript, every rejected
+    // opportunity and its evidence - with a 200. A run this caller cannot write
+    // to must be indistinguishable from one that does not exist.
+    if (!matched) return null;
+    // Re-read scoped as well, so the boundary does not rest on `matched` alone.
+    const rows = await this.sql<Row[]>`
+      select * from public.investigation_runs
+      where id = ${runId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+    `;
+    return rows[0] ? runFrom(rows[0]) : null;
   }
 
   async finalizeRunCancellation(runId: string): Promise<void> {
