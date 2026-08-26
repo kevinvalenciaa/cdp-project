@@ -193,6 +193,116 @@ describe("LocalInvestigationRepository", () => {
     await repository.completeJob(engineJob!.id);
   });
 
+  it("reports a live run status from the list, not only from the detail", async () => {
+    // The regression: listInvestigations returned the persisted summary verbatim,
+    // and activeRunStatus is only ever *written* as null - nothing sets "queued"
+    // or "running". So the list said null while getInvestigation said "running",
+    // and the sidebar's live dot and header spinner were dead in demo mode, which
+    // is the mode the demo ships in. Postgres derives this in SQL.
+    const repository = new Repository();
+    const created = await repository.createInvestigation(ctx, {
+      content: "Active run status investigation",
+      clientMessageId: "repo-test-active-status-1",
+      intentHint: "investigate",
+    });
+    const input = created.messages[0]!;
+    const assistantJob = await repository.claimJob("assistant", "repo-test-active-assistant", 60);
+    await repository.completeJob(assistantJob!.id);
+    const run = await repository.enqueueRun(
+      input.id,
+      {
+        version: 1,
+        objective: created.objective,
+        currentPrompt: input.content,
+        recentMessages: [{ role: "user", content: input.content }],
+        scopedResults: [],
+        referencedOccurrenceIds: [],
+        workspaceInsights: [],
+      },
+      input.content,
+    );
+
+    const queued = (await repository.listInvestigations(ctx, {})).find((item) => item.id === created.id);
+    expect(queued?.activeRunStatus).toBe("queued");
+
+    await repository.markRunRunning(run.id);
+    const running = (await repository.listInvestigations(ctx, {})).find((item) => item.id === created.id);
+    expect(running?.activeRunStatus).toBe("running");
+    expect((await repository.getInvestigation(ctx, created.id))?.activeRunStatus).toBe("running");
+
+    await repository.finalizeRunCancellation(run.id);
+    const settled = (await repository.listInvestigations(ctx, {})).find((item) => item.id === created.id);
+    expect(settled?.activeRunStatus).toBeNull();
+  });
+
+  it("refuses to resurrect a run that was cancelled while queued", async () => {
+    // markRunRunning set the status unconditionally, so a cancel landing between
+    // the worker's claim and this call was silently undone: the run carried on
+    // after the user was told it was cancelled, and the assistant message flipped
+    // back from "Investigation cancelled." to "Investigating…". Postgres guards
+    // this with `and status = 'queued'`.
+    const repository = new Repository();
+    const created = await repository.createInvestigation(ctx, {
+      content: "Resurrection guard investigation",
+      clientMessageId: "repo-test-resurrect-1",
+      intentHint: "investigate",
+    });
+    const input = created.messages[0]!;
+    const assistantJob = await repository.claimJob("assistant", "repo-test-resurrect-assistant", 60);
+    await repository.completeJob(assistantJob!.id);
+    const run = await repository.enqueueRun(
+      input.id,
+      {
+        version: 1,
+        objective: created.objective,
+        currentPrompt: input.content,
+        recentMessages: [{ role: "user", content: input.content }],
+        scopedResults: [],
+        referencedOccurrenceIds: [],
+        workspaceInsights: [],
+      },
+      input.content,
+    );
+    await repository.cancelRun(ctx, run.id);
+    expect((await repository.getRun(run.id))?.status).toBe("cancelled");
+
+    await repository.markRunRunning(run.id);
+
+    expect((await repository.getRun(run.id))?.status).toBe("cancelled");
+    const detail = await repository.getInvestigation(ctx, created.id);
+    expect(detail?.messages.find((message) => message.id === run.assistantMessageId)?.content).toBe(
+      "Investigation cancelled.",
+    );
+  });
+
+  it("allows only one active run per investigation, as Postgres does", async () => {
+    // Postgres enforces this with investigation_one_active_run_idx. Nothing
+    // enforced it here, so demo mode allowed two concurrent runs where
+    // production raised a constraint violation that wedged the investigation.
+    const repository = new Repository();
+    const created = await repository.createInvestigation(ctx, {
+      content: "Single active run investigation",
+      clientMessageId: "repo-test-single-run-1",
+      intentHint: "investigate",
+    });
+    const input = created.messages[0]!;
+    const context = {
+      version: 1 as const,
+      objective: created.objective,
+      currentPrompt: input.content,
+      recentMessages: [{ role: "user" as const, content: input.content }],
+      scopedResults: [],
+      referencedOccurrenceIds: [],
+      workspaceInsights: [],
+    };
+    const assistantJob = await repository.claimJob("assistant", "repo-test-single-run-assistant", 60);
+    await repository.completeJob(assistantJob!.id);
+    await repository.enqueueRun(input.id, context, input.content);
+    await expect(repository.enqueueRun(input.id, context, input.content)).rejects.toMatchObject({
+      code: "CONFLICT",
+    });
+  });
+
   it("recovers an expired lease without letting two workers own it at once", async () => {
     const repository = new Repository();
     const created = await repository.createInvestigation(ctx, {

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { apiError } from "@/server/api-response";
 import { getRequestContext } from "@/server/auth";
-import { decodeCursor, encodeCursor } from "@/server/cursor";
+import { decodeCursor, paginate, parsePageLimit } from "@/server/cursor";
 import { getInvestigationRepository } from "@/server/investigations";
 
 export const runtime = "nodejs";
@@ -23,26 +23,20 @@ export async function GET(req: Request): Promise<Response> {
         ? rawStatus
         : "proven";
     const cursor = CursorSchema.nullable().parse(decodeCursor(url.searchParams.get("cursor")));
-    const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100);
-    const all = await repository.listOpportunities(ctx, {
-      status,
-      query: url.searchParams.get("q") ?? undefined,
-      investigationId: url.searchParams.get("investigationId") ?? undefined,
-      cursor: cursor ?? undefined,
-      limit: limit + 1,
-    });
-    const opportunities = all.slice(0, limit);
-    const last = opportunities.at(-1);
-    return Response.json({
-      opportunities,
-      nextCursor:
-        all.length > limit && last
-          ? encodeCursor({
-              impactMonthly: last.current.impactMonthly,
-              key: last.key,
-            })
-          : null,
-    });
+    const limit = parsePageLimit(url.searchParams.get("limit"));
+    const { items, nextCursor } = await paginate(
+      limit,
+      (take) =>
+        repository.listOpportunities(ctx, {
+          status,
+          query: url.searchParams.get("q") ?? undefined,
+          investigationId: url.searchParams.get("investigationId") ?? undefined,
+          cursor: cursor ?? undefined,
+          limit: take,
+        }),
+      (item) => ({ impactMonthly: item.current.impactMonthly, key: item.key }),
+    );
+    return Response.json({ opportunities: items, nextCursor });
   } catch (error) {
     return apiError(error);
   }

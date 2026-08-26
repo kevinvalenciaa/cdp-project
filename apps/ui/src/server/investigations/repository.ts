@@ -127,3 +127,19 @@ export function canWrite(role: WorkspaceRole): boolean {
 export function canAdmin(role: WorkspaceRole): boolean {
   return role === "owner" || role === "admin";
 }
+
+/**
+ * Backstop for a repository read's row count.
+ *
+ * `pageMax` is the largest page a route may ask for. The ceiling here is
+ * pageMax + 1 because paginate() deliberately requests one row beyond the page to
+ * detect whether another one exists. Clamping to exactly pageMax swallowed that
+ * sentinel, so at limit === pageMax the caller could never be told there was a
+ * next page - pagination stopped dead after page one, in Postgres only, while
+ * the local repository (which did not clamp) paged correctly and hid the bug
+ * from every test and demo.
+ */
+export function boundedLimit(requested: number | undefined, pageMax: number): number {
+  if (requested === undefined || !Number.isFinite(requested)) return pageMax;
+  return Math.min(Math.max(Math.trunc(requested), 1), pageMax + 1);
+}

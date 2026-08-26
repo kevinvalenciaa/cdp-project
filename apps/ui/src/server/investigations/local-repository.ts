@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import boardData from "../../../public/board.json";
@@ -29,7 +29,7 @@ import type {
   WorkspaceOpportunity,
   WorkspaceSummary,
 } from "@/lib/investigations";
-import { canAdmin, canWrite, type InvestigationRepository, RepositoryError } from "./repository";
+import { boundedLimit, canAdmin, canWrite, type InvestigationRepository, RepositoryError } from "./repository";
 
 const STATE_PATH = process.env.LIFT_INVESTIGATION_STATE_PATH
   ? resolve(process.env.LIFT_INVESTIGATION_STATE_PATH)
@@ -183,12 +183,39 @@ function seedState(): LocalState {
   };
 }
 
+/**
+ * Parsed state, keyed by the file's mtime+size.
+ *
+ * Every read used to be a synchronous readFileSync plus a JSON.parse of the whole
+ * file, and every mutation a full stringify and rewrite - once per engine event,
+ * against a file that only grows. That is roughly three whole-file operations per
+ * streamed event, all of them blocking the event loop rather than just the
+ * caller, so a run stalled every concurrent request and open SSE stream with it.
+ *
+ * A statSync is orders of magnitude cheaper than a parse, and checking it keeps
+ * a second process (the standalone worker) correct: if it wrote, the stamp moves
+ * and we re-read.
+ */
+let cache: { stamp: string; state: LocalState } | null = null;
+
+function stampOf(): string | null {
+  try {
+    const info = statSync(STATE_PATH);
+    return `${info.mtimeMs}:${info.size}`;
+  } catch {
+    return null;
+  }
+}
+
 function readState(): LocalState {
   if (!existsSync(STATE_PATH)) return seedState();
+  const stamp = stampOf();
+  if (cache && stamp && cache.stamp === stamp) return cache.state;
   try {
     const value = JSON.parse(readFileSync(STATE_PATH, "utf8")) as LocalState;
     if (value.version !== 1) return seedState();
     value.activations ??= [];
+    if (stamp) cache = { stamp, state: value };
     return value;
   } catch {
     return seedState();
@@ -200,13 +227,25 @@ function persist(state: LocalState): void {
   const temp = `${STATE_PATH}.${process.pid}.tmp`;
   writeFileSync(temp, JSON.stringify(state));
   renameSync(temp, STATE_PATH);
+  // Adopt what we just wrote rather than re-parsing it on the next read.
+  const stamp = stampOf();
+  cache = stamp ? { stamp, state } : null;
 }
 
 async function mutate<T>(fn: (state: LocalState) => T | Promise<T>): Promise<T> {
   let result!: T;
   const operation = writeChain.then(async () => {
     const state = readState();
-    result = await fn(state);
+    try {
+      result = await fn(state);
+    } catch (error) {
+      // fn mutates in place. When it throws part-way - a CONFLICT check that
+      // fires after an earlier field was already touched - those edits are never
+      // persisted, so the cached object no longer matches the file. Drop it and
+      // let the next read reload the last committed state from disk.
+      cache = null;
+      throw error;
+    }
     persist(state);
   });
   // A rejected validation/conflict operation must reject for its caller without
@@ -229,13 +268,29 @@ function scopedLatest(state: LocalState, investigationId: string): OpportunityOc
   return [...byKey.values()].sort((a, b) => b.impactMonthly - a.impactMonthly);
 }
 
+/**
+ * Derive the live run status the same way `detail` does.
+ *
+ * The persisted InvestigationSummary carries an `activeRunStatus` field that is
+ * only ever written as null - nothing sets "queued" or "running" - so
+ * listInvestigations returned null for every row while getInvestigation reported
+ * the truth. The sidebar's live dot and header spinner were therefore dead in
+ * demo mode, which is the mode the demo ships in. Postgres computes this in SQL.
+ */
+function activeRunStatus(state: LocalState, investigationId: string): "queued" | "running" | null {
+  const active = state.runs.find(
+    (run) => run.investigationId === investigationId && (run.status === "queued" || run.status === "running"),
+  );
+  return active?.status === "running" ? "running" : active ? "queued" : null;
+}
+
 function detail(state: LocalState, item: InvestigationSummary): InvestigationDetail {
   const runs = state.runs
     .filter((run) => run.investigationId === item.id)
     .sort((a, b) => a.queuedAt.localeCompare(b.queuedAt));
   return {
     ...item,
-    activeRunStatus: runs.find((run) => run.status === "queued" || run.status === "running")?.status ?? null,
+    activeRunStatus: activeRunStatus(state, item.id),
     provenCount: scopedLatest(state, item.id).filter((o) => o.accepted).length,
     messages: state.messages
       .filter((message) => message.investigationId === item.id)
@@ -287,8 +342,9 @@ export class LocalInvestigationRepository implements InvestigationRepository {
     } = {},
   ): Promise<InvestigationSummary[]> {
     const query = options.query?.trim().toLowerCase();
-    return readState()
-      .investigations.filter(
+    const state = readState();
+    return state.investigations
+      .filter(
         (item) =>
           item.workspaceId === ctx.workspaceId &&
           (!options.status || item.status === options.status) &&
@@ -297,8 +353,16 @@ export class LocalInvestigationRepository implements InvestigationRepository {
             (item.lastActivityAt === options.cursor.lastActivityAt && item.id > options.cursor.id)) &&
           (!query || item.title.toLowerCase().includes(query) || item.objective.toLowerCase().includes(query)),
       )
-      .sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt))
-      .slice(0, options.limit ?? 100);
+      // The id tiebreaker is not optional: the cursor predicate above assumes
+      // id-ASC within a lastActivityAt group, and ties are common - seeded rows
+      // all share a timestamp, and createInvestigation writes created/updated/
+      // lastActivity at the same millisecond. Without it tied rows came back in
+      // insertion order and a page boundary could skip or repeat them. Postgres
+      // orders by (last_activity_at desc, id).
+      .sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt) || a.id.localeCompare(b.id))
+      .slice(0, boundedLimit(options.limit, 100))
+      // activeRunStatus is not maintained on the stored summary, so derive it.
+      .map((item) => ({ ...item, activeRunStatus: activeRunStatus(state, item.id) }));
   }
 
   async createInvestigation(
@@ -545,7 +609,7 @@ export class LocalInvestigationRepository implements InvestigationRepository {
           item.current.impactMonthly < filters.cursor.impactMonthly ||
           (item.current.impactMonthly === filters.cursor.impactMonthly && item.key > filters.cursor.key),
       )
-      .slice(0, Math.min(filters.limit ?? 500, 500));
+      .slice(0, boundedLimit(filters.limit, 500));
   }
 
   async getWorkspaceOpportunity(
@@ -758,6 +822,16 @@ export class LocalInvestigationRepository implements InvestigationRepository {
     return mutate((state) => {
       const input = state.messages.find((message) => message.id === messageId);
       if (!input) throw new RepositoryError("NOT_FOUND", "Message not found.");
+      // Postgres enforces one active run per investigation with a partial unique
+      // index; nothing enforced it here, so demo mode silently allowed two
+      // concurrent runs where production hard-failed. Same invariant, same error.
+      const active = state.runs.find(
+        (run) =>
+          run.investigationId === input.investigationId && (run.status === "queued" || run.status === "running"),
+      );
+      if (active) {
+        throw new RepositoryError("CONFLICT", "This investigation already has a run in progress.");
+      }
       input.status = "complete";
       input.intent = "investigate";
       const assistant: InvestigationMessage = {
@@ -816,6 +890,12 @@ export class LocalInvestigationRepository implements InvestigationRepository {
     await mutate((state) => {
       const run = state.runs.find((candidate) => candidate.id === runId);
       if (!run) throw new RepositoryError("NOT_FOUND", "Run not found.");
+      // Only queued -> running, matching the Postgres `and status = 'queued'`
+      // predicate. Setting it unconditionally let a cancel that landed between
+      // the worker's claim and this call be undone: the run carried on after the
+      // user was told it was cancelled, and the assistant message flipped back
+      // from "Investigation cancelled." to "Investigating…".
+      if (run.status !== "queued") return;
       run.status = "running";
       run.startedAt = iso();
       const assistant = state.messages.find((message) => message.id === run.assistantMessageId);

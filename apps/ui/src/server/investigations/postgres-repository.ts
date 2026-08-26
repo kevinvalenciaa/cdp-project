@@ -28,7 +28,7 @@ import type {
   WorkspaceRole,
   WorkspaceSummary,
 } from "@/lib/investigations";
-import { canAdmin, canWrite, type InvestigationRepository, RepositoryError } from "./repository";
+import { boundedLimit, canAdmin, canWrite, type InvestigationRepository, RepositoryError } from "./repository";
 
 type Row = Record<string, unknown>;
 type QuerySql = Sql | TransactionSql;
@@ -298,7 +298,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
           )
         )
       order by investigation.last_activity_at desc, investigation.id
-      limit ${Math.min(options.limit ?? 100, 100)}
+      limit ${boundedLimit(options.limit, 100)}
     `;
     return rows.map((row) => this.summaryFrom(row));
   }
@@ -640,7 +640,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
           )
         )
       order by occurrence.impact_monthly desc, occurrence.opportunity_key
-      limit ${Math.min(filters.limit ?? 500, 500)}
+      limit ${boundedLimit(filters.limit, 500)}
     `;
     const now = Date.now();
     return rows
@@ -917,6 +917,21 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
       if (!inputs[0]) throw new RepositoryError("NOT_FOUND", "Message not found.");
       const workspaceId = String(inputs[0].workspace_id);
       const investigationId = String(inputs[0].investigation_id);
+      // investigation_one_active_run_idx is a partial unique index over
+      // (investigation_id) where status in ('queued','running'). A stale active
+      // run - a crashed worker, or a cancellation that never finalized - made the
+      // insert below raise 23505, which rolled the whole transaction back and
+      // left the user message 'queued'. enqueueMessage then answered 409 for
+      // every subsequent message, permanently. Detect it here and surface a
+      // CONFLICT the API can explain instead of a constraint violation.
+      const active = await tx<Row[]>`
+        select id from public.investigation_runs
+        where investigation_id = ${investigationId}::uuid and status in ('queued', 'running')
+        limit 1
+      `;
+      if (active[0]) {
+        throw new RepositoryError("CONFLICT", "This investigation already has a run in progress.");
+      }
       const assistants = await tx<Row[]>`
         insert into public.investigation_messages (
           workspace_id, investigation_id, role, content, status, intent
@@ -1309,19 +1324,27 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
   }
 
   async revokeShare(ctx: RequestContext, shareId: string): Promise<boolean> {
-    const rows = canAdmin(ctx.role)
-      ? await this.sql<Row[]>`
-          update public.share_snapshots set revoked_at = now()
-          where id = ${shareId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
-          returning id
-        `
-      : await this.sql<Row[]>`
-          update public.share_snapshots set revoked_at = now()
-          where id = ${shareId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
-            and created_by = ${ctx.userId}::uuid
-          returning id
-        `;
-    return Boolean(rows[0]);
+    return this.sql.begin(async (tx) => {
+      // Folding the permission check into the WHERE clause made "you may not
+      // revoke this" indistinguishable from "no such share", so the same action
+      // answered 403 locally and 404 in production. Separate the two: the share
+      // is already workspace-scoped, so telling a member why they cannot revoke
+      // it leaks nothing.
+      const existing = await tx<Row[]>`
+        select created_by from public.share_snapshots
+        where id = ${shareId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+      `;
+      if (!existing[0]) return false;
+      if (!canAdmin(ctx.role) && String(existing[0].created_by) !== ctx.userId) {
+        throw new RepositoryError("FORBIDDEN", "Only the creator or an administrator can revoke this share.");
+      }
+      const rows = await tx<Row[]>`
+        update public.share_snapshots set revoked_at = now()
+        where id = ${shareId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+        returning id
+      `;
+      return Boolean(rows[0]);
+    });
   }
 
   private summaryFrom(row: Row): InvestigationSummary {
