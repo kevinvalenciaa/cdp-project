@@ -251,11 +251,18 @@ function assertWorkspace(ctx: RequestContext, item: { workspaceId: string }): vo
 
 export class LocalInvestigationRepository implements InvestigationRepository {
   async resolveWorkspace(user: { id: string; email: string }, preferredWorkspaceId?: string): Promise<RequestContext> {
+    // preferredWorkspaceId comes straight off the lift-workspace-id cookie, so it
+    // is client-controlled. Honouring it unchecked handed out an owner context for
+    // any workspace id the caller cared to name; the Postgres implementation looks
+    // up membership, and this one has to agree. Falling back to the demo workspace
+    // rather than throwing keeps a stale cookie from bricking the local demo.
+    const workspaces = await this.listWorkspaces(user.id);
+    const membership = workspaces.find((workspace) => workspace.id === preferredWorkspaceId) ?? workspaces[0];
     return {
       userId: user.id || DEMO_USER,
       email: user.email || "maria@fashionretailer.com",
-      workspaceId: preferredWorkspaceId || DEMO_WORKSPACE,
-      role: "owner",
+      workspaceId: membership?.id ?? DEMO_WORKSPACE,
+      role: membership?.role ?? "owner",
     };
   }
 

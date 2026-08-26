@@ -165,10 +165,14 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
 
   async resolveWorkspace(user: { id: string; email: string }, preferredWorkspaceId?: string): Promise<RequestContext> {
     return this.sql.begin(async (tx) => {
+      // Runs on every authenticated request. `do update` unconditionally wrote a
+      // new row version each time, producing a dead tuple per page view in a
+      // table with one row per user; the email almost never changes.
       await tx`
         insert into public.profiles (id, email)
         values (${user.id}::uuid, ${user.email})
         on conflict (id) do update set email = excluded.email, updated_at = now()
+        where public.profiles.email is distinct from excluded.email
       `;
       let rows: Row[] = [];
       if (preferredWorkspaceId) {
@@ -190,19 +194,34 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
         `;
       }
       if (!rows[0]) {
+        // First sign-in bootstraps a workspace. Next renders the app layout and
+        // the page in parallel and each calls getRequestContext, so two
+        // transactions reach here at once with the same deterministic slug; a
+        // bare insert made the loser fail on workspaces_slug_key and threw an
+        // unhandled error out of a Server Component on the very first login.
+        // `do nothing` + re-select makes the loser adopt the winner's workspace.
         const local = user.email.split("@")[0]?.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "workspace";
         const slug = `${local}-${user.id.slice(0, 8)}`;
-        const workspaces = await tx<Row[]>`
+        let workspaces = await tx<Row[]>`
           insert into public.workspaces (name, slug)
           values (${`${local}'s workspace`}, ${slug})
+          on conflict (slug) do nothing
           returning id
         `;
+        if (!workspaces[0]) {
+          workspaces = await tx<Row[]>`select id from public.workspaces where slug = ${slug}`;
+        }
         const workspaceId = String(workspaces[0]!.id);
         await tx`
           insert into public.workspace_memberships (workspace_id, user_id, role)
           values (${workspaceId}::uuid, ${user.id}::uuid, 'owner')
+          on conflict (workspace_id, user_id) do nothing
         `;
-        rows = [{ workspace_id: workspaceId, role: "owner" }];
+        rows = await tx<Row[]>`
+          select membership.workspace_id, membership.role
+          from public.workspace_memberships membership
+          where membership.user_id = ${user.id}::uuid and membership.workspace_id = ${workspaceId}::uuid
+        `;
       }
       return {
         userId: user.id,
