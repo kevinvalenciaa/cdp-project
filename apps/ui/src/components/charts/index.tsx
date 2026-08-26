@@ -13,13 +13,15 @@ const C = {
   axis: "#667085",
 };
 
+// Chrome only. The bar colours above carry meaning (green = positive lift,
+// coral = risk, slate = holdout) and are deliberately not re-hued.
 const tooltipStyle = {
   background: "#FFFFFF",
-  border: "1px solid #DCE2EA",
-  borderRadius: 12,
+  border: "1px solid #E4EAEC",
+  borderRadius: 10,
   fontSize: 12,
   color: "#302D2E",
-  boxShadow: "0 12px 30px -18px rgba(31,45,61,.35)",
+  boxShadow: "0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1)",
 };
 
 /**

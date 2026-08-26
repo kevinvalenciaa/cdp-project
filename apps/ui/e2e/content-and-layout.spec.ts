@@ -5,10 +5,12 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 const STATE_PATH = resolve(__dirname, "../../../.context/e2e-investigations-state.json");
 const DEMO_INVESTIGATION = "00000000-0000-4000-8000-000000000003";
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, context }) => {
   rmSync(STATE_PATH, { force: true });
+  // The nav rail persists to a cookie (so the server can render the right width
+  // on first paint); the inner rails still use localStorage.
+  await context.clearCookies({ name: "sidebar_state" });
   await page.addInitScript(() => {
-    localStorage.removeItem("ui.sidebar-open");
     localStorage.removeItem("ui.opportunities-sidebar-open");
     localStorage.removeItem("ui.results-rail-open");
   });
@@ -197,9 +199,11 @@ test("captures the full responsive visual matrix without overflow", async ({ pag
     await assertNoHorizontalPageOverflow(page);
 
     if (scenario.width >= 1024 && scenario.path !== "/login") {
-      const sidebar = page.locator("aside").first();
+      // The nav rail is the sidebar primitive's own element, not an <aside> -
+      // /investigations also renders an <aside> for its recent-chats list.
+      const sidebar = page.locator('[data-slot="sidebar"]').first();
       await expect(sidebar).toBeVisible();
-      expect((await sidebar.boundingBox())?.width).toBeCloseTo(272, 0);
+      expect((await sidebar.boundingBox())?.width).toBeCloseTo(288, 0);
     }
 
     if (scenario.path === "/" || scenario.path === "/opportunities") {

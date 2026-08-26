@@ -14,7 +14,7 @@ function Node({ tone, children, className }: { tone: Tone; children: React.React
   return (
     <div
       className={cn(
-        "rounded-xl border-2 px-3 py-2 text-center font-display text-[15px] leading-tight shadow-ht-xs",
+        "rounded-xl border-2 px-3 py-2 text-center font-display text-[15px] leading-tight",
         TONE[tone],
         className,
       )}
@@ -36,7 +36,7 @@ function Arrow({ down, label }: { down?: boolean; label?: string }) {
 /** "Inside the Agentic CDP" - the engine pipeline with a feedback loop. */
 export function PipelineDiagram() {
   return (
-    <figure className="rounded-[20px] border border-border bg-card p-5 shadow-ht-xs sm:p-6">
+    <figure className="rounded-[20px] border border-border bg-card p-5 sm:p-6">
       <figcaption className="mb-4 font-display text-xl font-semibold tracking-[-0.02em] text-foreground">Inside the engine</figcaption>
       <div className="flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
         <Node tone="context" className="lg:w-44">
@@ -81,7 +81,7 @@ export function FlywheelDiagram() {
     { tone: "feedback", label: "results become new evidence" },
   ];
   return (
-    <figure className="rounded-[20px] border border-border bg-card p-5 shadow-ht-xs sm:p-6">
+    <figure className="rounded-[20px] border border-border bg-card p-5 sm:p-6">
       <figcaption className="mb-4 font-display text-xl font-semibold tracking-[-0.02em] text-foreground">The flywheel</figcaption>
       <div className="flex flex-col items-stretch gap-2 md:flex-row md:items-center">
         {steps.map((s, i) => (

@@ -1,10 +1,11 @@
 import "./globals.css";
 import type { ReactNode } from "react";
-import { Inter, DM_Mono } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const dmMono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-dm-mono", display: "swap" });
+// One family across sans, serif and mono - the reference system maps all three
+// to Outfit, and the tokens in globals.css point at this single variable.
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", display: "swap" });
 
 export const metadata = {
   title: "Proofloop - Agentic CDP",
@@ -19,9 +20,11 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${dmMono.variable}`}>
+    <html lang="en" className={outfit.variable}>
       {/* text-sm (0.875rem) rather than a fixed 14px so browser font-size settings are honoured */}
-      <body className="min-h-screen bg-background font-sans text-sm text-foreground antialiased">
+      {/* No base font-size: the reference system leaves the browser default at
+          16px and every component states its own size. */}
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-ht-md focus:ring-2 focus:ring-ring"

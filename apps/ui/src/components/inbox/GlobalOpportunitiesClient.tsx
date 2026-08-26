@@ -10,7 +10,10 @@ import type {
 } from "@/lib/investigations";
 import { confidenceLabel, moneyCompact, pp } from "@/lib/format";
 import { OpportunityDetail } from "@/components/detail/OpportunityDetail";
+import { PageHeader } from "@/components/common/PageHeader";
 import { StatusPill } from "@/components/common/StatusPill";
+import { StatCard, StatCardGrid } from "@/components/dashboard/StatCard";
+import { Button } from "@/components/ui/button";
 
 export function GlobalOpportunitiesClient({
   initialOpportunities,
@@ -65,51 +68,41 @@ export function GlobalOpportunitiesClient({
   return (
     <>
       <div className="min-h-full bg-background">
-        <header className="flex min-h-24 items-center border-b border-border bg-card/70 px-5 py-6 backdrop-blur sm:px-6 lg:px-8">
-          <div className="flex w-full flex-wrap items-center justify-between gap-5">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ht-teal-tint">
-                  <Sparkles className="h-5 w-5 text-ht-teal" aria-hidden />
-                </span>
-                <h1 className="text-2xl font-semibold tracking-[-0.025em] text-foreground">Opportunities</h1>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                The latest proven results across every workspace investigation.
-              </p>
-            </div>
-            <Link
-              href="/investigations"
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-ht-xs transition-all hover:-translate-y-px hover:bg-ht-teal-hover"
-            >
-              <Plus className="h-4 w-4" aria-hidden /> New investigation
-            </Link>
-          </div>
-        </header>
+        <PageHeader
+          title="Opportunities"
+          description="The latest proven results across every workspace investigation."
+          actions={
+            <Button asChild>
+              <Link href="/investigations">
+                <Plus aria-hidden /> New investigation
+              </Link>
+            </Button>
+          }
+        />
 
         <div className="app-page">
-          <section className="grid gap-4 sm:grid-cols-3" aria-label="Opportunity summary">
-            <SummaryCard icon={Sparkles} label="Currently proven" value={String(proven.length)} />
-            <SummaryCard icon={TrendingUp} label="Est. monthly impact" value={`~${moneyCompact(totalImpact)}`} />
-            <SummaryCard icon={CalendarClock} label="Needs re-verification" value={String(stale)} />
-          </section>
+          <StatCardGrid className="lg:grid-cols-3 xl:grid-cols-3" aria-label="Opportunity summary">
+            <StatCard icon={Sparkles} label="Currently proven" value={String(proven.length)} />
+            <StatCard icon={TrendingUp} label="Est. monthly impact" value={`~${moneyCompact(totalImpact)}`} />
+            <StatCard icon={CalendarClock} label="Needs re-verification" value={String(stale)} />
+          </StatCardGrid>
 
           <div className="control-surface grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[minmax(180px,1fr)_110px_minmax(125px,1fr)_minmax(145px,1fr)_minmax(155px,1fr)]">
-            <label className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-background px-3 transition-shadow focus-within:ring-2 focus-within:ring-ring/20 md:col-span-2 2xl:col-span-1">
+            <label className="flex min-w-0 items-center gap-2 rounded-md border border-input bg-background px-3 transition-shadow focus-within:ring-2 focus-within:ring-ring/20 md:col-span-2 2xl:col-span-1">
               <Search className="h-4 w-4 text-muted-foreground" aria-hidden />
               <span className="sr-only">Search opportunities</span>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search opportunities or segments…"
-                className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-hidden placeholder:text-muted-foreground"
               />
             </label>
             <select
               aria-label="Filter by status"
               value={status}
               onChange={(event) => setStatus(event.target.value as typeof status)}
-              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring/20"
             >
               <option value="proven">Proven</option>
               <option value="stale">Stale</option>
@@ -120,7 +113,7 @@ export function GlobalOpportunitiesClient({
               aria-label="Filter by segment"
               value={segment}
               onChange={(event) => setSegment(event.target.value)}
-              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring/20"
             >
               <option value="all">Every segment</option>
               {segments.map((value) => (
@@ -133,7 +126,7 @@ export function GlobalOpportunitiesClient({
               aria-label="Filter by verification date"
               value={verifiedWithinDays}
               onChange={(event) => setVerifiedWithinDays(event.target.value)}
-              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring/20"
             >
               <option value="all">Any verification date</option>
               <option value="7">Verified in 7 days</option>
@@ -144,7 +137,7 @@ export function GlobalOpportunitiesClient({
               aria-label="Filter by investigation"
               value={investigationId}
               onChange={(event) => setInvestigationId(event.target.value)}
-              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/20"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring/20"
             >
               <option value="all">Every investigation</option>
               {investigations.map((investigation) => (
@@ -171,9 +164,12 @@ export function GlobalOpportunitiesClient({
                   return (
                     <article
                       key={item.key}
-                      className="group rounded-[18px] border border-border bg-card p-5 shadow-ht-xs transition-all hover:-translate-y-0.5 hover:border-ht-400 hover:shadow-ht-sm"
+                      // min-w-0: grid items default to min-width:auto, so without
+                      // this the card sizes to its min-content and pushes the page
+                      // sideways on narrow screens instead of truncating.
+                      className="group min-w-0 rounded-xl border border-border bg-white p-5 transition-colors hover:border-ht-400"
                     >
-                      <button onClick={() => void selectOpportunity(item)} className="w-full text-left">
+                      <button onClick={() => void selectOpportunity(item)} className="w-full min-w-0 text-left">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
@@ -241,24 +237,3 @@ export function GlobalOpportunitiesClient({
   );
 }
 
-function SummaryCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Sparkles;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="metric-card min-h-[116px]">
-      <div className="flex items-center justify-between gap-2 text-sm font-medium text-foreground/80">
-        {label}
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ht-teal-tint">
-          <Icon className="h-4 w-4 text-ht-teal" aria-hidden />
-        </span>
-      </div>
-      <div className="mt-2 text-[28px] font-semibold tracking-[-0.03em] tabular-nums text-foreground">{value}</div>
-    </div>
-  );
-}

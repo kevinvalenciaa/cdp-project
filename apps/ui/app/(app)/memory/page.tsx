@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { StatusPill } from "@/components/common/StatusPill";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { verdictMeta } from "@/lib/format";
 import { getRequestContext } from "@/server/auth";
 import { getInvestigationRepository } from "@/server/investigations";
@@ -23,12 +24,11 @@ export default async function MemoryPage() {
             title="No insights yet"
             description="Verified outcomes are recorded here so the next run starts smarter - and skips what has already been ruled out."
             action={
-              <Link
-                href="/investigations"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-ht-xs transition-all hover:-translate-y-px hover:bg-ht-teal-hover"
-              >
-                Run a discovery <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
+              <Button asChild>
+                <Link href="/investigations">
+                  Run a discovery <ArrowRight aria-hidden />
+                </Link>
+              </Button>
             }
           />
         ) : (

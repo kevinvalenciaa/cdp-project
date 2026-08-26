@@ -79,7 +79,7 @@ export function OpportunitiesSidebar({ investigations }: { investigations: Inves
                 onClick={toggleSidebar}
                 aria-label={sidebarOpen ? "Collapse recent investigations" : "Expand recent investigations"}
                 aria-expanded={sidebarOpen}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/30"
               >
                 {sidebarOpen ? (
                   <PanelLeftClose className="h-4 w-4" aria-hidden />
