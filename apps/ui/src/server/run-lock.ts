@@ -54,7 +54,3 @@ export function release(id: string): void {
   active = null;
   waiters.shift()?.();
 }
-
-export function isRunning(): boolean {
-  return active !== null;
-}

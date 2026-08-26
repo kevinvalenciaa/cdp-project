@@ -5,11 +5,6 @@ export function ymd(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Format a Date as 'YYYY-MM-DD HH:MM:SS' (UTC). */
-export function ymdhms(d: Date): string {
-  return d.toISOString().slice(0, 19).replace("T", " ");
-}
-
 export function addDays(d: Date, n: number): Date {
   return new Date(d.getTime() + n * DAY_MS);
 }

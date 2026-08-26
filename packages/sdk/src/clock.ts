@@ -1,23 +1,14 @@
 /**
- * The clock is the hardest design decision in this SDK, so it gets its own file.
+ * evaluateBundle() must be pure so the golden vectors stay deterministic, so
+ * "now" is injected - yet wall-clock "now" is exactly what a user edits to
+ * defeat a P7D cap. Both hold only if time is structured rather than one
+ * number: wallMs (display + last-resort fallback), monotonicMs (ms since boot,
+ * cannot be set backwards), bootId (regenerated each boot, pairing monotonic
+ * stamps), skewMs (serverTime - deviceWall, anchored on every response).
  *
- * evaluateBundle() must be PURE so the golden vectors are deterministic - which
- * means "now" is injected. But wall-clock "now" is exactly what the Settings
- * app (or DST, or a confused traveller) manipulates to defeat a P7D frequency
- * cap. You cannot have both purity and an adversarial clock unless time is a
- * VALUE with structure, not a number:
- *
- *   - wallMs      device wall clock. Display + last-resort fallback only.
- *   - monotonicMs ms since boot. Cannot be set backwards. Authoritative for
- *                 window arithmetic whenever the ledger entry shares bootId.
- *   - bootId      random id regenerated each boot, pairing monotonic stamps.
- *   - skewMs      serverTime - deviceWall from the last response's server_time
- *                 anchor (every response carries it - no extra round trip).
- *
- * Window rule: same boot -> monotonic elapsed. Across boots -> skew-corrected
- * wall elapsed. Ambiguous (entry claims a FUTURE wall time) -> elapsed 0, i.e.
- * treated as just-sent: the cap stays engaged. On ambiguity we suppress rather
- * than show - a user who fiddles with the date gets fewer messages, never more.
+ * Same boot -> monotonic elapsed. Across boots -> skew-corrected wall elapsed.
+ * Ambiguous (entry claims a future wall time) -> elapsed 0, so the cap stays
+ * engaged: fiddling with the date yields fewer messages, never more.
  */
 
 export interface Clock {

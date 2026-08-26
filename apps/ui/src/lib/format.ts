@@ -112,8 +112,3 @@ export function sourceChips(o: Opportunity): string[] {
   if (o.type === "segment") return ["Purchase history", "Campaign coverage"];
   return ["Purchase history", "Campaign performance"];
 }
-
-/** The draft work the agent already produced. */
-export function draftWorkChips(o: Opportunity): string[] {
-  return [`${o.reach.toLocaleString()} customers identified`, "Messaging drafted", "Lift measurement configured"];
-}

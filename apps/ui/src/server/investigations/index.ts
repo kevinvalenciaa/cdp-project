@@ -17,7 +17,3 @@ export async function getInvestigationRepository(): Promise<InvestigationReposit
   }
   return repository;
 }
-
-export function resetInvestigationRepositoryForTests(): void {
-  repository = null;
-}
