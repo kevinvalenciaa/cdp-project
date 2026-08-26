@@ -48,14 +48,9 @@ function ChartCardActions({ className, ...props }: React.ComponentProps<"div">) 
   return <div className={cn("flex flex-wrap items-center gap-2", className)} {...props} />;
 }
 
-function ChartCardContent({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("px-6", className)} {...props} />;
-}
-
 export {
   ChartCard,
   ChartCardActions,
-  ChartCardContent,
   ChartCardDescription,
   ChartCardHeader,
   ChartCardHeading,

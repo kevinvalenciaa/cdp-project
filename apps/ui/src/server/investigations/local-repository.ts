@@ -1082,5 +1082,3 @@ export class LocalInvestigationRepository implements InvestigationRepository {
     investigation.lastActivityAt = at;
   }
 }
-
-export const LOCAL_INVESTIGATION_STATE_FILE = STATE_PATH;

@@ -4,17 +4,12 @@
  * The first three ids predate the redesign and are kept for event continuity.
  *
  * Photography: Unsplash License (free commercial use, no attribution required),
- * downloaded once and bundled - the offline demo depends on zero runtime
- * fetches. Sources:
- *   wax-canvas-jacket  https://unsplash.com/photos/1544022613-e87ca75a784a
- *   chore-coat         https://unsplash.com/photos/1516257984-b1b4d707412e
- *   flannel-overshirt  https://unsplash.com/photos/1596755094514-f87e34085b2c
- *   leather-moto       https://unsplash.com/photos/1551028719-00167b16eac5
- *   lace-up-boot       https://unsplash.com/photos/1608256246200-53e635b5b65f
- *   utility-pant       https://unsplash.com/photos/1473966968600-fa801b869a1a
- *   rib-beanie         https://unsplash.com/photos/1510598969022-c4c6c5d05769
- *   day-pack           https://unsplash.com/photos/1553062407-98eeb64c6a62
- *   masthead           https://unsplash.com/photos/1490481651871-ab68de25d43d
+ * downloaded once and bundled so the offline demo makes zero runtime fetches.
+ * Photo ids under unsplash.com/photos/ - wax-canvas-jacket 1544022613-e87ca75a784a,
+ * chore-coat 1516257984-b1b4d707412e, flannel-overshirt 1596755094514-f87e34085b2c,
+ * leather-moto 1551028719-00167b16eac5, lace-up-boot 1608256246200-53e635b5b65f,
+ * utility-pant 1473966968600-fa801b869a1a, rib-beanie 1510598969022-c4c6c5d05769,
+ * day-pack 1553062407-98eeb64c6a62, masthead 1490481651871-ab68de25d43d.
  */
 
 export type Category = "Outerwear" | "Workwear" | "Footwear" | "Accessories";

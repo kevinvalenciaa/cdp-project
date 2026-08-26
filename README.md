@@ -135,4 +135,3 @@ A verified opportunity compiles into a portable decision bundle that the device 
 - [`docs/DESIGN_DECISIONS.md`](docs/DESIGN_DECISIONS.md) — build-vs-buy rationale
 - [`docs/FANOUT_VS_RAG.md`](docs/FANOUT_VS_RAG.md) — why fan-out over retrieval
 - [`docs/EXPLAINER.md`](docs/EXPLAINER.md) — non-technical overview
-- [`docs/DEMO.md`](docs/DEMO.md) — demo script
