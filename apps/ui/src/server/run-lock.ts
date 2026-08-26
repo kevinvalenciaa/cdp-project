@@ -11,7 +11,3 @@ export function tryAcquire(id: string): boolean {
 export function release(id: string): void {
   if (active?.id === id) active = null;
 }
-
-export function isRunning(): boolean {
-  return active !== null;
-}

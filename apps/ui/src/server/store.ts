@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { ActivationSummary, EngineEvent, RunDetail } from "@/lib/types";
 
@@ -38,6 +38,3 @@ export const store = {
     write({ ...s, activations });
   },
 };
-
-export const STATE_FILE = STATE_PATH;
-export const stateExists = () => existsSync(STATE_PATH);
