@@ -16,7 +16,14 @@ export async function GET(): Promise<Response> {
     const ctx = await getRequestContext();
     const repository = await getInvestigationRepository();
     const workspaces = await repository.listWorkspaces(ctx.userId);
-    return Response.json({ workspaces, selectedWorkspaceId: ctx.workspaceId });
+    // The sidebar identity block used to hardcode the demo account's email, so
+    // every real signed-in user saw maria@fashionretailer.com in a multi-tenant
+    // app. RequestContext has carried the real email all along.
+    return Response.json({
+      workspaces,
+      selectedWorkspaceId: ctx.workspaceId,
+      account: { email: ctx.email, role: ctx.role },
+    });
   } catch (error) {
     return apiError(error);
   }

@@ -342,7 +342,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
   }
 
   async getInvestigation(ctx: RequestContext, investigationId: string): Promise<InvestigationDetail | null> {
-    const [investigations, messages, runs, results] = await Promise.all([
+    const [investigations, messages, runs, results, cursor] = await Promise.all([
       this.sql<Row[]>`
         select investigation.*,
           (
@@ -378,6 +378,10 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
         where investigation_id = ${investigationId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
         order by opportunity_key, verified_at desc
       `,
+      this.sql<Row[]>`
+        select coalesce(max(id), 0) last_event_id from public.investigation_events
+        where investigation_id = ${investigationId}::uuid and workspace_id = ${ctx.workspaceId}::uuid
+      `,
     ]);
     if (!investigations[0]) return null;
     return {
@@ -385,6 +389,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
       messages: messages.map(messageFrom),
       runs: runs.map(runFrom),
       results: results.map(occurrenceFrom).sort((a, b) => b.impactMonthly - a.impactMonthly),
+      lastEventId: Number(cursor[0]?.last_event_id ?? 0),
     };
   }
 

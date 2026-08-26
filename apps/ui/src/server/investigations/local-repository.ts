@@ -291,6 +291,10 @@ function detail(state: LocalState, item: InvestigationSummary): InvestigationDet
   return {
     ...item,
     activeRunStatus: activeRunStatus(state, item.id),
+    lastEventId: state.events.reduce(
+      (highest, envelope) => (envelope.investigationId === item.id ? Math.max(highest, envelope.id) : highest),
+      0,
+    ),
     provenCount: scopedLatest(state, item.id).filter((o) => o.accepted).length,
     messages: state.messages
       .filter((message) => message.investigationId === item.id)
