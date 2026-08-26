@@ -1,15 +1,44 @@
+# Two-process production topology: the web server and the investigation worker
+# are separate containers that coordinate through Postgres.
+#
+# DATABASE_URL is mandatory here. Without it both containers fall back to the
+# per-process local state file, the web container enqueues jobs into its own copy
+# and the worker polls a different one, so investigations sit "queued" forever.
+# The `:?` form fails the run immediately with that message instead.
+#
+# Copy .env.example to .env and fill it in before running:
+#   cp .env.example .env && docker compose -f docker-compose.worker.yml up --build
+
+x-image: &image
+  build:
+    context: .
+    args:
+      # NEXT_PUBLIC_* must reach the image at build time - Next inlines them into
+      # the client bundle, so run-time env_file injection is too late.
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
+  env_file: .env
+  environment:
+    DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required - the web and worker containers coordinate through Postgres}
+  restart: unless-stopped
+
 services:
   web:
-    build: .
+    <<: *image
     command: ["pnpm", "--filter", "@lift/ui", "start"]
-    env_file: .env
     ports:
       - "3000:3000"
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   investigation-worker:
-    build: .
+    <<: *image
     command: ["pnpm", "--filter", "@lift/ui", "worker"]
-    env_file: .env
-    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_started
     stop_grace_period: 30s
