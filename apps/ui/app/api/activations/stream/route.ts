@@ -43,6 +43,15 @@ export async function GET(req: Request) {
         { status: 409 },
       );
     }
+    // Without this, re-approving a live opportunity streamed the whole launch
+    // again and answered 200, while recordActivation silently did nothing - so
+    // the UI raised "Launched" for a launch that never happened.
+    if (current.opportunity.activationStatus === "live") {
+      return Response.json(
+        { error: "This opportunity is already live.", code: "ALREADY_ACTIVATED" },
+        { status: 409 },
+      );
+    }
     const provider = await getProvider();
     const stream = provider.streamActivation(key, req.signal);
     async function* persistActivation() {

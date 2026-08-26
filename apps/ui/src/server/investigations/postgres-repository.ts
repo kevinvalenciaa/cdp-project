@@ -594,6 +594,7 @@ export class PostgresInvestigationRepository implements InvestigationRepository 
           ${String(rows[0].run_id)}::uuid, ${occurrenceId}, ${String(rows[0].opportunity_key)},
           ${ctx.userId}::uuid, 'live', ${tx.json(pgJson(result))}
         )
+        on conflict (occurrence_id) do nothing
       `;
     });
   }

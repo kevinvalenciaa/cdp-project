@@ -102,6 +102,66 @@ function buildActivity(run: RunDetail): EngineEvent[] {
   return events;
 }
 
+const FIXTURE_ACTIVATION = RUN.activation!;
+
+function findOpportunity(key: string): Opportunity | null {
+  return [...RUN.opportunities.ranked, ...RUN.opportunities.rejected].find((item) => item.key === key) ?? null;
+}
+
+/**
+ * Build the activation for a specific opportunity.
+ *
+ * The fixture bundles exactly one activation (SECOND_PURCHASE_SMS), and
+ * streamActivation used to ignore its `key` argument and return it for every
+ * approval. The route binds whatever comes back to the caller's occurrenceId, so
+ * approving any other opportunity recorded the wrong campaign: /launched showed a
+ * campaign the user never approved while /opportunities flagged the one they did
+ * as live. Derive the parts that are opportunity-specific instead, and keep the
+ * fixture's shape for the rest.
+ */
+function activationFor(key: string): ActivationResult {
+  const opportunity = findOpportunity(key);
+  if (!opportunity || opportunity.key === FIXTURE_ACTIVATION.opportunity.key) return FIXTURE_ACTIVATION;
+
+  const channel = /sms/i.test(opportunity.key) || /sms/i.test(opportunity.title) ? "sms" : "email";
+  const persuadableReach = Math.max(1, Math.round(opportunity.reach * 0.62));
+  const treatmentN = Math.max(1, Math.round(persuadableReach * 0.8));
+  const controlN = Math.max(1, persuadableReach - treatmentN);
+  const upliftPp = opportunity.upliftPp ?? 0;
+  const baseRate = (opportunity.rawConversion ?? 0) / 100;
+
+  return {
+    ...FIXTURE_ACTIVATION,
+    opportunity,
+    audience: {
+      ...FIXTURE_ACTIVATION.audience,
+      label: opportunity.segment,
+      channel,
+      reach: opportunity.reach,
+      persuadableReach,
+    },
+    brief: `**CREATIVE BRIEF: ${opportunity.title}**\n\nAudience: ${opportunity.segment}.\n\n${opportunity.reason}`,
+    variants: FIXTURE_ACTIVATION.variants.map((variant) => ({ ...variant, channel })),
+    sync: {
+      ...FIXTURE_ACTIVATION.sync!,
+      destination: channel === "sms" ? "Braze (SMS journey)" : "Braze (email journey)",
+      membersSynced: persuadableReach,
+    },
+    measurement: {
+      ...FIXTURE_ACTIVATION.measurement,
+      treatmentN,
+      controlN,
+      treatmentConv: Math.max(0, Math.round(treatmentN * (baseRate + upliftPp / 100))),
+      controlConv: Math.max(0, Math.round(controlN * baseRate)),
+      upliftPp,
+      ci: opportunity.ci ?? FIXTURE_ACTIVATION.measurement.ci,
+      pValue: opportunity.pValue ?? FIXTURE_ACTIVATION.measurement.pValue,
+      verdict: opportunity.verdict,
+      reason: opportunity.reason,
+    },
+  };
+}
+
 function memoryFrom(run: RunDetail): InsightRecord[] {
   const out: InsightRecord[] = [];
   for (const o of [...run.opportunities.ranked, ...run.opportunities.rejected]) {
@@ -147,8 +207,8 @@ export const demoProvider: DataProvider = {
     }
   },
 
-  async *streamActivation(_key, signal) {
-    const result = RUN.activation!;
+  async *streamActivation(key, signal) {
+    const result = activationFor(key);
     yield { kind: "act_started", title: result.opportunity.title };
     for (const label of [
       "Compiling the audience…",
@@ -166,8 +226,8 @@ export const demoProvider: DataProvider = {
     yield { kind: "act_finished", result };
   },
 
-  async getActivation() {
-    return RUN.activation!;
+  async getActivation(opportunityKey) {
+    return activationFor(opportunityKey);
   },
 
   async listActivations(): Promise<ActivationSummary[]> {
